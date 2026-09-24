@@ -76,3 +76,45 @@ def test_atomic_write_keeps_original_on_permanent_failure(tmp_path, monkeypatch)
     assert path.read_text() == "original"
     assert len(calls) == 8
     assert not list(tmp_path.glob("*.tmp"))
+
+
+def test_metadata_read_retries_transient_windows_access_conflict(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    from on_knowledge import storage
+
+    path = tmp_path / "source.json"
+    path.write_text('{"status": "ready"}', encoding="utf-8")
+    original = Path.read_text
+    calls = []
+
+    def briefly_locked(self, *args, **kwargs):
+        calls.append(1)
+        if len(calls) < 3:
+            error = PermissionError("sharing violation")
+            error.winerror = 32
+            raise error
+        return original(self, *args, **kwargs)
+
+    monkeypatch.setattr(Path, "read_text", briefly_locked)
+    monkeypatch.setattr(storage.time, "sleep", lambda _: None)
+    assert json.loads(storage.read_text(path))["status"] == "ready"
+    assert len(calls) == 3
+
+
+def test_metadata_read_does_not_hide_real_permission_failure(tmp_path, monkeypatch):
+    from pathlib import Path
+
+    import pytest
+    from on_knowledge import storage
+
+    calls = []
+
+    def denied(self, *args, **kwargs):
+        calls.append(1)
+        raise PermissionError("permission denied")
+
+    monkeypatch.setattr(Path, "read_text", denied)
+    with pytest.raises(PermissionError):
+        storage.read_text(tmp_path / "source.json")
+    assert len(calls) == 1

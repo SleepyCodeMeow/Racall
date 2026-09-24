@@ -56,6 +56,18 @@ def atomic_write(path: Path, text: str):
                 pass
 
 
+def read_text(path: Path) -> str:
+    """Allow a concurrent Windows rename/scanner to release a metadata file."""
+    for attempt in range(8):
+        try:
+            return path.read_text(encoding="utf-8")
+        except PermissionError as exc:
+            if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 7:
+                raise
+            time.sleep(0.01 * 2**attempt)
+    raise AssertionError("unreachable")
+
+
 class Store:
     """Portable files are authoritative. SQLite is a disposable retrieval cache."""
 
@@ -102,7 +114,7 @@ class Store:
     def notebooks(self) -> list[dict]:
         result = []
         for path in self.vault.glob("*/notebook.yaml"):
-            data = yaml.safe_load(path.read_text("utf-8"))
+            data = yaml.safe_load(read_text(path))
             data["sources_count"] = len(list((path.parent / "sources").glob("*/source.json")))
             result.append(data)
         return sorted(result, key=lambda n: n["created_at"])
@@ -124,13 +136,13 @@ class Store:
 
     def sources(self, notebook: str) -> list[dict]:
         return sorted(
-            [json.loads(p.read_text("utf-8")) for p in
+            [json.loads(read_text(p)) for p in
              (self.notebook_path(notebook) / "sources").glob("*/source.json")],
             key=lambda s: s["created_at"], reverse=True,
         )
 
     def source(self, notebook: str, source: str) -> dict:
-        return json.loads((self.source_path(notebook, source) / "source.json").read_text("utf-8"))
+        return json.loads(read_text(self.source_path(notebook, source) / "source.json"))
 
     def save_source(self, notebook: str, source: dict):
         path = self.notebook_path(notebook) / "sources" / identifier(source["id"])
@@ -152,7 +164,7 @@ class Store:
             raise ValueError("Неизвестный тип записи")
         notes = []
         for path in (self.notebook_path(notebook) / kind).glob("*.md"):
-            text = path.read_text("utf-8")
+            text = read_text(path)
             frontmatter = {}
             body = text
             if text.startswith("---\n"):
@@ -186,7 +198,7 @@ class Store:
         path = self.notebook_path(notebook) / kind / f"{note_id}.md"
         metadata = {}
         if path.exists():
-            previous = path.read_text("utf-8")
+            previous = read_text(path)
             if previous.startswith("---\n"):
                 parts = previous.split("---\n", 2)
                 if len(parts) == 3:
@@ -205,7 +217,7 @@ class Store:
 
     def settings(self) -> dict:
         path = self.root / "settings.json"
-        return json.loads(path.read_text("utf-8")) if path.exists() else {
+        return json.loads(read_text(path)) if path.exists() else {
             "base_url": "https://api.openai.com/v1", "model": "", "embedding_model": "",
         }
 
