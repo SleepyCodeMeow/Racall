@@ -63,3 +63,21 @@ Preview подходит для локального знакомства и о�
 Текущий EXE: `Racall-0.1.0-win-x64.exe`, 144123803 байта, SHA-256 `d2f7ba12a1054e14061a33dad18985df9e89229f3705c446aa4485cb44ffce30`. Подписи нет; macOS/Linux не собирались локально.
 
 Финальная упакованная сборка: `test-results/languages-1790263205646/result.json` и `test-results/desktop-1790263237975/result.json` — passed, JavaScript errors: 0. Снимки EN/RU: `test-results/racall-ui-1790263080081`.
+
+
+## 0.1 Beta release preparation
+
+- Public source repository: https://github.com/SleepyCodeMeow/Racall.
+- Version metadata aligned to `0.1.0-beta.1` (`0.1.0b1` for Python).
+- English README with GitHub-hosted navigation, separate Russian README, getting-started guide, changelog, release process and issue templates.
+- 26 Python tests pass locally, including transient Windows metadata read/write conflicts; lint, TypeScript and 208-key localization checks pass.
+- npm audit reported zero known vulnerabilities at preparation time.
+- Packaged Windows app: notebook creation, Markdown import/search, exact citation, note editing/preview, MCP configuration, Ollama settings, English/Russian switching, full restart and installer-language seeding passed. Frozen backend PDF page provenance/original download/authentication passed.
+- README rendered on the live GitHub page; all embedded images loaded. Relative README/documentation links resolve.
+- Clean GitHub Windows runner exposed a transient metadata read conflict during import. Added bounded retries for Windows sharing/access conflicts and regression coverage; real permission failures still propagate.
+- CI is configured to test/package four OS/architecture combinations before publishing a complete prerelease. See Actions for the outcome; configuration alone does not establish success.
+- Manual clean install/uninstall on every OS, signing/notarization, and real cloud/Ollama model evaluation remain outstanding. Beta documentation states these limits.
+
+Local rebuilt Windows beta SHA-256: `23f3b79f5c287f18f2ae4f6cc087d20e38a403a7dbe64b83c3384d87a39ba485`. CI artifacts are built separately; use the release-attached checksums for downloaded packages.
+
+All four native CI jobs passed on commit `27330bd`: Windows x64, Linux x64, macOS arm64 and macOS x64, including packaged app, language restart and frozen PDF tests. Evidence: https://github.com/SleepyCodeMeow/Racall/actions/runs/36022117952.
