@@ -1,0 +1,26 @@
+node_modules/
+.next/
+out/
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.tsbuildinfo
+build/
+release/
+.local-data/
+.env
+*.spec
+test-results/
+
+# Third-party visual references are not distributed
+assets/brand/references/
+
+.env.*
+!.env.example
+*.log
+.DS_Store
+Thumbs.db
+*.pem
+*.pfx
+*.p12

@@ -1,0 +1,15 @@
+name: Feature request
+description: Suggest a focused improvement to Racall.
+title: "[Idea]: "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this help you do?
+      description: Describe your workflow and the missing capability.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested solution or alternatives

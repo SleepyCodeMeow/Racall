@@ -1,0 +1,97 @@
+name: Test and package desktop
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+jobs:
+  desktop:
+    timeout-minutes: 35
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            arch: x64
+          - os: macos-15
+            platform: mac
+            arch: arm64
+          - os: macos-15-intel
+            platform: mac
+            arch: x64
+          - os: ubuntu-22.04
+            platform: linux
+            arch: x64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: npm
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: '0.12.13'
+          python-version: '3.12'
+          enable-cache: true
+      - run: npm ci
+      - run: uv sync --frozen
+      - run: npm test -- -q
+      - run: npm run lint
+      - run: npm run test:i18n
+      - run: npm run check:release
+      - run: npm run build
+      - run: npm run typecheck
+      - run: npx electron-builder --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+        env:
+          CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Check packaged app (Windows and macOS)
+        if: runner.os != 'Linux'
+        run: npm run test:packaged
+      - name: Check packaged app (Linux)
+        if: runner.os == 'Linux'
+        run: xvfb-run -a npm run test:packaged
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Racall-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            release/*.exe
+            release/*.dmg
+            release/*.zip
+            release/*.AppImage
+            release/*.deb
+          if-no-files-found: error
+      - name: Save diagnostic artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: diagnostics-${{ matrix.platform }}-${{ matrix.arch }}
+          path: |
+            test-results/**/result.json
+            test-results/**/failure.png
+            test-results/**/backend.log
+          if-no-files-found: ignore
+  publish:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: desktop
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Racall-*
+          path: release
+          merge-multiple: true
+      - name: Publish complete release with checksums
+        run: python3 scripts/publish_release.py
+        env:
+          GH_TOKEN: ${{ github.token }}

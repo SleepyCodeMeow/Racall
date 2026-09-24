@@ -1,0 +1,114 @@
+{
+  "name": "open-notebook-desktop",
+  "productName": "Racall",
+  "version": "0.1.0-beta.1",
+  "private": true,
+  "description": "An open-source workspace for connected notes, cited answers, and research with the AI you choose.",
+  "author": "Racall contributors",
+  "license": "MIT",
+  "main": "apps/desktop/main.cjs",
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "dev:web": "next dev apps/web",
+    "build:web": "next build apps/web",
+    "build:backend": "uv run python scripts/build_backend.py",
+    "build": "npm run build:web && npm run build:backend",
+    "start": "electron .",
+    "dist": "npm run build && electron-builder --publish never",
+    "test": "uv run python scripts/test.py",
+    "typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
+    "test:desktop": "node scripts/smoke-desktop.cjs",
+    "lint": "uv run ruff check apps/api tests scripts/build_backend.py",
+    "test:i18n": "node scripts/test-i18n.cjs",
+    "check:release": "uv run python scripts/check_release.py",
+    "test:languages": "node scripts/smoke-languages.cjs",
+    "test:packaged": "node scripts/test-packaged.cjs"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.63.0",
+    "@types/node": "^24.0.0",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "electron": "44.4.5",
+    "electron-builder": "26.15.3",
+    "typescript": "^5.9.0",
+    "@phosphor-icons/react": "2.1.10",
+    "@tailwindcss/postcss": "4.3.3",
+    "@tanstack/react-query": "^5.90.0",
+    "next": "16.3.6",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
+    "tailwindcss": "4.3.3"
+  },
+  "build": {
+    "appId": "org.opennotebook.desktop",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "apps/desktop/**",
+      "package.json",
+      "apps/shared/**"
+    ],
+    "extraResources": [
+      {
+        "from": "apps/web/out",
+        "to": "web"
+      },
+      {
+        "from": "build/backend/open-notebook-api",
+        "to": "backend"
+      }
+    ],
+    "artifactName": "Racall-${version}-${os}-${arch}.${ext}",
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "assets/icon.ico",
+      "signExecutable": false
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "deleteAppDataOnUninstall": false,
+      "installerLanguages": [
+        "en_US",
+        "ru_RU"
+      ],
+      "displayLanguageSelector": true,
+      "language": "1033",
+      "include": "installer/languages.nsh"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "icon": "assets/icon.icns"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Office",
+      "maintainer": "Racall contributors",
+      "icon": "assets/icon.png"
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SleepyCodeMeow/Racall.git"
+  },
+  "homepage": "https://github.com/SleepyCodeMeow/Racall#readme",
+  "bugs": {
+    "url": "https://github.com/SleepyCodeMeow/Racall/issues"
+  }
+}

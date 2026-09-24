@@ -1,0 +1,30 @@
+name: Bug report
+description: Something in Racall is not working.
+title: "[Bug]: "
+body:
+  - type: input
+    id: version
+    attributes:
+      label: Racall version
+      placeholder: 0.1.0-beta.1
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS and CPU architecture
+      placeholder: Windows 11 x64 / macOS arm64 / Ubuntu x64
+    validations:
+      required: true
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      description: What did you do, what happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Additional details
+      description: Remove API keys, tokens, private documents and identifying paths before sharing logs or screenshots.
