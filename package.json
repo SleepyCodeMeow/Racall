@@ -3,7 +3,7 @@
   "productName": "Racall",
   "version": "0.1.0-beta.1",
   "private": true,
-  "description": "An open-source workspace for connected notes, cited answers, and research with the AI you choose.",
+  "description": "An open-source alternative to NotebookLM + Obsidian: AI research, cited answers, and connected Markdown notes.",
   "author": "Racall contributors",
   "license": "AGPL-3.0-only",
   "main": "apps/desktop/main.cjs",

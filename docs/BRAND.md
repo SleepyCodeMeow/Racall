@@ -8,7 +8,7 @@
 - Смысл: raccoon (енот) + recall (вспоминать).
 - Маскот: енот на оранжевой наклейке с загнутым нижним правым краем.
 - Слоган: **Your notes. Your sources. Connected.**
-- GitHub About: **An open-source workspace for connected notes, cited answers, and research with the AI you choose.**
+- GitHub About: **An open-source alternative to NotebookLM + Obsidian: AI research, cited answers, and connected Markdown notes.**
 
 ## Файлы
 

@@ -8,7 +8,7 @@
 
 ---
 
-<h3 align="center">Racall — приложение для связанных заметок и ответов AI с цитатами.</h3>
+<h3 align="center">Racall — открытая альтернатива NotebookLM + Obsidian.</h3>
 <p align="center">
   <a href="#что-работает">Возможности</a> •
   <a href="#-установка">Быстрый старт</a> •

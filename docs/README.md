@@ -1,5 +1,7 @@
 # Racall documentation
 
+Racall is an open-source alternative to NotebookLM + Obsidian, combining AI research, cited answers and connected Markdown notes.
+
 [← Project home](../README.md) · [Русский](../README.ru.md)
 
 - [Get started, connect AI, back up your data](GETTING_STARTED.md)

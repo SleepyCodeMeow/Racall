@@ -20,6 +20,12 @@ Download and test the actual installer after publication. CI launches unpacked p
 
 GitHub is the project's home: README, docs, Issues, Releases and Actions. No website or website secret is required. Standard `GITHUB_TOKEN` with `contents: write` in the publication job is sufficient. Signing/notarization certificates are optional future additions; no fabricated signing settings belong in the workflow.
 
+## GitHub Latest and the public beta
+
+The existing **Racall 0.1 Beta** is designated as GitHub Latest so it appears in the repository sidebar. GitHub does not allow a prerelease to be Latest, so its GitHub prerelease flag is disabled. The product remains a beta: its title, version, tag, assets and documented limitations are unchanged. This presentation change does not certify production readiness.
+
+The automated workflow still marks future prerelease versions as prereleases. Promote one to Latest explicitly only when it is intended to be the main public download; preserve the Beta label and limitations while applicable. Do not recreate a release, move its tag or replace assets merely to change this display.
+
 ## Recover a publication-only failure
 
 If all four native jobs passed but publishing failed, fix the publication script on main. Run **Publish verified existing build** from Actions and enter the completed build run ID. It verifies the run belongs to this repository's build workflow, all four native jobs passed, artifacts are available, and its commit exactly matches the current version tag. It reuses those packages and never moves the tag. Current main version metadata must still match the tag being published. An already-public release is never overwritten.

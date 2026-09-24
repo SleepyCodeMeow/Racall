@@ -8,7 +8,7 @@
 
 ---
 
-<h3 align="center">Racall is a desktop workspace for connected notes and cited AI answers.</h3>
+<h3 align="center">Racall is an open-source alternative to NotebookLM + Obsidian.</h3>
 <p align="center">
   <a href="#features">Features</a> •
   <a href="#-get-started">Quickstart</a> •
