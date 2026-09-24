@@ -1,5 +1,11 @@
 # Changelog
 
+## Repository documentation update — no new application version
+
+- Apache-2.0 for the Python core/tools, AGPL-3.0-only for the UI/desktop components; contribution scope and legacy MIT grants documented.
+- README layout aligned with the project reference: logo, divider, description, navigation, screenshot and download table.
+- Existing 0.1 Beta tag, installers and original MIT grants are unchanged.
+
 ## 0.1.0-beta.1 — 0.1 Beta
 
 First public beta of Racall, focused on a local desktop knowledge workspace.

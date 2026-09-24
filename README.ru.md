@@ -1,32 +1,34 @@
 <p align="center">
-  <img src="assets/brand/raccoon-logo-original.png" width="110" height="110" alt="Racall raccoon mascot" />
+  <img src="assets/brand/raccoon-logo-original.png" width="84" height="84" alt="Racall raccoon mascot" />
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wordmark-dark.svg" />
-    <img src="assets/brand/wordmark-light.svg" width="236" height="110" alt="Racall" />
+    <img src="assets/brand/wordmark-light.svg" width="180" height="84" alt="Racall" />
   </picture>
 </p>
 
-<p align="center"><strong>Your notes. Your sources. Connected.</strong></p>
-<p align="center">An open-source workspace for connected notes, cited answers, and research with the AI you choose.</p>
-<p align="center"><a href="README.md">English</a> · Русский</p>
-<p align="center"><a href="docs/README.md">Документация</a> · <a href="https://github.com/SleepyCodeMeow/Racall/releases">Скачать</a> · <a href="#установка">Установка</a> · <a href="#что-работает">Возможности</a> · <a href="docs/ROADMAP.md">План развития</a> · <a href="#разработка">Разработка</a></p>
+---
 
-<p align="center"><img src="assets/brand/racall-desktop-preview.png" alt="Racall: диалог по источникам, заметки и исследования" width="1120" /></p>
+<h3 align="center">Racall — приложение для связанных заметок и ответов AI с цитатами.</h3>
+<p align="center">
+  <a href="#что-работает">Возможности</a> •
+  <a href="#-установка">Быстрый старт</a> •
+  <a href="docs/GETTING_STARTED.md#first-notebook">Блокноты</a> •
+  <a href="docs/README.md">Документация</a>
+</p>
+<p align="center"><img src="assets/brand/racall-desktop-preview.png" alt="Racall: заметки, источники и ответы с цитатами" width="680" /></p>
 
-# Racall
+## ⚡ Установка
 
-Открытое приложение для связанных заметок, ответов с цитатами и исследований с выбранным вами AI.
-Имя объединяет **raccoon** (енот) и **recall** (вспоминать).
+Скачайте **Racall 0.1 Beta** для своей системы. [English documentation](README.md).
 
-**0.1 Beta**: рабочее ядро спецификации, но не весь план Phase 0–8.
-На скриншоте — работающий интерфейс с демонстрационными материалами; цветная подложка добавлена только для оформления README.
-Рамка и системные кнопки окна зависят от ОС. Мобильное приложение пока не выпущено.
+| Платформа | Ссылка |
+| :--- | :--- |
+| **Windows x64** | [Скачать](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-win-x64.exe) |
+| **macOS Apple Silicon** | [Скачать](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.dmg) |
+| **macOS Intel** | [Скачать](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.dmg) |
+| **Linux x64 / Ubuntu (DEB)** | [Скачать](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb) |
+| **Linux x64 (AppImage)** | [Скачать](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) |
 
-## Установка
-
-- Windows x64: [скачать установщик EXE](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-win-x64.exe) (NSIS).
-- macOS: [DMG для Apple Silicon](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.dmg) / [DMG для Intel](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.dmg).
-- Linux x64: [AppImage](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) / [DEB](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb).
 - Пользователю не нужны Python, Node.js, Docker, PostgreSQL или Redis.
 - Сборки беты не подписаны. macOS notarization и Windows code signing требуют сертификатов владельца проекта.
 - Все четыре сборки прошли автоматические проверки запуска и основных сценариев. Ручная проверка полной установки/удаления на каждой ОС пока не выполнена.
@@ -157,3 +159,10 @@ MCP write tools, GitHub/YouTube, OCR, медиа, GraphRAG и cloud connectors �
 Нет заявления о выполнении полного Definition of Done из исходной спецификации.
 
 План и архитектурные решения: [docs/ROADMAP.md](docs/ROADMAP.md), [docs/adr](docs/adr).
+
+
+## Лицензии
+
+Python-ядро и инструменты — [Apache 2.0](LICENSE). Интерфейс и desktop-приложение — [AGPLv3](COPYING). Обе лицензии разрешают коммерческое использование и продажу при соблюдении их условий. Распределение по папкам и правила участия описаны в [LICENSING.md](LICENSING.md).
+
+Уже опубликованные установщики **0.1 Beta** и исходники этого тега сохраняют первоначальную MIT-лицензию. Новое оформление лицензий в текущей ветке не отменяет ранее выданные права. Номер версии, тег и опубликованные файлы не менялись.

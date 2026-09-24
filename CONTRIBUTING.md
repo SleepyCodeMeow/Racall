@@ -2,6 +2,12 @@
 
 Bug reports, focused fixes and translations are welcome. Use [Issues](https://github.com/SleepyCodeMeow/Racall/issues/new/choose) to discuss larger changes first.
 
+## Contribution licensing
+
+Contributors keep copyright in their own work. By intentionally submitting a contribution for inclusion, you license that contribution under the target component's existing terms: Apache-2.0 for the Python service and tools; AGPL-3.0-only for the UI, desktop shell, shared UI resources and installer. See [LICENSING.md](LICENSING.md) for exact scope and legacy MIT rights.
+
+Submit only work you have permission to license on those terms. Retain third-party notices and identify any differently licensed material in your pull request. No copyright assignment or blanket permission to relicense your contribution is required. Both component licenses permit commercial use under their respective conditions.
+
 ## Local development
 
 Use Node.js 24, Python 3.12 and uv. Clone the repository, then run `npm ci` and `uv sync --frozen`, or use `scripts/setup.ps1` / `scripts/setup.sh`. Run `npm run dev` to start the frontend and desktop app. Use an isolated `OPENNOTEBOOK_DATA_DIR` for experiments involving storage.

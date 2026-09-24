@@ -1,37 +1,35 @@
 <p align="center">
-  <img src="assets/brand/raccoon-logo-original.png" width="96" height="96" alt="Racall raccoon mascot" />
+  <img src="assets/brand/raccoon-logo-original.png" width="84" height="84" alt="Racall raccoon mascot" />
   <picture>
     <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wordmark-dark.svg" />
-    <img src="assets/brand/wordmark-light.svg" width="206" height="96" alt="Racall" />
+    <img src="assets/brand/wordmark-light.svg" width="180" height="84" alt="Racall" />
   </picture>
 </p>
-<h3 align="center">Your notes. Your sources. Connected.</h3>
-<p align="center">An open-source desktop workspace for connected notes, cited answers,<br />and research with the AI you choose.</p>
+
+---
+
+<h3 align="center">Racall is a desktop workspace for connected notes and cited AI answers.</h3>
 <p align="center">
-  <a href="#get-started">Download</a> ·
-  <a href="#features">Features</a> ·
-  <a href="docs/README.md">Documentation</a> ·
-  <a href="docs/ROADMAP.md">Roadmap</a> ·
-  <a href="https://github.com/SleepyCodeMeow/Racall/issues">Feedback</a>
+  <a href="#features">Features</a> •
+  <a href="#-get-started">Quickstart</a> •
+  <a href="docs/GETTING_STARTED.md#first-notebook">Notebooks</a> •
+  <a href="docs/README.md">Documentation</a>
 </p>
-<p align="center">
-  <a href="https://github.com/SleepyCodeMeow/Racall/releases"><img src="https://img.shields.io/badge/version-0.1_Beta-f58220" alt="0.1 Beta" /></a>
-  <a href="https://github.com/SleepyCodeMeow/Racall/actions/workflows/build.yml"><img src="https://github.com/SleepyCodeMeow/Racall/actions/workflows/build.yml/badge.svg?branch=main" alt="Main branch desktop builds" /></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-71717a" alt="MIT license" /></a>
-</p>
-<p align="center">English · <a href="README.ru.md">Русский</a></p>
-<p align="center"><img src="assets/brand/racall-desktop-preview.png" alt="Racall desktop: notebooks, cited answers and connected notes" width="1120" /></p>
+<p align="center"><img src="assets/brand/racall-desktop-preview.png" alt="Racall desktop: notebooks, cited answers and connected notes" width="680" /></p>
 
-## Get started
+## ⚡ Get started
 
-**Racall 0.1 Beta** is the first desktop release. Download installers from [GitHub Releases](https://github.com/SleepyCodeMeow/Racall/releases). No Python, Node.js or Docker installation is needed to use the app.
+Download **Racall 0.1 Beta** for your operating system:
 
-| Platform | Package |
+| Platform | Link |
 | :--- | :--- |
-| Windows x64 | [Download EXE](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-win-x64.exe) · English / Русский |
-| macOS Apple Silicon | [DMG](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.dmg) / [ZIP](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.zip) |
-| macOS Intel | [DMG](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.dmg) / [ZIP](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.zip) |
-| Linux x64 | [AppImage](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) / [DEB](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb) |
+| **Windows x64** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-win-x64.exe) |
+| **macOS Apple Silicon** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.dmg) |
+| **macOS Intel** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.dmg) |
+| **Linux x64 / Ubuntu (DEB)** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb) |
+| **Linux x64 (AppImage)** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) |
+
+More packages and checksums: [GitHub Releases](https://github.com/SleepyCodeMeow/Racall/releases). No Python, Node.js or Docker installation is required. [Русская документация](README.ru.md).
 
 All four native build and packaged smoke-test jobs passed for this release. See the [release notes](docs/releases/0.1.0-beta.1.md) for verification scope. Beta packages are unsigned; macOS packages are not notarized. Mobile apps are planned for a later release.
 
@@ -115,4 +113,10 @@ Python binaries are built on each target OS and architecture. [Contributing](CON
 
 Everything lives on GitHub for now: [downloads](https://github.com/SleepyCodeMeow/Racall/releases), [documentation](docs/README.md), [bugs and ideas](https://github.com/SleepyCodeMeow/Racall/issues), and [the roadmap](docs/ROADMAP.md). Read [CHANGELOG.md](CHANGELOG.md) for each release.
 
-Racall is independently developed and is not affiliated with NotebookLM, Obsidian or Unsloth. Released under the [MIT license](LICENSE).
+## License
+
+Python core and tools: [Apache 2.0](LICENSE). Interface and desktop application: [AGPLv3](COPYING). Both allow commercial use and sale subject to their terms. [Component boundaries and contributor rights](LICENSING.md).
+
+The already-published **0.1 Beta** downloads remain under their original MIT terms. This update changes the current branch's licensing documents without changing the application version or replacing existing release files.
+
+Racall is independently developed and is not affiliated with NotebookLM, Obsidian or Unsloth.

@@ -5,7 +5,7 @@
   "private": true,
   "description": "An open-source workspace for connected notes, cited answers, and research with the AI you choose.",
   "author": "Racall contributors",
-  "license": "MIT",
+  "license": "AGPL-3.0-only",
   "main": "apps/desktop/main.cjs",
   "scripts": {
     "dev": "node scripts/dev.mjs",
@@ -60,6 +60,26 @@
       {
         "from": "build/backend/open-notebook-api",
         "to": "backend"
+      },
+      {
+        "from": "LICENSE",
+        "to": "legal/LICENSE"
+      },
+      {
+        "from": "COPYING",
+        "to": "legal/COPYING"
+      },
+      {
+        "from": "NOTICE",
+        "to": "legal/NOTICE"
+      },
+      {
+        "from": "LICENSING.md",
+        "to": "legal/LICENSING.md"
+      },
+      {
+        "from": "docs/licensing/MIT-legacy.txt",
+        "to": "legal/docs/licensing/MIT-legacy.txt"
       }
     ],
     "artifactName": "Racall-${version}-${os}-${arch}.${ext}",

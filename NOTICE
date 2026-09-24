@@ -1,0 +1,12 @@
+Racall
+Copyright (c) 2026 SleepyCodeMeow and Racall contributors.
+Project: https://github.com/SleepyCodeMeow/Racall
+
+Apache-2.0 applies by default. The application UI, desktop shell, shared UI
+resources and installer are AGPL-3.0-only. See LICENSING.md for directory scope.
+Each contributor retains copyright in their contributions.
+
+The original v0.1.0-beta.1 release was published under MIT. Its grants are not
+revoked or replaced. Preserve docs/licensing/MIT-legacy.txt when distributing
+material from that release. Separately licensed dependencies retain their
+own licenses and notices. No patent registration is claimed by this notice.
