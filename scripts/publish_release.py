@@ -8,13 +8,13 @@ from pathlib import Path
 root = Path(__file__).resolve().parents[1]
 version = json.loads((root / "package.json").read_text())["version"]
 tag = "v" + version
-assert os.environ["GITHUB_REF_NAME"] == tag
+assert os.environ.get("RACALL_RELEASE_TAG", os.environ["GITHUB_REF_NAME"]) == tag
 repo = os.environ["GITHUB_REPOSITORY"]
 expected = [
     f"Racall-{version}-win-x64.exe",
     f"Racall-{version}-mac-arm64.dmg", f"Racall-{version}-mac-arm64.zip",
     f"Racall-{version}-mac-x64.dmg", f"Racall-{version}-mac-x64.zip",
-    f"Racall-{version}-linux-x64.AppImage", f"Racall-{version}-linux-x64.deb",
+    f"Racall-{version}-linux-x86_64.AppImage", f"Racall-{version}-linux-amd64.deb",
 ]
 files = [root / "release" / name for name in expected]
 for file in files:

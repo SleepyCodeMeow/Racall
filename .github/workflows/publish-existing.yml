@@ -1,0 +1,40 @@
+name: Publish verified existing build
+on:
+  workflow_dispatch:
+    inputs:
+      build_run_id:
+        description: Completed Test and package desktop run matching the current version tag
+        required: true
+        type: string
+permissions:
+  contents: read
+  actions: read
+concurrency:
+  group: publish-existing
+  cancel-in-progress: false
+jobs:
+  publish:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      actions: read
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify tag, all native checks and available artifacts
+        run: python3 scripts/verify_release_build.py
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RACALL_BUILD_RUN: ${{ inputs.build_run_id }}
+      - uses: actions/download-artifact@v4
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.build_run_id }}
+          pattern: Racall-*
+          path: release
+          merge-multiple: true
+      - name: Publish complete release with checksums
+        run: python3 scripts/publish_release.py
+        env:
+          GH_TOKEN: ${{ github.token }}

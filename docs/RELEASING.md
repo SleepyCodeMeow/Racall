@@ -19,3 +19,9 @@ After all platforms pass, the workflow downloads the seven installers/archives, 
 Download and test the actual installer after publication. CI launches unpacked packaged apps, which does not cover every OS installer flow or permissions dialog. This beta has no automatic updater; users install later releases manually. Existing data and language preferences must survive upgrades.
 
 GitHub is the project's home: README, docs, Issues, Releases and Actions. No website or website secret is required. Standard `GITHUB_TOKEN` with `contents: write` in the publication job is sufficient. Signing/notarization certificates are optional future additions; no fabricated signing settings belong in the workflow.
+
+## Recover a publication-only failure
+
+If all four native jobs passed but publishing failed, fix the publication script on main. Run **Publish verified existing build** from Actions and enter the completed build run ID. It verifies the run belongs to this repository's build workflow, all four native jobs passed, artifacts are available, and its commit exactly matches the current version tag. It reuses those packages and never moves the tag. Current main version metadata must still match the tag being published. An already-public release is never overwritten.
+
+Linux filenames use packaging-native architecture names: `linux-x86_64.AppImage` and `linux-amd64.deb` for x64 builds.
