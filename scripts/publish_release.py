@@ -23,7 +23,10 @@ sums = root / "release/SHA256SUMS.txt"
 lines = []
 for file in files:
     with file.open("rb") as stream:
-        lines.append(f"{hashlib.file_digest(stream, 'sha256').hexdigest()}  {file.name}")
+        digest = hashlib.sha256()
+        for block in iter(lambda: stream.read(1024 * 1024), b""):
+            digest.update(block)
+        lines.append(f"{digest.hexdigest()}  {file.name}")
 sums.write_text("\n".join(lines) + "\n")
 notes = root / f"docs/releases/{version}.md"
 assert notes.is_file()

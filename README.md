@@ -16,7 +16,7 @@
 </p>
 <p align="center">
   <a href="https://github.com/SleepyCodeMeow/Racall/releases"><img src="https://img.shields.io/badge/version-0.1_Beta-f58220" alt="0.1 Beta" /></a>
-  <a href="https://github.com/SleepyCodeMeow/Racall/actions/workflows/build.yml"><img src="https://github.com/SleepyCodeMeow/Racall/actions/workflows/build.yml/badge.svg" alt="Desktop builds" /></a>
+  <a href="https://github.com/SleepyCodeMeow/Racall/actions/workflows/build.yml"><img src="https://github.com/SleepyCodeMeow/Racall/actions/workflows/build.yml/badge.svg?branch=main" alt="Main branch desktop builds" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-71717a" alt="MIT license" /></a>
 </p>
 <p align="center">English · <a href="README.ru.md">Русский</a></p>
