@@ -24,12 +24,12 @@
 
 ## Установка
 
-- Windows x64: `release/Racall-0.1.0-beta.1-win-x64.exe` (NSIS).
-- macOS Apple Silicon / Intel: отдельные `.dmg` и `.zip` собирает CI на macOS.
-- Linux x64: `.AppImage` и `.deb` собирает CI на Ubuntu.
+- Windows x64: [скачать установщик EXE](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-win-x64.exe) (NSIS).
+- macOS: [DMG для Apple Silicon](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.dmg) / [DMG для Intel](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.dmg).
+- Linux x64: [AppImage](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) / [DEB](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb).
 - Пользователю не нужны Python, Node.js, Docker, PostgreSQL или Redis.
 - Сборки беты не подписаны. macOS notarization и Windows code signing требуют сертификатов владельца проекта.
-- macOS/Linux нельзя считать проверенными, пока матрица CI не отработает на этих ОС.
+- Все четыре сборки прошли автоматические проверки запуска и основных сценариев. Ручная проверка полной установки/удаления на каждой ОС пока не выполнена.
 
 Откройте приложение → создайте блокнот → «Источники» → импортируйте файл.
 Панель источников можно свернуть; нажатие на цитату автоматически открывает нужный фрагмент.

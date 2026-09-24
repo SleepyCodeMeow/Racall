@@ -28,12 +28,12 @@
 
 | Platform | Package |
 | :--- | :--- |
-| Windows x64 | `.exe` installer, English / Русский |
-| macOS Apple Silicon | `.dmg` / `.zip`, arm64 |
-| macOS Intel | `.dmg` / `.zip`, x64 |
-| Linux x64 | `.AppImage` / `.deb` |
+| Windows x64 | [Download EXE](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-win-x64.exe) · English / Русский |
+| macOS Apple Silicon | [DMG](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.dmg) / [ZIP](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.zip) |
+| macOS Intel | [DMG](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.dmg) / [ZIP](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.zip) |
+| Linux x64 | [AppImage](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) / [DEB](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb) |
 
-Release packages are published only after the build matrix passes. See the release notes for actual available downloads and verification status. Beta packages are unsigned; macOS packages are not notarized. Mobile apps are planned for a later release.
+All four native build and packaged smoke-test jobs passed for this release. See the [release notes](docs/releases/0.1.0-beta.1.md) for verification scope. Beta packages are unsigned; macOS packages are not notarized. Mobile apps are planned for a later release.
 
 1. Open Racall and create a notebook.
 2. Open **Sources** and import a document.

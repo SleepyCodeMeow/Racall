@@ -81,3 +81,10 @@ Preview подходит для локального знакомства и о�
 Local rebuilt Windows beta SHA-256: `23f3b79f5c287f18f2ae4f6cc087d20e38a403a7dbe64b83c3384d87a39ba485`. CI artifacts are built separately; use the release-attached checksums for downloaded packages.
 
 All four native CI jobs passed on commit `27330bd`: Windows x64, Linux x64, macOS arm64 and macOS x64, including packaged app, language restart and frozen PDF tests. Evidence: https://github.com/SleepyCodeMeow/Racall/actions/runs/36022117952.
+
+
+### Published prerelease
+
+`v0.1.0-beta.1` is public: https://github.com/SleepyCodeMeow/Racall/releases/tag/v0.1.0-beta.1.
+All four native jobs passed again in build run `36023413535`. Publication initially stopped on Linux architecture filename conventions, then on Ubuntu's older Python lacking `hashlib.file_digest`; both publication-only issues were corrected on main. Recovery workflow `36024957384` verifies the immutable tag commit and all four passing native jobs before reusing their artifacts. No application binaries were substituted or retagged.
+Seven packages plus `SHA256SUMS.txt` are attached. The downloaded checksum file and all seven entries match GitHub's server-side asset digests. Windows release artifact SHA-256: `5b78d634948e5f2e87fbb238457186c25a66cfa3c621bc6b597e14ec10df06c1`.
