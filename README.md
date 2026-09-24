@@ -29,7 +29,7 @@ Download **Racall 0.1 Beta** for your operating system:
 | **Linux x64 / Ubuntu (DEB)** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb) |
 | **Linux x64 (AppImage)** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) |
 
-More packages and checksums: [GitHub Releases](https://github.com/SleepyCodeMeow/Racall/releases). No Python, Node.js or Docker installation is required. [Русская документация](README.ru.md).
+More packages and checksums: [GitHub Releases](https://github.com/SleepyCodeMeow/Racall/releases). No Python, Node.js or Docker installation is required. [Russian documentation](README.ru.md).
 
 All four native build and packaged smoke-test jobs passed for this release. See the [release notes](docs/releases/0.1.0-beta.1.md) for verification scope. Beta packages are unsigned; macOS packages are not notarized. Mobile apps are planned for a later release.
 
