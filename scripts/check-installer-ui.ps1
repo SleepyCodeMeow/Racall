@@ -8,6 +8,7 @@ if (!$Compiler) {
         Select-Object -First 1 -ExpandProperty FullName
 }
 if (!$Compiler) { throw 'Build the Windows package first to populate the NSIS compiler cache.' }
+$releaseLabel = (Get-Content -LiteralPath "$repoRoot/apps/shared/release.json" -Raw | ConvertFrom-Json).label
 $output = Join-Path $repoRoot 'test-results/installer-ui'
 New-Item -ItemType Directory -Force -Path $output | Out-Null
 & $Compiler /V2 "/DPROJECT_DIR=$repoRoot" "$repoRoot/installer/welcome-ui.nsi"
@@ -94,7 +95,7 @@ try {
     $install = [InstallerUI]::GetDlgItem($window, 1)
     Assert-UI ((Count-Languages) -eq 2) 'Initial language count'
     Assert-UI ([InstallerUI]::Send($list,0x147,0,0).ToInt32() -eq 0) 'English must be selected'
-    Assert-UI ([InstallerUI]::Text($window) -eq 'Racall Setup') 'English must be the default UI'
+    Assert-UI ([InstallerUI]::Text($window) -eq "Setup — Racall version $releaseLabel") 'English must be the default UI'
     Assert-UI ([InstallerUI]::IsWindowEnabled($install)) 'Install must initially be enabled'
     Assert-UI (!($controls | Where-Object { [InstallerUI]::Class($_) -in @('Edit','ListBox') })) 'No separate search or list'
     $texts = [InstallerUI]::Children($window) | ForEach-Object { [InstallerUI]::Text($_) }
@@ -105,14 +106,14 @@ try {
     [InstallerUI]::Send($list,0x14F,0,0) | Out-Null
     [InstallerUI]::Select($list,1)
     Assert-UI ([InstallerUI]::Send($list,0x147,0,0).ToInt32() -eq 1) 'Russian must be selected'
-    Assert-UI ([InstallerUI]::Text($window) -eq 'Установка Racall') 'Russian must apply immediately'
+    Assert-UI ([InstallerUI]::Text($window) -eq "Установка — Racall, версия $releaseLabel") 'Russian must apply immediately'
     Assert-UI ([InstallerUI]::Text($install) -match 'Установить') 'Translated install button'
     Assert-UI ([InstallerUI]::IsWindowEnabled($install)) 'Install remains enabled'
     $texts = [InstallerUI]::Children($window) | ForEach-Object { [InstallerUI]::Text($_) }
     Assert-UI ($texts -contains 'Нажмите «Установить», чтобы продолжить установку.') 'Russian continuation instruction'
     Capture-Window $window "$output/russian.png"
     [InstallerUI]::Select($list,0)
-    Assert-UI ([InstallerUI]::Text($window) -eq 'Racall Setup') 'Switching back to English'
+    Assert-UI ([InstallerUI]::Text($window) -eq "Setup — Racall version $releaseLabel") 'Switching back to English'
     [InstallerUI]::Select($list,1)
     [InstallerUI]::Send($install,0xF5,0,0) | Out-Null
     Assert-UI ($fixture.WaitForExit(5000)) 'Helper must return after Install'

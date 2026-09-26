@@ -13,6 +13,11 @@ def quote(value):
 def generate():
     entries = json.loads((ROOT / 'installer/catalog.json').read_text(encoding='utf-8'))['languages']
     package = json.loads((ROOT / 'package.json').read_text(encoding='utf-8'))
+    release = json.loads((ROOT / 'apps/shared/release.json').read_text(encoding='utf-8'))
+    assert release['version'] == package['version'], 'Release/package version mismatch'
+    for entry in entries:
+        entry['text'] = {key: value.replace('{version}', release['label'])
+                         for key, value in entry['text'].items()}
     assert entries[0]['locale'] == 'en' and entries[0]['windowsId'] == 1033
     for key in ('locale', 'windowsId', 'name'):
         assert len({entry[key] for entry in entries}) == len(entries), key

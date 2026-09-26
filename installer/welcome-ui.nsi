@@ -4,7 +4,8 @@ RequestExecutionLevel user
 Name "Racall"
 OutFile "${PROJECT_DIR}\build\racall-installer-welcome.exe"
 InstallDir "$LOCALAPPDATA\Programs\Racall"
-Icon "${PROJECT_DIR}\assets\icon.ico"
+; MUI otherwise replaces a plain Icon directive with its stock installer icon.
+!define MUI_ICON "${PROJECT_DIR}\assets\icon.ico"
 !include MUI2.nsh
 !include FileFunc.nsh
 !include "${PROJECT_DIR}\installer\appearance.nsh"
