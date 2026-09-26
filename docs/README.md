@@ -20,4 +20,4 @@ Racall is an open-source alternative to NotebookLM + Obsidian, combining AI rese
 Some architecture and implementation notes are currently in Russian. The app supports English and Russian. Documentation, issue tracking and downloads are hosted in this repository; no external project website is required.
 
 - [0.2 release checklist](RELEASE_02_CHECKLIST.md)
-- [Real-model evaluation](MODEL_EVALUATION.md)
+- [Real-model evaluation](MODEL_EVALUATION.md) · [Russian instructions](MODEL_EVALUATION.ru.md)

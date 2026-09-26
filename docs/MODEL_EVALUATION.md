@@ -1,6 +1,6 @@
 # Real-model acceptance check for 0.2
 
-[Release checklist](RELEASE_02_CHECKLIST.md) · [Synthetic fixture](../evals/release02)
+[Russian instructions](MODEL_EVALUATION.ru.md) · [Release checklist](RELEASE_02_CHECKLIST.md) · [Synthetic fixture](../evals/release02)
 
 **Status: awaiting the owner's model test.** The owner chose to run this later. No real-model success is claimed from deterministic test stubs.
 

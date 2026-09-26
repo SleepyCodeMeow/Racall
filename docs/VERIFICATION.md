@@ -119,3 +119,15 @@ The published 0.1 tag and binaries are unchanged. See [0.2 development notes](re
 - A later backend regression run exposed a transient CRT EACCES file read without a `winerror` code. The read/write retry predicate now recognizes that Windows-only form, with bounded retries; document creation also uses the reader's store lock. A focused regression covers it. Permanent permission failures still propagate.
 - The model evaluation fixture validates offline: four synthetic sources, ten EN/RU questions. Real-provider execution is deferred to the owner by explicit choice.
 - Publication is on hold. No 0.2 release tag or GitHub Release has been created. See [release checklist](RELEASE_02_CHECKLIST.md).
+
+
+### Final 0.2 candidate code: `7a73788`
+
+- 44 backend regression tests passed; Ruff, TypeScript, release metadata checks and 270-key EN/RU checks passed. Production web and frozen backend builds passed.
+- An interrupted staged original is rewritten atomically before becoming active; its SHA-256 must match the declared source version. A regression test covers a partial pre-existing staged file.
+- The final local Windows package passed the full suite again: `desktop-1790430514014`, `languages-1790430548183`, `persistence-1790430580763`, `maintenance-1790430621341`. Frozen backend PDF provenance, original download and authentication checks passed.
+- The owner-facing model evaluation guide now has [Russian instructions](MODEL_EVALUATION.ru.md), with ten questions, expected answers and the old/new source-version check. No real-model requests were made.
+
+- All four native jobs passed on code commit `7a73788d29ce15bcaf7834ed732ffca625050746`: [run 36246042420](https://github.com/SleepyCodeMeow/Racall/actions/runs/36246042420). Each ran backend/static checks, production builds, all packaged smoke scenarios and the frozen PDF check.
+- Installer checks passed on disposable native hosts: Windows NSIS install/launch/uninstall with a preserved knowledge sentinel; macOS arm64 and x64 DMG mount/copy/launch; Linux Debian install/launch/remove with preserved data, plus extracted AppImage launch. FUSE mounting, interactive OS security prompts and signing/notarization are not covered.
+- The publication job was skipped. The candidate remains on hold; the 0.1 release/tag is unchanged. Owner real-model acceptance and hands-on review remain open by explicit choice. Later documentation-only commits do not change the code validated above.

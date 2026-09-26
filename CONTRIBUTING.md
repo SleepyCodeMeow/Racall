@@ -32,6 +32,7 @@ npm run typecheck
 npm run test:desktop
 npm run test:languages
 npm run test:persistence
+npm run test:maintenance
 ```
 
 On headless Linux, run the desktop test under `xvfb-run -a`. Build installers on their target OS with `npm run dist`. The CI matrix covers Windows x64, macOS arm64/x64 and Linux x64.
