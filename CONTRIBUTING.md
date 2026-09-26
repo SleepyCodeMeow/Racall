@@ -8,6 +8,10 @@ Contributors keep copyright in their own work. By intentionally submitting a con
 
 Submit only work you have permission to license on those terms. Retain third-party notices and identify any differently licensed material in your pull request. No copyright assignment or blanket permission to relicense your contribution is required. Both component licenses permit commercial use under their respective conditions.
 
+## Reference-driven feature work
+
+For source ingestion, chat, Studio, presentation or audio changes, consult [Reference projects](docs/REFERENCE_PROJECTS.md). Record the relevant upstream commit and implementation paths, explain the adaptation to Racall, and define acceptance checks. Distinguish source inspection from runtime verification. If reusing code, record provenance and preserve applicable license notices; do not assume every directory or model has the repository root license.
+
 ## Local development
 
 Use Node.js 24, Python 3.12 and uv. Clone the repository, then run `npm ci` and `uv sync --frozen`, or use `scripts/setup.ps1` / `scripts/setup.sh`. Run `npm run dev` to start the frontend and desktop app. Use an isolated `OPENNOTEBOOK_DATA_DIR` for experiments involving storage.

@@ -12,6 +12,8 @@ Planned Studio outputs include reports, study guides, flashcards, quizzes, mind 
 
 Use the [official product help](https://support.google.com/gemininotebook/?hl=en) and [Google's March 2026 feature update](https://workspaceupdates.googleblog.com/2026/03/new-ways-to-customize-and-interact-with-your-content-in-NotebookLM.html) as references for user workflows, not as promises of identical implementation. Targets below are provisional release groupings; split or reorder them based on testing and feedback.
 
+Implementation references and acceptance criteria are maintained in [Reference projects](REFERENCE_PROJECTS.md). Review the relevant upstream code before each major workflow; verify the result in Racall rather than treating feature lists as tested capabilities.
+
 ## 0.1 Beta — Desktop foundation
 
 Local notebooks and portable Markdown; PDF/MD/TXT/DOCX/URL import; search and cited answers; limited research with a critic; read-only MCP; English/Russian UI; Windows/macOS/Linux packaging. See [release notes](releases/0.1.0-beta.1.md) for testing status and limits.
