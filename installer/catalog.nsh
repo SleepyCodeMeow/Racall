@@ -10,6 +10,7 @@ LangString Racall_setup 1033 "Racall Setup"
 LangString Racall_install 1033 "Install"
 LangString Racall_cancel 1033 "Cancel"
 LangString Racall_seedError 1033 "Could not save the installation language. Check access to the app folder."
+LangString Racall_continue 1033 "Click Install to continue with the installation."
 LangString Racall_intro 1049 "Источники, связанные заметки и исследования с ИИ в одном месте."
 LangString Racall_language 1049 "Язык"
 LangString Racall_spaceError 1049 "На выбранном диске недостаточно свободного места."
@@ -17,6 +18,7 @@ LangString Racall_setup 1049 "Установка Racall"
 LangString Racall_install 1049 "Установить"
 LangString Racall_cancel 1049 "Отмена"
 LangString Racall_seedError 1049 "Не удалось сохранить язык установки. Проверьте доступ к папке приложения."
+LangString Racall_continue 1049 "Нажмите «Установить», чтобы продолжить установку."
 !macro RacallLoadLanguages
   !insertmacro MUI_LANGUAGE "English"
   !insertmacro MUI_LANGUAGE "Russian"
@@ -29,6 +31,7 @@ LangString Racall_seedError 1049 "Не удалось сохранить язы�
   Var RacallText_install
   Var RacallText_cancel
   Var RacallText_seedError
+  Var RacallText_continue
 !macroend
 !macro RacallLoadText
   ${If} $LANGUAGE == 1033
@@ -39,6 +42,7 @@ LangString Racall_seedError 1049 "Не удалось сохранить язы�
     StrCpy $RacallText_install "Install"
     StrCpy $RacallText_cancel "Cancel"
     StrCpy $RacallText_seedError "Could not save the installation language. Check access to the app folder."
+    StrCpy $RacallText_continue "Click Install to continue with the installation."
   ${EndIf}
   ${If} $LANGUAGE == 1049
     StrCpy $RacallText_intro "Источники, связанные заметки и исследования с ИИ в одном месте."
@@ -48,5 +52,6 @@ LangString Racall_seedError 1049 "Не удалось сохранить язы�
     StrCpy $RacallText_install "Установить"
     StrCpy $RacallText_cancel "Отмена"
     StrCpy $RacallText_seedError "Не удалось сохранить язык установки. Проверьте доступ к папке приложения."
+    StrCpy $RacallText_continue "Нажмите «Установить», чтобы продолжить установку."
   ${EndIf}
 !macroend

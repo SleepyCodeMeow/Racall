@@ -1,6 +1,6 @@
 # Windows installer
 
-Racall uses a light first screen with a compact language dropdown (English by default, Russian available), a short introduction and the existing mascot at the upper right. The window is shorter, with only Install and Cancel in its footer. There is no separate search, folder picker or disk-space summary on this screen; the standard current-user location is selected automatically. A normal current-user installation proceeds directly to installation progress, then the standard finish screen. Existing machine-wide installations retain their scope/elevation handling.
+Racall uses a light first screen with a compact language dropdown (English by default, Russian available), a short introduction and the existing mascot at the upper right. The first-screen layout follows the supplied Ollama reference: 838 × 636 at 96 DPI, a white body, a product title at the upper left, a logo at the upper right and a gray footer with Install and Cancel. Introductory text, the continuation instruction and the language row are spaced equally. Native window chrome still follows Windows. There is no separate search, folder picker or disk-space summary on this screen; the standard current-user location is selected automatically. A normal current-user installation proceeds directly to installation progress, then the standard finish screen. Existing machine-wide installations retain their scope/elevation handling.
 
 The first screen runs as a small bundled NSIS helper during the parent installer's initialization. This is necessary because NSIS fixes its language table after `.onInit`. Selecting a language updates the helper's text immediately; clicking Install returns the language and directory through an INI file in the parent's temporary plugin directory. The parent then initializes its complete native translation and starts installation. Cancel exits before installation. No additional executable must be downloaded.
 
@@ -11,7 +11,7 @@ A disk-space check runs when Install is clicked, using the parent section size a
 - `catalog.json`: language names, NSIS identifiers and first-screen translations.
 - `catalog.nsh`: generated catalog; do not edit directly.
 - `welcome.nsh`: native language dropdown, immediate translation and the disk-space guard.
-- `layout.nsh`: shorter first-screen window with DPI-scaled layout and native footer controls.
+- `layout.nsh`: reference first-screen geometry with DPI scaling, equal row spacing and native footer controls.
 - `welcome-ui.nsi`: builds the small first-screen executable (no installation commands).
 - `selection.nsh`: compiles/bundles the helper, reads its selection before NSIS translation initialization and skips the redundant current-user scope page.
 - `languages.nsh`: command-line locale and first-run seed written beside the application.

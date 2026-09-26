@@ -5,7 +5,7 @@
 - Notebook rename, recoverable trash/restore and protection during active operations.
 - Source replacements, website refresh, historical originals/citations and failed-update recovery.
 - Isolated file/web parsers with time and memory supervision.
-- Compact light Windows first screen with an English/Russian dropdown, automatic installation location and a disk-space check when installing.
+- Minimal light Windows first screen following the supplied installer reference, with evenly spaced introduction/instruction/language rows, an English/Russian dropdown and automatic installation location.
 - Native installer CI checks, an opt-in model evaluation kit and an explicit publication hold.
 
 - Persistent notebook chats with saved citation snapshots, rename/delete and interrupted-request recovery.

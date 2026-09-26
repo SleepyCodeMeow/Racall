@@ -97,6 +97,8 @@ try {
     Assert-UI ([InstallerUI]::Text($window) -eq 'Racall Setup') 'English must be the default UI'
     Assert-UI ([InstallerUI]::IsWindowEnabled($install)) 'Install must initially be enabled'
     Assert-UI (!($controls | Where-Object { [InstallerUI]::Class($_) -in @('Edit','ListBox') })) 'No separate search or list'
+    $texts = [InstallerUI]::Children($window) | ForEach-Object { [InstallerUI]::Text($_) }
+    Assert-UI ($texts -contains 'Click Install to continue with the installation.') 'English continuation instruction'
     Capture-Window $window "$output/english.png"
     [InstallerUI]::Send($list,0x14F,1,0) | Out-Null
     Assert-UI ([InstallerUI]::Send($list,0x157,0,0).ToInt32() -eq 1) 'Dropdown must open'
@@ -106,6 +108,8 @@ try {
     Assert-UI ([InstallerUI]::Text($window) -eq 'Установка Racall') 'Russian must apply immediately'
     Assert-UI ([InstallerUI]::Text($install) -match 'Установить') 'Translated install button'
     Assert-UI ([InstallerUI]::IsWindowEnabled($install)) 'Install remains enabled'
+    $texts = [InstallerUI]::Children($window) | ForEach-Object { [InstallerUI]::Text($_) }
+    Assert-UI ($texts -contains 'Нажмите «Установить», чтобы продолжить установку.') 'Russian continuation instruction'
     Capture-Window $window "$output/russian.png"
     [InstallerUI]::Select($list,0)
     Assert-UI ([InstallerUI]::Text($window) -eq 'Racall Setup') 'Switching back to English'

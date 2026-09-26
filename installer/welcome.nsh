@@ -17,6 +17,12 @@
   !insertmacro MUI_PAGE_INIT
   Page custom RacallWelcome RacallWelcomeLeave
   Var RacallPage
+  Var RacallDpi
+  Var RacallTitle
+  Var RacallLogo
+  Var RacallLogoImage
+  Var RacallContinue
+  Var RacallDivider
   Var RacallIntro
   Var RacallLabel
   Var RacallLanguages
@@ -28,37 +34,49 @@
     ${If} $RacallPage == error
       Abort
     ${EndIf}
-    SetCtlColors $HWNDPARENT 242424 FFFFFF
-    SetCtlColors $RacallPage 242424 FFFFFF
+    SetCtlColors $HWNDPARENT 000000 F0F0F0
+    SetCtlColors $RacallPage 000000 FFFFFF
     GetDlgItem $RacallNext $HWNDPARENT 1
     GetDlgItem $0 $HWNDPARENT 3
     ShowWindow $0 ${SW_HIDE}
 
-    ${NSD_CreateLabel} 0 0 100% 25u ""
+    ${NSD_CreateLabel} 0 0 100% 24 "Racall"
+    Pop $RacallTitle
+    SetCtlColors $RacallTitle 000000 FFFFFF
+    CreateFont $0 "Segoe UI" 11 700
+    SendMessage $RacallTitle ${WM_SETFONT} $0 1
+    ${NSD_CreateBitmap} 0 0 150 57 ""
+    Pop $RacallLogo
+    ${NSD_CreateLabel} 0 0 100% 22 ""
     Pop $RacallIntro
-    SetCtlColors $RacallIntro 242424 FFFFFF
-    ${NSD_CreateLabel} 0 38u 55u 12u ""
+    SetCtlColors $RacallIntro 000000 FFFFFF
+    ${NSD_CreateLabel} 0 0 100% 22 ""
+    Pop $RacallContinue
+    SetCtlColors $RacallContinue 000000 FFFFFF
+    ${NSD_CreateLabel} 0 0 85 22 ""
     Pop $RacallLabel
-    SetCtlColors $RacallLabel 242424 FFFFFF
-    ${NSD_CreateDropList} 60u 34u 145u 65u ""
+    SetCtlColors $RacallLabel 000000 FFFFFF
+    ${NSD_CreateDropList} 0 0 180 100 ""
     Pop $RacallLanguages
+    ${NSD_CreateLabel} 0 0 100% 1 ""
+    Pop $RacallDivider
+    SetCtlColors $RacallDivider A0A0A0 A0A0A0
     !insertmacro RacallEachLanguage RacallAddLanguage
     ${NSD_OnChange} $RacallLanguages RacallLanguageChanged
     Call RacallRefreshText
-    GetDlgItem $0 $HWNDPARENT 1256
-    ShowWindow $0 ${SW_HIDE}
-    GetDlgItem $0 $HWNDPARENT 1028
-    ShowWindow $0 ${SW_HIDE}
-    !insertmacro RacallCompactLayout
-    ${NSD_SetFocus} $RacallLanguages
+    !insertmacro RacallReferenceLayout
+    InitPluginsDir
+    File /oname=$PLUGINSDIR\header.bmp "${PROJECT_DIR}\installer\assets\header.bmp"
+    ${NSD_SetStretchedImage} $RacallLogo "$PLUGINSDIR\header.bmp" $RacallLogoImage
+    ${NSD_SetFocus} $RacallNext
     nsDialogs::Show
   FunctionEnd
 
   Function RacallRefreshText
     !insertmacro RacallLoadText
-    !insertmacro MUI_HEADER_TEXT "Racall" ""
     SendMessage $HWNDPARENT ${WM_SETTEXT} 0 'STR:$RacallText_setup'
     ${NSD_SetText} $RacallIntro "$RacallText_intro"
+    ${NSD_SetText} $RacallContinue "$RacallText_continue"
     ${NSD_SetText} $RacallLabel "$RacallText_language"
     ${NSD_SetText} $RacallNext "$RacallText_install"
     GetDlgItem $0 $HWNDPARENT 2

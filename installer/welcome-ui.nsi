@@ -18,6 +18,7 @@ Var RacallResult
 !insertmacro RacallWelcomePage
 !insertmacro RacallLoadLanguages
 !insertmacro customHeader
+SetFont "Segoe UI" 11
 !macro RacallAcceptCommandLanguage LOCALE ID NAME
   ${If} $R1 == "${ID}"
     StrCpy $LANGUAGE ${ID}

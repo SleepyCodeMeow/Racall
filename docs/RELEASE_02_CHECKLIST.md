@@ -22,8 +22,8 @@ Publication is **on hold** at the owner's request. No release date or interval h
 - [x] Full Windows packaged regression suite for code commit `d909076` in native CI; includes the searchable installer and model citation-label fix.
 - [x] Native CI: Windows x64, Linux x64, macOS arm64 and macOS x64 — [run 36251019854](https://github.com/SleepyCodeMeow/Racall/actions/runs/36251019854), code commit `d909076`.
 - [x] Installer checks on disposable native hosts: NSIS install/uninstall, DMG copy/launch, Debian install/remove, extracted AppImage launch.
-- [x] Compact Windows language dropdown: local native opening/translation/handoff checks, rebuilt EXE and actual bundled-screen cancellation check. Separate search, directory controls and size summary removed from the first screen.
-- [ ] Native CI for the compact dropdown revision; the run below covers the earlier searchable picker.
+- [x] Reference-style Windows first screen and language dropdown: local native opening/translation/handoff checks, rebuilt EXE and actual bundled-screen cancellation check. Separate search, directory controls and size summary removed from the first screen.
+- [ ] Native CI for the revised first-screen layout; the run below covers the earlier searchable picker.
 - [x] Native CI for the searchable installer: immediate translation, search/selection, path handoff, actual Russian installation seed and English reinstall seed. All four platform jobs passed in the run above; publication was skipped.
 - [ ] Real cloud/Ollama acceptance using [MODEL_EVALUATION.md](MODEL_EVALUATION.md). The first local Ollama run did not pass: two missing answers and four provider failures; see [report](OLLAMA_EVALUATION_2026-09-26.md). Rerun after investigation; do not replace with mock tests.
 - [ ] Owner's hands-on review of the candidate on their computer.

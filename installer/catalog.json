@@ -12,7 +12,8 @@
         "setup": "Racall Setup",
         "install": "Install",
         "cancel": "Cancel",
-        "seedError": "Could not save the installation language. Check access to the app folder."
+        "seedError": "Could not save the installation language. Check access to the app folder.",
+        "continue": "Click Install to continue with the installation."
       },
       "nsisLanguage": "English"
     },
@@ -28,7 +29,8 @@
         "setup": "Установка Racall",
         "install": "Установить",
         "cancel": "Отмена",
-        "seedError": "Не удалось сохранить язык установки. Проверьте доступ к папке приложения."
+        "seedError": "Не удалось сохранить язык установки. Проверьте доступ к папке приложения.",
+        "continue": "Нажмите «Установить», чтобы продолжить установку."
       },
       "nsisLanguage": "Russian"
     }
