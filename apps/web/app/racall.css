@@ -215,3 +215,22 @@ button:disabled { cursor: default; }
   .chat-history-bar select { max-width: 150px; }
   .chat-history-bar .text-button { font-size: 11px; }
 }
+
+/* Notebook management and recoverable trash. */
+.notebook-entry { display: flex; align-items: center; min-width: 0; }
+.notebook-entry > button:first-child { min-width: 0; flex: 1; }
+.notebook-list .notebook-options { width: 30px; flex: 0 0 30px; padding: 7px 4px; }
+.notebook-trash-link { padding: 9px 12px; font-size: 12px; flex-shrink: 0; }
+.management-modal { max-height: 85vh; overflow-y: auto; }
+.management-modal h2 { margin-top: 5px; padding-right: 15px; }
+.management-actions { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 24px; }
+.trash-list > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); padding: 12px 0; }
+.trash-list span { overflow-wrap: anywhere; min-width: 0; }
+@media(max-width: 700px) { .notebook-entry { flex-shrink: 0; } .notebook-trash-link { font-size: 11px; } }
+
+/* Source version controls stay beside the selected document. */
+.source-version-picker { display: grid; gap: 7px; margin: 16px 0 10px; font-size: 11px; }
+.source-version-picker select { width: 100%; min-width: 0; padding: 8px; font-size: 11px; }
+.source-version-actions { display: flex; flex-wrap: wrap; gap: 7px 14px; margin-bottom: 10px; }
+.detail-panel .draft-notice { margin: 0 20px 14px; font-size: 12px; }
+.detail-panel > .source-error { margin: 0 20px 14px; }

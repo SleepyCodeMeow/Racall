@@ -5,10 +5,18 @@ description = "Knowledge service for Racall, an open-source alternative to Noteb
 license = "Apache-2.0"
 requires-python = ">=3.12,<3.14"
 dependencies = [
-  "fastapi==0.141.1", "uvicorn>=0.35,<1", "pydantic>=2.11,<3",
-  "python-multipart>=0.0.20", "pypdf==6.19.0", "python-docx>=1.2,<2",
-  "httpx>=0.28,<1", "beautifulsoup4>=4.13,<5", "pyyaml>=6,<7",
-  "keyring>=25,<27", "mcp==1.30.0"
+  "fastapi==0.141.1",
+  "uvicorn>=0.35,<1",
+  "pydantic>=2.11,<3",
+  "python-multipart>=0.0.20",
+  "pypdf==6.19.0",
+  "python-docx>=1.2,<2",
+  "httpx>=0.28,<1",
+  "beautifulsoup4>=4.13,<5",
+  "pyyaml>=6,<7",
+  "keyring>=25,<27",
+  "mcp==1.30.0",
+  "psutil>=7,<8",
 ]
 
 [dependency-groups]

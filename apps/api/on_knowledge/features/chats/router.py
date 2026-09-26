@@ -46,21 +46,22 @@ def create_router(chats: Chats, knowledge: Knowledge) -> APIRouter:
 
     @router.post("/api/notebooks/{notebook}/chats/{thread}/turns")
     def chat_turn(notebook: str, thread: str, body: ChatQuestion):
-        question = body.question.strip()
-        if not question:
-            raise ValueError("A question is required.")
-        turn, fresh = chats.begin(notebook, thread, body.request_id, question, body.mode)
-        if not fresh:
-            return turn
-        try:
-            result = (
-                {"answer": knowledge.answer(notebook, question)}
-                if body.mode == "ask"
-                else {"evidence": knowledge.search(notebook, question)["evidence"]}
-            )
-            return chats.finish(notebook, thread, body.request_id, status="completed", **result)
-        except Exception:
-            # Persist the failed question without retaining provider responses or credentials.
-            return chats.finish(notebook, thread, body.request_id, status="failed")
+        with chats.store.notebook_operation(notebook):
+            question = body.question.strip()
+            if not question:
+                raise ValueError("A question is required.")
+            turn, fresh = chats.begin(notebook, thread, body.request_id, question, body.mode)
+            if not fresh:
+                return turn
+            try:
+                result = (
+                    {"answer": knowledge.answer(notebook, question)}
+                    if body.mode == "ask"
+                    else {"evidence": knowledge.search(notebook, question)["evidence"]}
+                )
+                return chats.finish(notebook, thread, body.request_id, status="completed", **result)
+            except Exception:
+                # Persist the failed question without retaining provider responses or credentials.
+                return chats.finish(notebook, thread, body.request_id, status="failed")
 
     return router

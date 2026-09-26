@@ -18,12 +18,13 @@
     "test": "uv run python scripts/test.py",
     "typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
     "test:desktop": "node scripts/smoke-desktop.cjs",
-    "lint": "uv run ruff check apps/api tests scripts/build_backend.py",
+    "lint": "uv run ruff check apps/api tests scripts/build_backend.py scripts/evaluate_model.py",
     "test:i18n": "node scripts/test-i18n.cjs",
     "check:release": "uv run python scripts/check_release.py",
     "test:languages": "node scripts/smoke-languages.cjs",
     "test:packaged": "node scripts/test-packaged.cjs",
-    "test:persistence": "node scripts/smoke-persistence.cjs"
+    "test:persistence": "node scripts/smoke-persistence.cjs",
+    "test:maintenance": "node scripts/smoke-maintenance.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

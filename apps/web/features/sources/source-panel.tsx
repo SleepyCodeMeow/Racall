@@ -1,31 +1,18 @@
 "use client";
 import { useI18n } from "../../lib/i18n";
-import { useEffect, useRef, useState } from "react";
+import { useRef, useState } from "react";
+import { SourceDetail } from "./source-detail";
 import {
   ArrowClockwise,
-  ArrowSquareOut,
   CheckCircle,
   FilePdf,
   FileText,
   LinkSimple,
   Plus,
   UploadSimple,
-  X,
 } from "@phosphor-icons/react";
-import {
-  api,
-  Evidence,
-  locationLabel,
-  originalFile,
-  Source,
-} from "../../lib/api";
+import { api, Evidence, Source } from "../../lib/api";
 
-type DocumentData = {
-  source: Source;
-  document: {
-    elements: { text: string; page?: number; section?: string; type: string }[];
-  } | null;
-};
 export function SourcePanel({
   notebook,
   sources,
@@ -46,33 +33,7 @@ export function SourcePanel({
   const [busy, setBusy] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
   const [url, setUrl] = useState("");
-  const [document, setDocument] = useState<DocumentData>();
-  const [fileUrl, setFileUrl] = useState("");
   const [drag, setDrag] = useState(false);
-  const anchor = useRef<HTMLDivElement>(null);
-  useEffect(() => {
-    setDocument(undefined);
-    setFileUrl("");
-    if (!selected) return;
-    let active = true;
-    api<DocumentData>(`/notebooks/${notebook}/sources/${selected.source.id}`)
-      .then((d) => {
-        if (active) setDocument(d);
-      })
-      .catch((e) => report(e.message));
-    return () => {
-      active = false;
-    };
-  }, [selected?.source.id, notebook, report]);
-  useEffect(() => {
-    anchor.current?.scrollIntoView({ block: "center", behavior: "smooth" });
-  }, [document, selected?.evidence]);
-  useEffect(
-    () => () => {
-      if (fileUrl) URL.revokeObjectURL(fileUrl);
-    },
-    [fileUrl],
-  );
   const upload = async (files: FileList | File[]) => {
     setBusy(true);
     try {
@@ -93,110 +54,17 @@ export function SourcePanel({
   };
   if (selected)
     return (
-      <aside className="source-panel detail-panel">
-        <div className="panel-heading">
-          <span>{tr("source.original")}</span>
-          <button
-            className="icon-button"
-            aria-label={tr("source.close")}
-            onClick={() => select(null)}
-          >
-            <X size={18} />
-          </button>
-        </div>
-        <div className="detail-title">
-          <span className="file-type">
-            {selected.source.type.toUpperCase()}
-          </span>
-          <h2>{selected.source.title}</h2>
-          {selected.evidence && (
-            <div className="location">{locationLabel(selected.evidence)}</div>
-          )}
-          <button
-            className="text-button"
-            onClick={async () => {
-              try {
-                setFileUrl(await originalFile(notebook, selected.source));
-              } catch (e) {
-                report((e as Error).message);
-              }
-            }}
-          >
-            {tr("source.openOriginal")} <ArrowSquareOut size={15} />
-          </button>
-          {fileUrl && selected.source.type !== "pdf" && (
-            <a
-              className="text-button"
-              href={fileUrl}
-              download={selected.source.title}
-            >
-              {tr("source.download")}
-            </a>
-          )}
-        </div>
-        {selected.evidence &&
-          selected.evidence.version !==
-            (document?.source.version || selected.source.version) && (
-            <div className="draft-notice">
-              <strong>{tr("source.savedPassage")}</strong>
-              <p>{tr("source.versionChanged")}</p>
-              <blockquote>{selected.evidence.quote}</blockquote>
-            </div>
-          )}
-        {fileUrl && selected.source.type === "pdf" ? (
-          <iframe
-            title={tr("source.pdf")}
-            className="pdf-preview"
-            src={`${fileUrl}#page=${selected.evidence?.location.page || 1}`}
-          />
-        ) : (
-          <div className="source-content">
-            {!document ? (
-              <div className="skeleton h-40" />
-            ) : !document.document ? (
-              <p className="muted">{tr("source.processingNotice")}</p>
-            ) : (
-              document.document.elements.map((element, i) => {
-                const e = selected.evidence;
-                const highlighted =
-                  e?.version === document.source.version &&
-                  e?.location.element === i;
-                return (
-                  <div
-                    key={i}
-                    ref={highlighted ? anchor : undefined}
-                    className={`source-element ${highlighted ? "highlighted" : ""}`}
-                  >
-                    {(element.page || element.section) && (
-                      <small>
-                        {element.page
-                          ? tr("source.page", { page: element.page })
-                          : element.section}
-                      </small>
-                    )}
-                    <p>
-                      {highlighted && e ? (
-                        <>
-                          {element.text.slice(0, e.location.offset_start)}
-                          <mark>
-                            {element.text.slice(
-                              e.location.offset_start,
-                              e.location.offset_end,
-                            )}
-                          </mark>
-                          {element.text.slice(e.location.offset_end)}
-                        </>
-                      ) : (
-                        element.text
-                      )}
-                    </p>
-                  </div>
-                );
-              })
-            )}
-          </div>
-        )}
-      </aside>
+      <SourceDetail
+        key={`${selected.source.id}:${selected.evidence?.id || ""}`}
+        notebook={notebook}
+        source={
+          sources.find((s) => s.id === selected.source.id) || selected.source
+        }
+        evidence={selected.evidence}
+        close={() => select(null)}
+        refresh={refresh}
+        report={report}
+      />
     );
   return (
     <aside
@@ -313,14 +181,17 @@ export function SourcePanel({
                 <span className="min-w-0">
                   <strong>{source.title}</strong>
                   <small>
-                    {source.status === "ready"
-                      ? tr("source.stats", {
-                          chunks: source.chunks,
-                          size: Math.max(1, Math.round(source.size / 1024)),
-                        })
-                      : source.status === "error"
-                        ? tr("source.failed")
-                        : tr("source.processing")}
+                    {source.refresh_status === "queued" ||
+                    source.refresh_status === "processing"
+                      ? tr("source.updating")
+                      : source.status === "ready"
+                        ? tr("source.stats", {
+                            chunks: source.chunks,
+                            size: Math.max(1, Math.round(source.size / 1024)),
+                          })
+                        : source.status === "error"
+                          ? tr("source.failed")
+                          : tr("source.processing")}
                   </small>
                 </span>
                 {source.status === "ready" ? (
@@ -329,9 +200,9 @@ export function SourcePanel({
                   <span className="pulse-dot" />
                 ) : null}
               </button>
-              {source.error && (
+              {(source.error || source.refresh_error) && (
                 <div className="source-error">
-                  <p>{localize(source.error)}</p>
+                  <p>{localize(source.refresh_error || source.error || "")}</p>
                   <button
                     className="text-button"
                     onClick={() =>

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
+import errno
 import json
 import os
 import sqlite3
+import sys
 import threading
 import time
 import uuid
@@ -11,6 +13,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
+
+WINDOWS = sys.platform == "win32"
+
+
+def transient_access(error: PermissionError) -> bool:
+    winerror = getattr(error, "winerror", None)
+    # Python's CRT file-open path can expose EACCES without a Windows error code.
+    return winerror in (5, 32, 33) or (WINDOWS and winerror is None and error.errno == errno.EACCES)
 
 
 def now() -> str:
@@ -44,7 +54,7 @@ def atomic_write(path: Path, text: str):
             except PermissionError as exc:
                 # Windows readers and antivirus scanners can briefly hold the target.
                 # Retry only Windows sharing/access conflicts, never arbitrary errors.
-                if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 7:
+                if not transient_access(exc) or attempt == 7:
                     raise
                 time.sleep(0.01 * 2**attempt)
     finally:
@@ -61,7 +71,7 @@ def read_text(path: Path) -> str:
         try:
             return path.read_text(encoding="utf-8")
         except PermissionError as exc:
-            if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 7:
+            if not transient_access(exc) or attempt == 7:
                 raise
             time.sleep(0.01 * 2**attempt)
     raise AssertionError("unreachable")
@@ -82,6 +92,7 @@ class Store:
         self.vault = self.root / "notebooks"
         self.vault.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
+        self.active_operations: dict[str, int] = {}
         self.db_path = self.root / "index.sqlite3"
         with self.db() as db:
             db.executescript('''
@@ -110,6 +121,20 @@ class Store:
                 raise
             finally:
                 db.close()
+
+    @contextmanager
+    def notebook_operation(self, notebook: str):
+        notebook = identifier(notebook)
+        with self.lock:
+            self.notebook_path(notebook)
+            self.active_operations[notebook] = self.active_operations.get(notebook, 0) + 1
+        try:
+            yield
+        finally:
+            with self.lock:
+                self.active_operations[notebook] -= 1
+                if not self.active_operations[notebook]:
+                    del self.active_operations[notebook]
 
     def notebook_path(self, notebook: str) -> Path:
         path = self.vault / identifier(notebook)
@@ -154,16 +179,18 @@ class Store:
         path = self.notebook_path(notebook) / "sources" / identifier(source["id"])
         write_json(path / "source.json", source)
 
-    def replace_chunks(self, notebook: str, source: str, version: str, chunks: list[dict]):
-        with self.db() as db:
-            db.execute("DELETE FROM chunks_fts WHERE id IN (SELECT id FROM chunks WHERE source=?)", (source,))
-            db.execute("DELETE FROM chunks WHERE source=?", (source,))
-            for c in chunks:
-                db.execute("INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)", (
-                    c["id"], notebook, source, version, c["text"], json.dumps(c["location"]),
-                    json.dumps(c.get("embedding")), c.get("model"),
-                ))
-                db.execute("INSERT INTO chunks_fts VALUES(?,?)", (c["id"], c["text"]))
+    def replace_chunks(self, notebook: str, source: str, version: str, chunks: list[dict], db=None):
+        if db is None:
+            with self.db() as transaction:
+                return self.replace_chunks(notebook, source, version, chunks, transaction)
+        db.execute("DELETE FROM chunks_fts WHERE id IN (SELECT id FROM chunks WHERE source=?)", (source,))
+        db.execute("DELETE FROM chunks WHERE source=?", (source,))
+        for c in chunks:
+            db.execute("INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)", (
+                c["id"], notebook, source, version, c["text"], json.dumps(c["location"]),
+                json.dumps(c.get("embedding")), c.get("model"),
+            ))
+            db.execute("INSERT INTO chunks_fts VALUES(?,?)", (c["id"], c["text"]))
 
     def list_notes(self, notebook: str, kind: str = "notes") -> list[dict]:
         return self.notes.list_notes(notebook, kind)

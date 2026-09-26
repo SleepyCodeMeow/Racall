@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { api, ApiError, Note, NoteDraft } from "../../lib/api";
+import { registerPendingEdits } from "../../lib/pending-edits";
 import { useI18n } from "../../lib/i18n";
 
 export function useNoteEditor(
@@ -122,6 +123,10 @@ export function useNoteEditor(
   };
   const persistRef = useRef(persist);
   persistRef.current = persist;
+  useEffect(() => {
+    if (kind === "notes")
+      return registerPendingEdits(() => persistRef.current());
+  }, [kind]);
   useEffect(() => {
     if (kind !== "notes" || !dirty || blocked || !current?.title.trim()) return;
     const timer = setTimeout(() => {

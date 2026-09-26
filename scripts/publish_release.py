@@ -6,9 +6,12 @@ import subprocess
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
+policy = json.loads((root / "apps/shared/release.json").read_text(encoding="utf-8"))
+if policy.get("publication") != "approved":
+    raise SystemExit("Publication is on hold. Release timing must be explicitly approved before publication.")
 version = json.loads((root / "package.json").read_text())["version"]
 tag = "v" + version
-assert os.environ.get("RACALL_RELEASE_TAG", os.environ["GITHUB_REF_NAME"]) == tag
+assert (os.environ.get("RACALL_RELEASE_TAG") or os.environ.get("GITHUB_REF_NAME")) == tag
 repo = os.environ["GITHUB_REPOSITORY"]
 expected = [
     f"Racall-{version}-win-x64.exe",

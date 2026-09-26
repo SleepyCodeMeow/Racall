@@ -108,3 +108,14 @@ Local evidence (ignored generated files):
 - `test-results/languages-1790427164391/result.json`
 
 The published 0.1 tag and binaries are unchanged. See [0.2 development notes](releases/0.2.0-beta.1.md) and the [code map](CODE_MAP.md).
+
+
+## 0.2 candidate engineering — 26 September 2026
+
+- Notebook lifecycle and versioned source maintenance are implemented, with regression coverage for active-operation guards, preserved originals/citations, failed promotion rollback, legacy files, cache repair and isolated parser deadlines/memory limits.
+- The existing first-slice CI passed all four platforms on `8ad858d` (run `36243565583`). This result does not establish success of the newer candidate; its extended native/installer CI must pass separately.
+- Local Windows candidate maintenance passed: `test-results/maintenance-1790429317240/result.json`.
+- Full Windows packaged checks passed: desktop `desktop-1790429567265`, languages `languages-1790429601202`, persistence `persistence-1790429632027`, maintenance `maintenance-1790429673862`. Frozen PDF import/provenance/original/auth checks also passed. These checks use synthetic data and deterministic model responses.
+- A later backend regression run exposed a transient CRT EACCES file read without a `winerror` code. The read/write retry predicate now recognizes that Windows-only form, with bounded retries; document creation also uses the reader's store lock. A focused regression covers it. Permanent permission failures still propagate.
+- The model evaluation fixture validates offline: four synthetic sources, ten EN/RU questions. Real-provider execution is deferred to the owner by explicit choice.
+- Publication is on hold. No 0.2 release tag or GitHub Release has been created. See [release checklist](RELEASE_02_CHECKLIST.md).

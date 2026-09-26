@@ -194,7 +194,7 @@ def test_rebuild_after_index_loss(client):
             break
         time.sleep(.03)
     assert client.app.state.knowledge.search(notebook, "Marigold")["evidence"]
-    assert (store.source_path(notebook, source["id"]) / "original.md").exists()
+    assert (store.source_path(notebook, source["id"]) / source["original"]).exists()
 
 
 def test_cors_preflight_and_frontmatter_preservation(client):

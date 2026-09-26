@@ -47,3 +47,12 @@ Select a notebook and open Connect AI to copy its MCP configuration. The stdio s
 ## Troubleshooting
 
 If AI is unavailable, check the endpoint, model ID, API key or local Ollama process. Import, notes and text search remain usable without a model. For a startup failure, check `backend.log` in the data directory. Before attaching logs to an issue, remove document contents, paths, tokens and other private information. [Report a bug](https://github.com/SleepyCodeMeow/Racall/issues/new/choose).
+
+
+## 0.2 candidate: notebook and source maintenance
+
+Use the menu beside a notebook name to rename it or move it to trash. The confirmation explains that its files are retained. **Notebook trash** restores it with the same sources, notes and conversations. Resolve an unsaved-note conflict and wait for ongoing imports/model requests before deleting a notebook.
+
+Open a source and use **Replace file** for an imported document or **Refresh from website** for a web source. Its current working version remains usable while the replacement is processed; a failed replacement shows an error and can be retried. The version selector opens retained originals and passages. Clicking an old answer's citation selects the version used by that answer.
+
+The candidate remains unpublished. Use the [release checklist](RELEASE_02_CHECKLIST.md) and [model evaluation guide](MODEL_EVALUATION.md) for acceptance testing. No automatic updater is included.

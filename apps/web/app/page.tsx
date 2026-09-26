@@ -23,6 +23,7 @@ import {
   X,
 } from "@phosphor-icons/react";
 import { api, Evidence, Notebook, Source, Settings } from "../lib/api";
+import { NotebookList } from "../features/notebooks/notebook-list";
 import { SourcePanel } from "../features/sources/source-panel";
 import { Chat } from "../features/chat/chat";
 import { Notes } from "../features/notes/notes";
@@ -71,12 +72,17 @@ function Application() {
     queryFn: () => api<Source[]>(`/notebooks/${notebook}/sources`),
     enabled: !!notebook,
     refetchInterval: (query) =>
-      query.state.data?.some((s) => ["queued", "processing"].includes(s.status))
+      query.state.data?.some(
+        (s) =>
+          ["queued", "processing"].includes(s.status) ||
+          ["queued", "processing"].includes(s.refresh_status || ""),
+      )
         ? 1500
         : false,
   });
   useEffect(() => {
-    if (!notebook && notebooks.data?.length) setNotebook(notebooks.data[0].id);
+    if (notebooks.data && !notebooks.data.some((n) => n.id === notebook))
+      setNotebook(notebooks.data[0]?.id || "");
   }, [notebooks.data, notebook]);
   useEffect(() => {
     if (notebooks.error || sources.error)
@@ -183,27 +189,26 @@ function Application() {
         <div className="nav-label">
           {tr("nav.notebooks")} <span>{notebooks.data?.length || 0}</span>
         </div>
-        <nav className="notebook-list" aria-label={tr("nav.notebooks")}>
-          {notebooks.isPending ? (
-            <div className="skeleton h-10 m-3" />
-          ) : (
-            notebooks.data?.map((n) => (
-              <button
-                key={n.id}
-                className={notebook === n.id && !settings ? "selected" : ""}
-                onClick={() => {
-                  setNotebook(n.id);
-                  setTab("chat");
-                  setSettings(false);
-                  setSelected(null);
-                }}
-              >
-                <NotebookIcon size={16} />
-                <span>{n.title}</span>
-              </button>
-            ))
-          )}
-        </nav>
+        <NotebookList
+          items={notebooks.data}
+          pending={notebooks.isPending}
+          active={settings ? "" : notebook}
+          report={report}
+          select={(id) => {
+            setNotebook(id);
+            setTab("chat");
+            setSettings(false);
+            setSelected(null);
+          }}
+          removed={(id) => {
+            if (notebook === id) {
+              setNotebook("");
+              setSelected(null);
+              setTab("chat");
+              setShowSources(false);
+            }
+          }}
+        />
         <div className="nav-bottom">
           <div className="local-note">
             <span className="status-dot" />

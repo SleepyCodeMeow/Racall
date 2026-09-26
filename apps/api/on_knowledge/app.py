@@ -77,7 +77,7 @@ def create_app(root: Path, token: str, web: Path | None = None) -> FastAPI:
         return {"status": "ok", "version": VERSION}
 
     for router in (
-        notebooks.create_router(store),
+        notebooks.create_router(store, knowledge),
         sources.create_router(store, knowledge),
         chats.create_router(chat_service, knowledge),
         notes.create_router(store),

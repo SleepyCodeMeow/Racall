@@ -12,8 +12,10 @@ The application is a modular desktop monolith: Electron starts one Python servic
 | Answer rendering and citation buttons | [answer view](../apps/web/features/chat/answer-view.tsx) | [retrieval and answer validation](../apps/api/on_knowledge/knowledge.py) |
 | Note editor and recovery actions | [notes](../apps/web/features/notes/notes.tsx) | [note routes](../apps/api/on_knowledge/features/notes/router.py) |
 | Autosave, draft recovery and conflict handling | [editor hook](../apps/web/features/notes/use-note-editor.ts) | [note repository](../apps/api/on_knowledge/features/notes/repository.py), [request schemas](../apps/api/on_knowledge/features/notes/schemas.py) |
-| Notebook creation and listing | [application shell](../apps/web/app/page.tsx) | [notebook routes](../apps/api/on_knowledge/features/notebooks/router.py) |
-| Source import, status and passage viewer | [sources](../apps/web/features/sources/source-panel.tsx) | [source routes](../apps/api/on_knowledge/features/sources/router.py), [parsing](../apps/api/on_knowledge/ingestion.py) |
+| Notebook rename, trash and restore | [notebook list/management](../apps/web/features/notebooks/notebook-list.tsx) | [notebook routes](../apps/api/on_knowledge/features/notebooks/router.py), [notebook repository](../apps/api/on_knowledge/features/notebooks/repository.py) |
+| Source import/status | [sources](../apps/web/features/sources/source-panel.tsx) | [source routes](../apps/api/on_knowledge/features/sources/router.py), [import service](../apps/api/on_knowledge/features/sources/service.py) |
+| Source versions, replacement and historical citations | [source details](../apps/web/features/sources/source-detail.tsx) | [source repository](../apps/api/on_knowledge/features/sources/repository.py) |
+| Parser time/memory isolation | — | [supervisor](../apps/api/on_knowledge/features/sources/parser.py), [worker](../apps/api/on_knowledge/features/sources/parser_worker.py), [format parsers](../apps/api/on_knowledge/ingestion.py) |
 | Research and saved reports | [research](../apps/web/features/research/research-panel.tsx) | [research routes](../apps/api/on_knowledge/features/research/router.py), [research engine](../apps/api/on_knowledge/knowledge.py) |
 | Models and language preferences | [settings](../apps/web/features/settings/settings.tsx) | [settings routes](../apps/api/on_knowledge/features/settings/router.py), [providers](../apps/api/on_knowledge/providers.py) |
 | Connecting other AI clients | [connections](../apps/web/features/connections/connect.tsx) | [connection routes](../apps/api/on_knowledge/features/connections/router.py), [MCP](../apps/api/on_knowledge/mcp_server.py) |
@@ -32,9 +34,13 @@ The application is a modular desktop monolith: Electron starts one Python servic
 
 - [Core workflow tests](../tests/test_knowledge.py): imports, retrieval, citation validation and Markdown metadata.
 - [Persistence tests](../tests/test_persistence.py): history, idempotent requests, restart recovery, note revision conflicts and I/O failures.
+- [0.2 maintenance tests](../tests/test_release02.py): notebook trash/restore, source history, failed promotions, legacy sources, parser limits and publication hold. [Desktop maintenance scenario](../scripts/smoke-maintenance.cjs); [native installer checks](../scripts/check-installer.cjs).
 - [Persistence desktop check](../scripts/smoke-persistence.cjs): real app restarts, restored citations, typing during a delayed save, recovered drafts, notebook isolation and EN/RU controls. Uses a deterministic local model stub, not a paid API.
 - `npm test -- -q`, `npm run lint`, `npm run typecheck`, `npm run test:i18n`, `npm run check:release`.
 - `npm run build:web` then `npm run test:persistence` for the development desktop. `npm run test:packaged` also runs the persistence scenario against a packaged executable.
+
+- [Real-model evaluation](../scripts/evaluate_model.py) is opt-in; [fixture and guide](MODEL_EVALUATION.md).
+- [Publication policy](../apps/shared/release.json) controls the explicit hold. See [release checklist](RELEASE_02_CHECKLIST.md).
 
 ## Adding a section
 

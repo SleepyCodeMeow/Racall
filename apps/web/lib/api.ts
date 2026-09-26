@@ -16,6 +16,8 @@ export type Source = {
   error?: string;
   url?: string;
   search_mode?: string;
+  refresh_status?: string;
+  refresh_error?: string;
 };
 export type Note = {
   id: string;
@@ -143,11 +145,12 @@ export async function api<T>(
 export async function originalFile(
   notebook: string,
   source: Source,
+  version?: string,
 ): Promise<string> {
   const token = sessionStorage.getItem("on-token");
   const response = await fetch(
     (await origin()) +
-      `/api/notebooks/${notebook}/sources/${source.id}/original`,
+      `/api/notebooks/${notebook}/sources/${source.id}${version ? `/versions/${version}` : ""}/original`,
     {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     },
