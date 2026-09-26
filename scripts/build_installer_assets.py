@@ -13,6 +13,7 @@ def main():
     # NSIS expects opaque 24-bit BMPs at its standard dialog dimensions.
     for name, size, logo_size, position in (
         ("header.bmp", (150, 57), (56, 56), (90, 0)),
+        ("welcome.bmp", (221, 84), (81, 81), (134, 0)),
         ("sidebar.bmp", (164, 314), (112, 112), (26, 30)),
     ):
         bitmap = Image.new("RGB", size, "white")

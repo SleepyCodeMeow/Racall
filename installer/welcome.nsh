@@ -17,6 +17,8 @@
   !insertmacro MUI_PAGE_INIT
   Page custom RacallWelcome RacallWelcomeLeave
   Var RacallPage
+  Var RacallBodyFont
+  Var RacallTitleFont
   Var RacallDpi
   Var RacallTitle
   Var RacallLogo
@@ -43,8 +45,6 @@
     ${NSD_CreateLabel} 0 0 100% 24 "Racall"
     Pop $RacallTitle
     SetCtlColors $RacallTitle 000000 FFFFFF
-    CreateFont $0 "Segoe UI" 11 700
-    SendMessage $RacallTitle ${WM_SETFONT} $0 1
     ${NSD_CreateBitmap} 0 0 150 57 ""
     Pop $RacallLogo
     ${NSD_CreateLabel} 0 0 100% 22 ""
@@ -66,8 +66,8 @@
     Call RacallRefreshText
     !insertmacro RacallReferenceLayout
     InitPluginsDir
-    File /oname=$PLUGINSDIR\header.bmp "${PROJECT_DIR}\installer\assets\header.bmp"
-    ${NSD_SetStretchedImage} $RacallLogo "$PLUGINSDIR\header.bmp" $RacallLogoImage
+    File /oname=$PLUGINSDIR\welcome.bmp "${PROJECT_DIR}\installer\assets\welcome.bmp"
+    ${NSD_SetStretchedImage} $RacallLogo "$PLUGINSDIR\welcome.bmp" $RacallLogoImage
     ${NSD_SetFocus} $RacallNext
     nsDialogs::Show
   FunctionEnd
