@@ -1,7 +1,7 @@
 {
   "name": "open-notebook-desktop",
   "productName": "Racall",
-  "version": "0.1.0-beta.1",
+  "version": "0.2.0-beta.1",
   "private": true,
   "description": "An open-source alternative to NotebookLM + Obsidian: AI research, cited answers, and connected Markdown notes.",
   "author": "Racall contributors",
@@ -22,7 +22,8 @@
     "test:i18n": "node scripts/test-i18n.cjs",
     "check:release": "uv run python scripts/check_release.py",
     "test:languages": "node scripts/smoke-languages.cjs",
-    "test:packaged": "node scripts/test-packaged.cjs"
+    "test:packaged": "node scripts/test-packaged.cjs",
+    "test:persistence": "node scripts/smoke-persistence.cjs"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",

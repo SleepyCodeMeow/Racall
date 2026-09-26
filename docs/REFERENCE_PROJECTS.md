@@ -38,7 +38,7 @@ Pinned links below keep the findings reproducible even when upstream main change
 
 ## Mapping to Racall
 
-This table describes proposed work, not newly implemented features.
+This table records the published **0.1 baseline** used for planning. The first 0.2 development slice now implements persistent conversations, citation snapshots and conflict-aware autosave; see [development notes](releases/0.2.0-beta.1.md) for verified scope and remaining work.
 
 | Workflow | Current Racall baseline | Next implementation and completion check | Target |
 | --- | --- | --- | --- |
@@ -50,7 +50,7 @@ This table describes proposed work, not newly implemented features.
 | Audio | Not implemented | Script → reviewed speaker segments → TTS → assembled audio; retry failed segments, preserve order, test EN/RU intelligibility and source fidelity | 0.5 target |
 | Video | Not implemented | Combine reviewed slides and narration with subtitles; verify timing, export playback and restart behavior | 0.6 target |
 
-Local baseline: [workspace UI](../apps/web/components/workspace.tsx), [storage](../apps/api/on_knowledge/storage.py), [knowledge service](../apps/api/on_knowledge/knowledge.py). Citation snapshots, conflict recovery and persistent generation records are design requirements above, not assertions about the current implementation.
+Local baseline: [workspace UI](../apps/web/features/chat/chat.tsx), [storage](../apps/api/on_knowledge/storage.py), [knowledge service](../apps/api/on_knowledge/knowledge.py). Persistent generation records remain future work. The 0.2 implementation and its limits are recorded in [ADR 0012](adr/0012-feature-organization-and-persistence.md).
 
 ## Reuse boundaries
 

@@ -20,6 +20,8 @@ Local notebooks and portable Markdown; PDF/MD/TXT/DOCX/URL import; search and ci
 
 ## 0.2 Beta — Everyday reliability
 
+Development has started on `development/0.2`. The first slice adds persistent chats, note autosave/recovery and feature-oriented code organization. This is not a published release or completion of every target below. See [0.2 development notes](releases/0.2.0-beta.1.md) and the [code map](CODE_MAP.md).
+
 - Persistent chat history and safer note draft recovery/autosave.
 - Rename/delete notebooks with clear confirmation and recovery safeguards.
 - Source refresh/version tracking and better import failure handling.

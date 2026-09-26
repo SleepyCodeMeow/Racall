@@ -25,4 +25,5 @@ function run(command, args) {
 }
 run(process.execPath, ['scripts/smoke-desktop.cjs']);
 run(process.execPath, ['scripts/smoke-languages.cjs']);
+run(process.execPath, ['scripts/smoke-persistence.cjs']);
 run('uv', ['run', 'python', 'scripts/check_bundle.py']);

@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.2 Beta — unreleased, first development slice
+
+- Persistent notebook chats with saved citation snapshots, rename/delete and interrupted-request recovery.
+- Serialized note autosave, durable recovery drafts and external-edit conflict handling.
+- Feature folders for API routes and interface sections, plus a contributor code map.
+- Full 0.2 scope and native platform verification remain in progress; 0.1 release assets are unchanged.
+
 ## Repository documentation update — no new application version
 
 - Apache-2.0 for the Python core/tools, AGPL-3.0-only for the UI/desktop components; contribution scope and legacy MIT grants documented.

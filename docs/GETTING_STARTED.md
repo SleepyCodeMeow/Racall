@@ -12,7 +12,11 @@ These beta builds are unsigned and macOS builds are not notarized. Operating sys
 
 Create a notebook, open Sources and import PDF (with a text layer), UTF-8 TXT/Markdown or DOCX. You can also import a public HTML URL. Files are limited to 25 MB. Wait for the source to become ready, then choose Search and enter a phrase from the document. Open a result to inspect its exact passage.
 
-Notes use Markdown. Save changes explicitly before closing the app. Frontmatter and wikilinks are supported. A notebook's folder can be opened in Obsidian; Racall is not an Obsidian plugin.
+Notes use Markdown. In the published 0.1 Beta, save changes explicitly before closing the app. In the 0.2 development build, edits autosave after a typing pause; wait for Saved before closing. If a file changed outside Racall, review the recovered draft and save a copy or reload the file. Frontmatter and wikilinks are supported. A notebook's folder can be opened in Obsidian; Racall is not an Obsidian plugin.
+
+## Chat history in 0.2 development builds
+
+Use the chat selector to reopen a conversation, or New chat to start another one. Questions, search results, answers and citation snapshots survive a restart. Rename changes the title; Delete moves the transcript into the notebook's `trash/chats` folder. There is no trash restore interface yet. Interrupted requests are marked and are not automatically sent again. Each AI answer still uses the current question and retrieved sources; storing history does not yet add follow-up question resolution.
 
 ## Connect AI
 

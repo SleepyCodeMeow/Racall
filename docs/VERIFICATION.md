@@ -88,3 +88,23 @@ All four native CI jobs passed on commit `27330bd`: Windows x64, Linux x64, macO
 `v0.1.0-beta.1` is public: https://github.com/SleepyCodeMeow/Racall/releases/tag/v0.1.0-beta.1.
 All four native jobs passed again in build run `36023413535`. Publication initially stopped on Linux architecture filename conventions, then on Ubuntu's older Python lacking `hashlib.file_digest`; both publication-only issues were corrected on main. Recovery workflow `36024957384` verifies the immutable tag commit and all four passing native jobs before reusing their artifacts. No application binaries were substituted or retagged.
 Seven packages plus `SHA256SUMS.txt` are attached. The downloaded checksum file and all seven entries match GitHub's server-side asset digests. Windows release artifact SHA-256: `5b78d634948e5f2e87fbb238457186c25a66cfa3c621bc6b597e14ec10df06c1`.
+
+
+## 0.2 development — first persistence slice, 26 September 2026
+
+This is development evidence, not a published 0.2 release or completion of the entire roadmap.
+
+- 31 Python tests passed: persisted chats/citation snapshots, request replay, interrupted/failed turns, notebook boundaries, legacy Markdown metadata, autosave revisions, lost-response retry, I/O failure recovery and invalid-path rejection without replacing an existing draft.
+- Ruff, TypeScript, 240-key EN/RU localization checks and release metadata validation passed. Production frontend and frozen Python service builds passed.
+- Windows unpacked application passed `smoke-persistence.cjs`: full app/service restart, restored answer and citation, chat rename/selection, no extra model call on reopen, autosave without pressing Save, newer typing while an older acknowledgement is delayed, cancelling close keeps the service alive, external edits remain intact, later conflict edits update the draft, recovered draft saved as a copy and notebook isolation.
+- Existing packaged desktop and language checks passed, including import/search/exact citation, note preview, MCP settings, provider settings, language restart, unchanged user Markdown, installer locale seed and manual preference preservation. JavaScript errors: zero.
+- Visually inspected the restored conversation and note conflict view at desktop width. No redesign is claimed.
+- The deterministic local model stub establishes persistence behavior, not real cloud/Ollama answer quality. 0.2 macOS/Linux/native installer checks, real-model evaluation and signing/notarization remain separate checks.
+
+Local evidence (ignored generated files):
+
+- `test-results/persistence-1790427093230/result.json`
+- `test-results/desktop-1790427130552/result.json`
+- `test-results/languages-1790427164391/result.json`
+
+The published 0.1 tag and binaries are unchanged. See [0.2 development notes](releases/0.2.0-beta.1.md) and the [code map](CODE_MAP.md).

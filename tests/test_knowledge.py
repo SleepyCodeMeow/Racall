@@ -209,6 +209,8 @@ def test_cors_preflight_and_frontmatter_preservation(client):
     assert note["id"] == "Human title"
     path = client.app.state.store.notebook_path(notebook) / "notes" / "Human title.md"
     path.write_text("---\ntitle: Human title\ntags: [retained]\ncustom: value\n---\n\nBefore", "utf-8")
+    # Refresh after editing externally: a stale revision must no longer overwrite the file.
+    note = client.get(f"/api/notebooks/{notebook}/notes").json()[0]
     assert client.post(f"/api/notebooks/{notebook}/notes", json={**note, "body": "After"}).status_code == 200
     assert "retained" in path.read_text("utf-8") and "custom: value" in path.read_text("utf-8")
 
