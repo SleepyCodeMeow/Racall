@@ -22,7 +22,7 @@ Publication is **on hold** at the owner's request. No release date or interval h
 - [x] Final full Windows packaged regression suite for code commit `7a73788`.
 - [x] Native CI: Windows x64, Linux x64, macOS arm64 and macOS x64 — [run 36246042420](https://github.com/SleepyCodeMeow/Racall/actions/runs/36246042420), code commit `7a73788`.
 - [x] Installer checks on disposable native hosts: NSIS install/uninstall, DMG copy/launch, Debian install/remove, extracted AppImage launch.
-- [ ] Owner's real cloud/Ollama evaluation using [MODEL_EVALUATION.md](MODEL_EVALUATION.md). Deferred to the owner by explicit choice; not replaced by mock tests.
+- [ ] Real cloud/Ollama acceptance using [MODEL_EVALUATION.md](MODEL_EVALUATION.md). The first local Ollama run did not pass: two missing answers and four provider failures; see [report](OLLAMA_EVALUATION_2026-09-26.md). Rerun after investigation; do not replace with mock tests.
 - [ ] Owner's hands-on review of the candidate on their computer.
 
 ## Known limits to carry into release notes

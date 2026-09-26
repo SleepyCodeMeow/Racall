@@ -2,7 +2,7 @@
 
 [Russian instructions](MODEL_EVALUATION.ru.md) · [Release checklist](RELEASE_02_CHECKLIST.md) · [Synthetic fixture](../evals/release02)
 
-**Status: awaiting the owner's model test.** The owner chose to run this later. No real-model success is claimed from deterministic test stubs.
+**Status: local Ollama run completed; acceptance not passed.** See the [26 September report](OLLAMA_EVALUATION_2026-09-26.md): four correct supported answers, two missing answers and four provider errors/timeouts. Further model checks and owner review remain open. No real-model success is claimed from deterministic test stubs.
 
 ## Through the desktop app
 

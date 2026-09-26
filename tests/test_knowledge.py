@@ -230,3 +230,34 @@ def test_hybrid_retrieves_without_keyword_overlap_and_rejects_model_mismatch(cli
     })
     result = client.post(f"/api/notebooks/{notebook}/search", json={"question": "unrelated lexical terms"}).json()
     assert result["evidence"] == []
+
+
+def test_model_citation_labels_resolve_without_fuzzy_hash_matching(client, monkeypatch):
+    notebook = create(client)
+    upload(client, notebook)
+    original = client.app.state.knowledge.search(notebook, "Marigold")["evidence"]
+    calls = []
+
+    def complete(self, system, data):
+        calls.append(data)
+        assert data["evidence"][0]["id"] == "E1"
+        assert all("source_id" not in e and "version" not in e for e in data["evidence"])
+        if "supported_indices" in system:
+            assert data["claims"] == [{"text": "The codename is Marigold.", "evidence_ids": ["E1"]}]
+            return {"supported_indices": [0]}
+        return {"claims": [
+            {"text": "The codename is Marigold.", "evidence_ids": ["E1", "E1"]},
+            {"text": "Unknown label", "evidence_ids": ["E999"]},
+            {"text": "Mixed valid and invalid labels", "evidence_ids": ["E1", "E999"]},
+            {"text": "Legacy hash is not a label", "evidence_ids": [original[0]["id"]]},
+        ]}
+
+    monkeypatch.setattr(OpenAICompatible, "complete", complete)
+    response = client.post(f"/api/notebooks/{notebook}/ask", json={"question": "Marigold"})
+    assert response.status_code == 200
+    answer = response.json()
+    assert len(calls) == 2
+    assert answer["claims"] == [{"text": "The codename is Marigold.", "evidence_ids": [original[0]["id"]]}]
+    assert answer["citations"][0]["id"] == original[0]["id"]
+    assert answer["citations"][0]["version"] == original[0]["version"]
+    assert answer["citations"][0]["quote"] == original[0]["quote"]
