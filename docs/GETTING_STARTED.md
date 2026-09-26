@@ -12,7 +12,11 @@ These beta builds are unsigned and macOS builds are not notarized. Operating sys
 
 Create a notebook, open Sources and import PDF (with a text layer), UTF-8 TXT/Markdown or DOCX. You can also import a public HTML URL. Files are limited to 25 MB. Wait for the source to become ready, then choose Search and enter a phrase from the document. Open a result to inspect its exact passage.
 
-Notes use Markdown. Save changes explicitly before closing the app. Frontmatter and wikilinks are supported. A notebook's folder can be opened in Obsidian; Racall is not an Obsidian plugin.
+Notes use Markdown. In the published 0.1 Beta, save changes explicitly before closing the app. In the 0.2 development build, edits autosave after a typing pause; wait for Saved before closing. If a file changed outside Racall, review the recovered draft and save a copy or reload the file. Frontmatter and wikilinks are supported. A notebook's folder can be opened in Obsidian; Racall is not an Obsidian plugin.
+
+## Chat history in 0.2 development builds
+
+Use the chat selector to reopen a conversation, or New chat to start another one. Questions, search results, answers and citation snapshots survive a restart. Rename changes the title; Delete moves the transcript into the notebook's `trash/chats` folder. There is no trash restore interface yet. Interrupted requests are marked and are not automatically sent again. Each AI answer still uses the current question and retrieved sources; storing history does not yet add follow-up question resolution.
 
 ## Connect AI
 
@@ -43,3 +47,12 @@ Select a notebook and open Connect AI to copy its MCP configuration. The stdio s
 ## Troubleshooting
 
 If AI is unavailable, check the endpoint, model ID, API key or local Ollama process. Import, notes and text search remain usable without a model. For a startup failure, check `backend.log` in the data directory. Before attaching logs to an issue, remove document contents, paths, tokens and other private information. [Report a bug](https://github.com/SleepyCodeMeow/Racall/issues/new/choose).
+
+
+## 0.2 candidate: notebook and source maintenance
+
+Use the menu beside a notebook name to rename it or move it to trash. The confirmation explains that its files are retained. **Notebook trash** restores it with the same sources, notes and conversations. Resolve an unsaved-note conflict and wait for ongoing imports/model requests before deleting a notebook.
+
+Open a source and use **Replace file** for an imported document or **Refresh from website** for a web source. Its current working version remains usable while the replacement is processed; a failed replacement shows an error and can be retried. The version selector opens retained originals and passages. Clicking an old answer's citation selects the version used by that answer.
+
+The candidate remains unpublished. Use the [release checklist](RELEASE_02_CHECKLIST.md) and [model evaluation guide](MODEL_EVALUATION.md) for acceptance testing. No automatic updater is included.

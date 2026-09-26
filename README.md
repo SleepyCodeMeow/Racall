@@ -19,6 +19,8 @@
 
 ## ⚡ Get started
 
+Development of **0.2 Beta** has started. [Development notes](docs/releases/0.2.0-beta.1.md) · [Code map](docs/CODE_MAP.md). The downloads below are still **0.1 Beta**.
+
 Download **Racall 0.1 Beta** for your operating system:
 
 | Platform | Link |

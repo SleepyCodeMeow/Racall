@@ -101,6 +101,16 @@ async function start() {
   window.webContents.on('will-navigate', (event, url) => {
     if (new URL(url).origin !== uiOrigin) event.preventDefault();
   });
+  window.webContents.on('will-prevent-unload', event => {
+    const choice = dialog.showMessageBoxSync(window, {
+      type: 'warning', title: 'Racall',
+      message: tr('native.unsavedTitle'), detail: tr('native.unsavedDetail'),
+      buttons: [tr('native.keepEditing'), tr('native.closeAnyway')],
+      defaultId: 0, cancelId: 0, noLink: true,
+    });
+    if (choice === 1) event.preventDefault();
+    else quitting = false;
+  });
   await window.loadURL(uiOrigin);
 }
 
@@ -110,4 +120,6 @@ else {
   app.whenReady().then(start).catch(error => { dialog.showErrorBox(tr('native.startTitle'), error.message); app.quit(); });
 }
 app.on('window-all-closed', () => app.quit());
-app.on('before-quit', () => { quitting = true; backend?.kill(); });
+app.on('before-quit', () => { quitting = true; });
+// Keep the service alive if an unsaved editor prevents the window from closing.
+app.on('will-quit', () => { backend?.kill(); });

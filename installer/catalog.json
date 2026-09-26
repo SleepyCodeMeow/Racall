@@ -1,0 +1,62 @@
+{
+  "languages": [
+    {
+      "locale": "en",
+      "windowsId": 1033,
+      "installerCode": "en_US",
+      "name": "English",
+      "search": [
+        "English",
+        "en",
+        "английский"
+      ],
+      "text": {
+        "intro": "Your sources, connected notes and AI research in one place.",
+        "language": "Choose your installation language",
+        "search": "Search languages…",
+        "empty": "No matching languages",
+        "choose": "Select a language from the list.",
+        "folder": "Change folder…",
+        "required": "Required:",
+        "available": "Available:",
+        "unavailable": "Free space unavailable",
+        "spaceError": "There is not enough free space on the selected drive.",
+        "folderTitle": "Choose the parent folder for Racall",
+        "setup": "Racall Setup",
+        "install": "Install",
+        "cancel": "Cancel",
+        "seedError": "Could not save the installation language. Check access to the app folder."
+      },
+      "nsisLanguage": "English"
+    },
+    {
+      "locale": "ru",
+      "windowsId": 1049,
+      "installerCode": "ru_RU",
+      "name": "Русский",
+      "search": [
+        "Русский",
+        "ru",
+        "Russian"
+      ],
+      "text": {
+        "intro": "Источники, связанные заметки и исследования с ИИ в одном месте.",
+        "language": "Выберите язык установки",
+        "search": "Найти язык…",
+        "empty": "Язык не найден",
+        "choose": "Выберите язык из списка.",
+        "folder": "Изменить папку…",
+        "required": "Требуется:",
+        "available": "Свободно:",
+        "unavailable": "Свободное место недоступно",
+        "spaceError": "На выбранном диске недостаточно свободного места.",
+        "folderTitle": "Выберите папку для установки Racall",
+        "setup": "Установка Racall",
+        "install": "Установить",
+        "cancel": "Отмена",
+        "seedError": "Не удалось сохранить язык установки. Проверьте доступ к папке приложения."
+      },
+      "nsisLanguage": "Russian"
+    }
+  ]
+}

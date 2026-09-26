@@ -1,9 +1,10 @@
 from __future__ import annotations
 
+import errno
 import json
 import os
-import re
 import sqlite3
+import sys
 import threading
 import time
 import uuid
@@ -12,6 +13,14 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import yaml
+
+WINDOWS = sys.platform == "win32"
+
+
+def transient_access(error: PermissionError) -> bool:
+    winerror = getattr(error, "winerror", None)
+    # Python's CRT file-open path can expose EACCES without a Windows error code.
+    return winerror in (5, 32, 33) or (WINDOWS and winerror is None and error.errno == errno.EACCES)
 
 
 def now() -> str:
@@ -33,10 +42,13 @@ def write_json(path: Path, value: object):
     atomic_write(path, json.dumps(value, ensure_ascii=False, indent=2))
 
 
-def atomic_write(path: Path, text: str):
+def atomic_write(path: Path, text: str | bytes):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + "." + uid() + ".tmp")
-    temporary.write_text(text, encoding="utf-8")
+    if isinstance(text, bytes):
+        temporary.write_bytes(text)
+    else:
+        temporary.write_text(text, encoding="utf-8")
     try:
         for attempt in range(8):
             try:
@@ -45,7 +57,7 @@ def atomic_write(path: Path, text: str):
             except PermissionError as exc:
                 # Windows readers and antivirus scanners can briefly hold the target.
                 # Retry only Windows sharing/access conflicts, never arbitrary errors.
-                if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 7:
+                if not transient_access(exc) or attempt == 7:
                     raise
                 time.sleep(0.01 * 2**attempt)
     finally:
@@ -62,20 +74,28 @@ def read_text(path: Path) -> str:
         try:
             return path.read_text(encoding="utf-8")
         except PermissionError as exc:
-            if getattr(exc, "winerror", None) not in (5, 32, 33) or attempt == 7:
+            if not transient_access(exc) or attempt == 7:
                 raise
             time.sleep(0.01 * 2**attempt)
     raise AssertionError("unreachable")
+
+
+class ConflictError(Exception):
+    pass
 
 
 class Store:
     """Portable files are authoritative. SQLite is a disposable retrieval cache."""
 
     def __init__(self, root: Path):
+        from .features.notes.repository import NoteRepository
+
+        self.notes = NoteRepository(self)
         self.root = root.resolve()
         self.vault = self.root / "notebooks"
         self.vault.mkdir(parents=True, exist_ok=True)
         self.lock = threading.RLock()
+        self.active_operations: dict[str, int] = {}
         self.db_path = self.root / "index.sqlite3"
         with self.db() as db:
             db.executescript('''
@@ -104,6 +124,20 @@ class Store:
                 raise
             finally:
                 db.close()
+
+    @contextmanager
+    def notebook_operation(self, notebook: str):
+        notebook = identifier(notebook)
+        with self.lock:
+            self.notebook_path(notebook)
+            self.active_operations[notebook] = self.active_operations.get(notebook, 0) + 1
+        try:
+            yield
+        finally:
+            with self.lock:
+                self.active_operations[notebook] -= 1
+                if not self.active_operations[notebook]:
+                    del self.active_operations[notebook]
 
     def notebook_path(self, notebook: str) -> Path:
         path = self.vault / identifier(notebook)
@@ -148,72 +182,34 @@ class Store:
         path = self.notebook_path(notebook) / "sources" / identifier(source["id"])
         write_json(path / "source.json", source)
 
-    def replace_chunks(self, notebook: str, source: str, version: str, chunks: list[dict]):
-        with self.db() as db:
-            db.execute("DELETE FROM chunks_fts WHERE id IN (SELECT id FROM chunks WHERE source=?)", (source,))
-            db.execute("DELETE FROM chunks WHERE source=?", (source,))
-            for c in chunks:
-                db.execute("INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)", (
-                    c["id"], notebook, source, version, c["text"], json.dumps(c["location"]),
-                    json.dumps(c.get("embedding")), c.get("model"),
-                ))
-                db.execute("INSERT INTO chunks_fts VALUES(?,?)", (c["id"], c["text"]))
+    def replace_chunks(self, notebook: str, source: str, version: str, chunks: list[dict], db=None):
+        if db is None:
+            with self.db() as transaction:
+                return self.replace_chunks(notebook, source, version, chunks, transaction)
+        db.execute("DELETE FROM chunks_fts WHERE id IN (SELECT id FROM chunks WHERE source=?)", (source,))
+        db.execute("DELETE FROM chunks WHERE source=?", (source,))
+        for c in chunks:
+            db.execute("INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)", (
+                c["id"], notebook, source, version, c["text"], json.dumps(c["location"]),
+                json.dumps(c.get("embedding")), c.get("model"),
+            ))
+            db.execute("INSERT INTO chunks_fts VALUES(?,?)", (c["id"], c["text"]))
 
     def list_notes(self, notebook: str, kind: str = "notes") -> list[dict]:
-        if kind not in ("notes", "artifacts"):
-            raise ValueError("Неизвестный тип записи")
-        notes = []
-        for path in (self.notebook_path(notebook) / kind).glob("*.md"):
-            text = read_text(path)
-            frontmatter = {}
-            body = text
-            if text.startswith("---\n"):
-                parts = text.split("---\n", 2)
-                if len(parts) == 3:
-                    try:
-                        parsed = yaml.safe_load(parts[1])
-                        frontmatter = parsed if isinstance(parsed, dict) else {}
-                    except yaml.YAMLError:
-                        frontmatter = {}
-                    body = parts[2].lstrip("\n")
-            notes.append({"id": path.stem, "title": str(frontmatter.get("title", path.stem)),
-                          "body": body, "modified": path.stat().st_mtime})
-        return sorted(notes, key=lambda n: n["modified"], reverse=True)
+        return self.notes.list_notes(notebook, kind)
 
     def save_note(self, notebook: str, title: str, body: str, note_id: str | None = None,
-                  kind: str = "notes") -> dict:
-        if kind not in ("notes", "artifacts"):
-            raise ValueError("Неизвестный тип записи")
-        if not note_id:
-            stem = re.sub(r'[<>:"/\\|?*\x00-\x1f]', "-", title).strip(" .")[:120]
-            reserved = {"CON", "PRN", "AUX", "NUL"} | {f"COM{i}" for i in range(1, 10)} | {f"LPT{i}" for i in range(1, 10)}
-            if not stem or stem.upper() in reserved:
-                stem = "note-" + uid()[:8]
-            note_id = stem
-            if (self.notebook_path(notebook) / kind / f"{note_id}.md").exists():
-                note_id += "-" + uid()[:8]
-        # Existing user-created filenames are allowed, but never separators or traversal.
-        if not re.fullmatch(r"[^/\\:.\x00-\x1f][^/\\:\x00-\x1f]{0,180}", note_id) or ".." in note_id:
-            raise ValueError("Недопустимое имя заметки")
-        path = self.notebook_path(notebook) / kind / f"{note_id}.md"
-        metadata = {}
-        if path.exists():
-            previous = read_text(path)
-            if previous.startswith("---\n"):
-                parts = previous.split("---\n", 2)
-                if len(parts) == 3:
-                    try:
-                        parsed = yaml.safe_load(parts[1])
-                        metadata = parsed if isinstance(parsed, dict) else {}
-                    except yaml.YAMLError:
-                        pass
-        aliases = metadata.get("aliases", [])
-        aliases = aliases if isinstance(aliases, list) else [str(aliases)]
-        metadata.update(title=title, id=note_id, aliases=list(dict.fromkeys([*map(str, aliases), title])))
-        atomic_write(path, "---\n" + yaml.safe_dump(metadata, allow_unicode=True)
-                     + "---\n\n" + body)
-        self.audit("note.saved", notebook, {"id": note_id, "kind": kind})
-        return {"id": note_id, "title": title, "body": body}
+                  kind: str = "notes", revision: str | None = None) -> dict:
+        return self.notes.save_note(notebook, title, body, note_id, kind, revision)
+
+    def autosave_note(self, notebook: str, draft_id: str, note: dict) -> dict:
+        return self.notes.autosave_note(notebook, draft_id, note)
+
+    def drafts(self, notebook: str) -> list[dict]:
+        return self.notes.drafts(notebook)
+
+    def discard_draft(self, notebook: str, draft_id: str):
+        self.notes.discard_draft(notebook, draft_id)
 
     def settings(self) -> dict:
         path = self.root / "settings.json"

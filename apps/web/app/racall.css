@@ -194,3 +194,43 @@ input:focus, textarea:focus { border-color: #c39874; outline-color: #c39874; }
 .language-error { position: fixed; z-index: 20; bottom: 16px; left: 16px; right: 16px; padding: 12px 16px; display: flex; align-items: center; gap: 16px; background: #fff0e0; color: #79451e; border: 1px solid #e5b88f; border-radius: 8px; }
 .language-error span { flex: 1; }
 .language-error button { text-decoration: underline; }
+
+/* Persistent conversations and note recovery use the existing workspace controls. */
+.chat-workspace { height: 100%; min-height: 0; display: flex; flex-direction: column; }
+.chat-workspace > .chat-layout { flex: 1; }
+.chat-history-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; padding: 12px 24px; border-bottom: 1px solid var(--line); }
+.chat-history-bar select { min-width: 100px; width: min(260px, 100%); margin-right: auto; border: 0; background: var(--paper); color: var(--ink); font: inherit; font-size: 12px; padding: 8px; text-overflow: ellipsis; }
+.chat-history-bar .text-button { font-size: 12px; }
+.chat-rename { display: flex; gap: 12px; padding: 12px 24px; }
+.chat-rename input { flex: 1; min-width: 0; }
+.turn-failure { padding: 12px 0; color: var(--muted); }
+.turn-failure p { margin-bottom: 8px; }
+.save-status { font-size: 12px; color: var(--muted); margin: 0 12px; }
+.draft-notice { border: 1px solid #e8cbae; background: #fff8f0; border-radius: 8px; padding: 14px; margin: 8px 0; font-size: 13px; line-height: 1.6; }
+.draft-notice > div { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 8px; }
+.draft-notice blockquote { white-space: pre-wrap; overflow-wrap: anywhere; margin-top: 10px; }
+button:disabled { cursor: default; }
+@media (max-width: 600px) {
+  .chat-history-bar { gap: 8px; padding: 8px 12px; }
+  .chat-history-bar select { max-width: 150px; }
+  .chat-history-bar .text-button { font-size: 11px; }
+}
+
+/* Notebook management and recoverable trash. */
+.notebook-entry { display: flex; align-items: center; min-width: 0; }
+.notebook-entry > button:first-child { min-width: 0; flex: 1; }
+.notebook-list .notebook-options { width: 30px; flex: 0 0 30px; padding: 7px 4px; }
+.notebook-trash-link { padding: 9px 12px; font-size: 12px; flex-shrink: 0; }
+.management-modal { max-height: 85vh; overflow-y: auto; }
+.management-modal h2 { margin-top: 5px; padding-right: 15px; }
+.management-actions { display: flex; gap: 12px; align-items: center; justify-content: space-between; margin-top: 24px; }
+.trash-list > div { display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid var(--line); padding: 12px 0; }
+.trash-list span { overflow-wrap: anywhere; min-width: 0; }
+@media(max-width: 700px) { .notebook-entry { flex-shrink: 0; } .notebook-trash-link { font-size: 11px; } }
+
+/* Source version controls stay beside the selected document. */
+.source-version-picker { display: grid; gap: 7px; margin: 16px 0 10px; font-size: 11px; }
+.source-version-picker select { width: 100%; min-width: 0; padding: 8px; font-size: 11px; }
+.source-version-actions { display: flex; flex-wrap: wrap; gap: 7px 14px; margin-bottom: 10px; }
+.detail-panel .draft-notice { margin: 0 20px 14px; font-size: 12px; }
+.detail-panel > .source-error { margin: 0 20px 14px; }

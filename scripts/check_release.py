@@ -17,7 +17,9 @@ project = tomllib.loads((root / "pyproject.toml").read_text(encoding="utf-8"))
 assert project["project"]["version"] == python_version
 uv = tomllib.loads((root / "uv.lock").read_text(encoding="utf-8"))
 assert next(p["version"] for p in uv["package"] if p["name"] == project["project"]["name"]) == python_version
-assert json.loads((root / "apps/shared/release.json").read_text())["version"] == version
+release = json.loads((root / "apps/shared/release.json").read_text())
+assert release["version"] == version
+assert release.get("publication") in ("hold", "approved"), "Declare publication hold/approval explicitly"
 assert (root / "apps/api/on_knowledge/version.py").read_text().strip() == f'VERSION = "{version}"'
 assert (root / f"docs/releases/{version}.md").is_file(), "Release notes are missing"
 if os.environ.get("GITHUB_REF_TYPE") == "tag":

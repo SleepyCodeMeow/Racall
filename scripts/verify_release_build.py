@@ -5,6 +5,9 @@ import subprocess
 from pathlib import Path
 
 root = Path(__file__).resolve().parents[1]
+policy = json.loads((root / "apps/shared/release.json").read_text(encoding="utf-8"))
+if policy.get("publication") != "approved":
+    raise SystemExit("Publication is on hold. Release timing must be explicitly approved before publication.")
 version = json.loads((root / "package.json").read_text())["version"]
 tag = "v" + version
 repo = os.environ["GITHUB_REPOSITORY"]

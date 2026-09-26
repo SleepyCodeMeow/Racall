@@ -1,7 +1,7 @@
 {
   "name": "open-notebook-desktop",
   "productName": "Racall",
-  "version": "0.1.0-beta.1",
+  "version": "0.2.0-beta.1",
   "private": true,
   "description": "An open-source alternative to NotebookLM + Obsidian: AI research, cited answers, and connected Markdown notes.",
   "author": "Racall contributors",
@@ -18,11 +18,14 @@
     "test": "uv run python scripts/test.py",
     "typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
     "test:desktop": "node scripts/smoke-desktop.cjs",
-    "lint": "uv run ruff check apps/api tests scripts/build_backend.py",
+    "lint": "uv run ruff check apps/api tests scripts/build_backend.py scripts/evaluate_model.py scripts/build_installer_catalog.py",
     "test:i18n": "node scripts/test-i18n.cjs",
     "check:release": "uv run python scripts/check_release.py",
     "test:languages": "node scripts/smoke-languages.cjs",
-    "test:packaged": "node scripts/test-packaged.cjs"
+    "test:packaged": "node scripts/test-packaged.cjs",
+    "test:persistence": "node scripts/smoke-persistence.cjs",
+    "test:maintenance": "node scripts/smoke-maintenance.cjs",
+    "check:installer-catalog": "uv run python scripts/build_installer_catalog.py --check"
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
@@ -93,16 +96,19 @@
     "nsis": {
       "oneClick": false,
       "perMachine": false,
-      "allowToChangeInstallationDirectory": true,
+      "allowToChangeInstallationDirectory": false,
       "createDesktopShortcut": true,
       "deleteAppDataOnUninstall": false,
       "installerLanguages": [
         "en_US",
         "ru_RU"
       ],
-      "displayLanguageSelector": true,
+      "displayLanguageSelector": false,
       "language": "1033",
-      "include": "installer/languages.nsh"
+      "include": "installer/languages.nsh",
+      "installerHeader": "installer/assets/header.bmp",
+      "installerSidebar": "installer/assets/sidebar.bmp",
+      "uninstallerSidebar": "installer/assets/sidebar.bmp"
     },
     "mac": {
       "target": [

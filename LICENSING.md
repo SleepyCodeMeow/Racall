@@ -28,7 +28,7 @@ The existing tag `v0.1.0-beta.1`, its source archive and its published installer
 
 This update to the current branch does not revoke MIT permissions already granted. Material previously available under MIT remains available under those grants, including when unchanged material appears in a later tree. The component licenses above govern contributions and revisions offered under them, subject to those existing rights.
 
-The application version remains unchanged at the owner's request. For the precise terms of a particular checkout, consult its commit's licensing files; do not infer the license solely from the version number. Download links in the README still point to the original MIT release.
+That licensing update did not change the application version. For the precise terms of a particular checkout, consult its commit's licensing files; do not infer the license solely from the version number. Download links in the README still point to the original MIT release.
 
 ## Distribution and contribution
 

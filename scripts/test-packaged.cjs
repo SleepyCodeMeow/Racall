@@ -3,7 +3,10 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const root = path.resolve(__dirname, '..');
 let executable, resources;
-if (process.platform === 'win32') {
+if (process.env.OPENNOTEBOOK_TEST_EXE) {
+  executable = path.resolve(process.env.OPENNOTEBOOK_TEST_EXE);
+  resources = path.resolve(path.dirname(executable), process.platform === 'darwin' ? '../Resources' : 'resources');
+} else if (process.platform === 'win32') {
   executable = path.join(root, 'release/win-unpacked/Racall.exe');
   resources = path.join(root, 'release/win-unpacked/resources');
 } else if (process.platform === 'darwin') {
@@ -25,4 +28,6 @@ function run(command, args) {
 }
 run(process.execPath, ['scripts/smoke-desktop.cjs']);
 run(process.execPath, ['scripts/smoke-languages.cjs']);
+run(process.execPath, ['scripts/smoke-persistence.cjs']);
+run(process.execPath, ['scripts/smoke-maintenance.cjs']);
 run('uv', ['run', 'python', 'scripts/check_bundle.py']);
