@@ -131,3 +131,12 @@ The published 0.1 tag and binaries are unchanged. See [0.2 development notes](re
 - All four native jobs passed on code commit `7a73788d29ce15bcaf7834ed732ffca625050746`: [run 36246042420](https://github.com/SleepyCodeMeow/Racall/actions/runs/36246042420). Each ran backend/static checks, production builds, all packaged smoke scenarios and the frozen PDF check.
 - Installer checks passed on disposable native hosts: Windows NSIS install/launch/uninstall with a preserved knowledge sentinel; macOS arm64 and x64 DMG mount/copy/launch; Linux Debian install/launch/remove with preserved data, plus extracted AppImage launch. FUSE mounting, interactive OS security prompts and signing/notarization are not covered.
 - The publication job was skipped. The candidate remains on hold; the 0.1 release/tag is unchanged. Owner real-model acceptance and hands-on review remain open by explicit choice. Later documentation-only commits do not change the code validated above.
+
+
+### Light installer and citation-label follow-up
+
+All four native jobs passed on `4eeb07ea2207cf2711bd881d5d5469cbf049665d`: [run 36248218995](https://github.com/SleepyCodeMeow/Racall/actions/runs/36248218995). This supersedes the earlier code candidate for packaged/installer checks and includes 45 backend tests. Publication was skipped.
+
+The Windows installer now uses a white header with the existing mascot, a white finish-page sidebar and Segoe UI. A real interactive screenshot could not be inspected because the Computer Use runtime failed to initialize (`apply deny-read ACLs`); the separate local HTML illustration is explicitly labelled as a mockup, not an EXE screenshot. Native automated install/uninstall checks passed.
+
+The first real Ollama run did not pass acceptance; see [the model report](OLLAMA_EVALUATION_2026-09-26.md). The attempted real-model recheck after shortening evidence labels was interrupted and has no saved verdict. No additional model inference is being started after the owner reported loss of display and reboot. Owner hands-on review and stable-provider acceptance remain open.
