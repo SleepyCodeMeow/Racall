@@ -32,13 +32,13 @@
   Pop $R0
 !macroend
 
-!macro RacallAcceptCommandLanguage LOCALE ID NAME SEARCH
+!macro RacallAcceptCommandLanguage LOCALE ID NAME
   ${If} $R1 == "${ID}"
     StrCpy $LANGUAGE ${ID}
   ${EndIf}
 !macroend
 
-!macro RacallSeedLanguage LOCALE ID NAME SEARCH
+!macro RacallSeedLanguage LOCALE ID NAME
   ${If} $LANGUAGE == ${ID}
     StrCpy $R1 "${LOCALE}"
   ${EndIf}

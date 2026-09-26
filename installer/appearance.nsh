@@ -5,6 +5,6 @@
 !define MUI_INSTFILESPAGE_COLORS "242424 FFFFFF"
 
 !macro customHeader
-  BrandingText "Racall"
+  BrandingText " "
   SetFont "Segoe UI" 9
 !macroend

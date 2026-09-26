@@ -7,7 +7,7 @@ Racall defaults to English and supports Russian. Language is a per-profile prefe
 `<knowledge directory>/preferences.json` stores `{ "locale": "en" }` or `{ "locale": "ru" }`.
 Authenticated `GET /api/preferences` and `PUT /api/preferences` read and update it. Writes are atomic and serialized. Unsupported locale values are rejected; missing or malformed preferences fall back to English.
 
-The Windows NSIS installer includes English and Russian with a searchable language list on its first screen. `installer/languages.nsh` writes the selected locale to `<install directory>/resources/installer-language.json`. It does not write to the installing administrator's personal profile.
+The Windows NSIS installer includes English and Russian with a compact language dropdown on its first screen. `installer/languages.nsh` writes the selected locale to `<install directory>/resources/installer-language.json`. It does not write to the installing administrator's personal profile.
 
 On startup, `apps/desktop/locale.cjs` seeds a missing profile preference from that file. Existing preferences always win. macOS, Linux and development launches default to English when no installation choice exists. Native startup errors read the same saved preference. Windows silent installation can provide `/LANGUAGE=1033` or `/LANGUAGE=1049`.
 

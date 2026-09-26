@@ -18,7 +18,7 @@ Var RacallResult
 !insertmacro RacallWelcomePage
 !insertmacro RacallLoadLanguages
 !insertmacro customHeader
-!macro RacallAcceptCommandLanguage LOCALE ID NAME SEARCH
+!macro RacallAcceptCommandLanguage LOCALE ID NAME
   ${If} $R1 == "${ID}"
     StrCpy $LANGUAGE ${ID}
   ${EndIf}

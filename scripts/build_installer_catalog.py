@@ -1,4 +1,4 @@
-"""Generate the native searchable language catalog; --check rejects stale output."""
+"""Generate the native language catalog; --check rejects stale output."""
 import argparse
 import json
 from pathlib import Path
@@ -23,7 +23,7 @@ def generate():
         assert (ROOT / 'apps/shared/locales' / (entry['locale'] + '.json')).exists()
         assert entry['text'].keys() == entries[0]['text'].keys()
         lines.append('  !insertmacro ${ACTION} ' + ' '.join(quote(str(v)) for v in
-            (entry['locale'], entry['windowsId'], entry['name'], ' '.join(entry['search']))))
+            (entry['locale'], entry['windowsId'], entry['name'])))
     lines.append('!macroend')
     for entry in entries:
         for key, value in entry['text'].items():
@@ -40,7 +40,7 @@ def generate():
             lines.append('    StrCpy $RacallText_' + key + ' ' + quote(value))
         lines.append('  ${EndIf}')
     lines.append('!macroend')
-    return '\n'.join(lines) + '\n' 
+    return '\n'.join(lines) + '\n'
 
 
 def main():
