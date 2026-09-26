@@ -13,7 +13,10 @@
         "install": "Install",
         "cancel": "Cancel",
         "seedError": "Could not save the installation language. Check access to the app folder.",
-        "continue": "Click Install to continue with the installation."
+        "continue": "Click Install to continue with the installation.",
+        "progressTitle": "Installing",
+        "progressIntro": "Please wait while Setup installs Racall on your computer.",
+        "progressActivity": "Installing files..."
       },
       "nsisLanguage": "English"
     },
@@ -30,7 +33,10 @@
         "install": "Установить",
         "cancel": "Отмена",
         "seedError": "Не удалось сохранить язык установки. Проверьте доступ к папке приложения.",
-        "continue": "Нажмите «Установить», чтобы продолжить установку."
+        "continue": "Нажмите «Установить», чтобы продолжить установку.",
+        "progressTitle": "Установка",
+        "progressIntro": "Подождите, пока программа устанавливает Racall на компьютер.",
+        "progressActivity": "Установка файлов..."
       },
       "nsisLanguage": "Russian"
     }

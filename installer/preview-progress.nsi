@@ -12,20 +12,23 @@ OutFile "${PROJECT_DIR}\build\Racall-progress-preview.exe"
 !define MUI_HEADERIMAGE
 !define MUI_HEADERIMAGE_RIGHT
 !define MUI_HEADERIMAGE_BITMAP "${PROJECT_DIR}\installer\assets\header.bmp"
+!include "${PROJECT_DIR}\installer\progress.nsh"
 !define MUI_CUSTOMFUNCTION_ABORT PreviewAbort
 !define MUI_PAGE_CUSTOMFUNCTION_SHOW PreviewShow
+!define MUI_PAGE_CUSTOMFUNCTION_LEAVE RacallProgressComplete
 !insertmacro MUI_PAGE_INSTFILES
 !insertmacro RacallLoadLanguages
 !insertmacro customHeader
 
 ShowInstDetails nevershow
 Var PreviewProgress
-LangString PreviewExtract 1033 "Extracting: resources\app.asar (preview only)"
-LangString PreviewExtract 1049 "Распаковка: resources\app.asar (только просмотр)"
+Var PreviewFailure
 
 Function .onInit
+  StrCpy $INSTDIR "$LOCALAPPDATA\Programs\Racall"
   StrCpy $LANGUAGE 1033
   ${GetParameters} $R0
+  ${GetOptions} $R0 "/FAILURE=" $PreviewFailure
   ${GetOptions} $R0 "/LANGUAGE=" $R1
   ${If} $R1 == "1049"
     StrCpy $LANGUAGE 1049
@@ -33,6 +36,7 @@ Function .onInit
 FunctionEnd
 
 Function PreviewShow
+  Call RacallProgressShow
   SendMessage $HWNDPARENT ${WM_SETTEXT} 0 'STR:Preview - $(Racall_setup)'
   ; NSIS updates its own bar from instruction counts. Use an identical native
   ; control at the same bounds for the paused sample; keep the real bar hidden.
@@ -63,7 +67,10 @@ Section
   GetDlgItem $1 $HWNDPARENT 2
   EnableWindow $1 1
   SetDetailsPrint textonly
-  DetailPrint "$(PreviewExtract)"
+  DetailPrint "$INSTDIR"
+  ${If} $PreviewFailure == "1"
+    Abort "Preview: simulated failure; no files were installed."
+  ${EndIf}
   ${Do}
     Sleep 250
   ${Loop}

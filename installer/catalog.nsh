@@ -11,6 +11,9 @@ LangString Racall_install 1033 "Install"
 LangString Racall_cancel 1033 "Cancel"
 LangString Racall_seedError 1033 "Could not save the installation language. Check access to the app folder."
 LangString Racall_continue 1033 "Click Install to continue with the installation."
+LangString Racall_progressTitle 1033 "Installing"
+LangString Racall_progressIntro 1033 "Please wait while Setup installs Racall on your computer."
+LangString Racall_progressActivity 1033 "Installing files..."
 LangString Racall_intro 1049 "Источники, связанные заметки и исследования с ИИ в одном месте."
 LangString Racall_language 1049 "Язык"
 LangString Racall_spaceError 1049 "На выбранном диске недостаточно свободного места."
@@ -19,6 +22,9 @@ LangString Racall_install 1049 "Установить"
 LangString Racall_cancel 1049 "Отмена"
 LangString Racall_seedError 1049 "Не удалось сохранить язык установки. Проверьте доступ к папке приложения."
 LangString Racall_continue 1049 "Нажмите «Установить», чтобы продолжить установку."
+LangString Racall_progressTitle 1049 "Установка"
+LangString Racall_progressIntro 1049 "Подождите, пока программа устанавливает Racall на компьютер."
+LangString Racall_progressActivity 1049 "Установка файлов..."
 !macro RacallLoadLanguages
   !insertmacro MUI_LANGUAGE "English"
   !insertmacro MUI_LANGUAGE "Russian"
@@ -32,6 +38,9 @@ LangString Racall_continue 1049 "Нажмите «Установить», что
   Var RacallText_cancel
   Var RacallText_seedError
   Var RacallText_continue
+  Var RacallText_progressTitle
+  Var RacallText_progressIntro
+  Var RacallText_progressActivity
 !macroend
 !macro RacallLoadText
   ${If} $LANGUAGE == 1033
@@ -43,6 +52,9 @@ LangString Racall_continue 1049 "Нажмите «Установить», что
     StrCpy $RacallText_cancel "Cancel"
     StrCpy $RacallText_seedError "Could not save the installation language. Check access to the app folder."
     StrCpy $RacallText_continue "Click Install to continue with the installation."
+    StrCpy $RacallText_progressTitle "Installing"
+    StrCpy $RacallText_progressIntro "Please wait while Setup installs Racall on your computer."
+    StrCpy $RacallText_progressActivity "Installing files..."
   ${EndIf}
   ${If} $LANGUAGE == 1049
     StrCpy $RacallText_intro "Источники, связанные заметки и исследования с ИИ в одном месте."
@@ -53,5 +65,8 @@ LangString Racall_continue 1049 "Нажмите «Установить», что
     StrCpy $RacallText_cancel "Отмена"
     StrCpy $RacallText_seedError "Не удалось сохранить язык установки. Проверьте доступ к папке приложения."
     StrCpy $RacallText_continue "Нажмите «Установить», чтобы продолжить установку."
+    StrCpy $RacallText_progressTitle "Установка"
+    StrCpy $RacallText_progressIntro "Подождите, пока программа устанавливает Racall на компьютер."
+    StrCpy $RacallText_progressActivity "Установка файлов..."
   ${EndIf}
 !macroend

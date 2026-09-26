@@ -17,9 +17,6 @@
   !insertmacro MUI_PAGE_INIT
   Page custom RacallWelcome RacallWelcomeLeave
   Var RacallPage
-  Var RacallBodyFont
-  Var RacallTitleFont
-  Var RacallDpi
   Var RacallTitle
   Var RacallLogo
   Var RacallLogoImage

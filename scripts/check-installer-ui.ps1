@@ -157,3 +157,62 @@ try {
     if (!$fixture.HasExited) { Stop-Process -Id $fixture.Id -Force }
 }
 
+
+# Exercise the same progress layout used by the real installer, without installing.
+& $Compiler /WX /V2 "/DPROJECT_DIR=$repoRoot" "$repoRoot/installer/preview-progress.nsi"
+if ($LASTEXITCODE) { throw 'Progress preview compilation failed.' }
+$catalog = Get-Content "$repoRoot/installer/catalog.json" -Raw | ConvertFrom-Json
+foreach ($entry in $catalog.languages) {
+    $preview = Start-Process "$repoRoot/build/Racall-progress-preview.exe" -ArgumentList "/LANGUAGE=$($entry.windowsId)" -WindowStyle Hidden -PassThru
+    try {
+        $progress = $null
+        for ($attempt=0; $attempt -lt 50; $attempt++) {
+            $window = [InstallerUI]::Find($preview.Id)
+            $controls = [InstallerUI]::Children($window)
+            $progress = $controls | Where-Object { [InstallerUI]::GetDlgCtrlID($_) -eq 2004 } | Select-Object -First 1
+            if ($progress -and [InstallerUI]::Send($progress,0x408,0,0).ToInt32() -eq 42) { break }
+            Start-Sleep -Milliseconds 100
+        }
+        Assert-UI ($progress -and [InstallerUI]::Send($progress,0x408,0,0).ToInt32() -eq 42) 'Preview holds 42 percent'
+        $page = [InstallerUI]::GetParent($progress)
+        $nativeProgress = [InstallerUI]::GetDlgItem($page,1004)
+        Assert-UI ($nativeProgress -ne [IntPtr]::Zero) 'Native engine progress handle retained'
+        Assert-UI ([InstallerUI]::Text([InstallerUI]::GetDlgItem($page,2101)) -eq $entry.text.progressTitle) 'Localized progress heading'
+        Assert-UI ([InstallerUI]::Text([InstallerUI]::GetDlgItem($page,2102)) -eq $entry.text.progressIntro) 'Localized progress introduction'
+        $client = New-Object InstallerUI+Rect
+        [InstallerUI]::GetClientRect($window,[ref]$client) | Out-Null
+        $dpi = [InstallerUI]::GetDpiForWindow($window)
+        Assert-UI ($client.right -eq [math]::Floor(835*$dpi/96) -and $client.bottom -eq [math]::Floor(605*$dpi/96)) 'Progress window matches welcome dimensions'
+        $rect = New-Object InstallerUI+Rect
+        [InstallerUI]::GetWindowRect($progress,[ref]$rect) | Out-Null
+        Assert-UI ($rect.right-$rect.left -eq [math]::Floor(724*$dpi/96) -and $rect.bottom-$rect.top -eq [math]::Floor(28*$dpi/96)) 'Reference progress bar dimensions'
+        $status = [InstallerUI]::GetDlgItem($page,1006)
+        Assert-UI (([InstallerUI]::GetWindowLong($status,-16) -band 0x8080) -eq 0x8080) 'Paths are single-line and ampersands are literal'
+        $cancel = [InstallerUI]::GetDlgItem($window,2)
+        Assert-UI ([InstallerUI]::IsWindowEnabled($cancel)) 'Preview cancellation remains available'
+        [InstallerUI]::ShowWindow($window,4) | Out-Null
+        Start-Sleep -Milliseconds 800
+        Capture-Window $window "$output/progress-preview-$($entry.windowsId).png"
+        [InstallerUI]::Send($cancel,0xF5,0,0) | Out-Null
+        Assert-UI ($preview.WaitForExit(3000)) 'Cancel closes progress preview'
+    } finally { if (!$preview.HasExited) { Stop-Process -Id $preview.Id -Force } }
+}
+@{ passed=$true; checks=@('EN/RU progress text','Shared window dimensions','Native engine handles retained','Path ellipsis','Preview cancellation'); installationPerformed=$false } |
+    ConvertTo-Json | Set-Content -Encoding utf8 "$output/progress-result.json"
+Get-Content "$output/progress-result.json"
+
+# A failed extraction must keep the second screen dismissible.
+$preview = Start-Process "$repoRoot/build/Racall-progress-preview.exe" -ArgumentList '/FAILURE=1' -WindowStyle Hidden -PassThru
+try {
+ for ($attempt=0; $attempt -lt 50; $attempt++) {
+  $window=[InstallerUI]::Find($preview.Id)
+  $close=[InstallerUI]::GetDlgItem($window,2)
+  if ([InstallerUI]::Text($close).Replace('&','') -eq 'Close') { break }
+  Start-Sleep -Milliseconds 100
+ }
+ Assert-UI (([InstallerUI]::GetWindowLong($close,-16) -band 0x10000000) -ne 0) 'Failed progress page needs a visible Close button'
+ Assert-UI ([InstallerUI]::IsWindowEnabled($close)) 'Failed progress page needs enabled Close button'
+ [InstallerUI]::Send($close,0xF5,0,0) | Out-Null
+ Assert-UI ($preview.WaitForExit(3000)) 'Failed preview closes without installing'
+ 'Simulated failure remains dismissible.'
+} finally { if (!$preview.HasExited) { Stop-Process -Id $preview.Id -Force } }

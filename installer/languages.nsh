@@ -5,6 +5,7 @@
 !include "FileFunc.nsh"
 !include "${PROJECT_DIR}\installer\catalog.nsh"
 !include "${PROJECT_DIR}\installer\selection.nsh"
+!include "${PROJECT_DIR}\installer\progress-integration.nsh"
 
 !macro preInit
   StrCpy $LANGUAGE 1033

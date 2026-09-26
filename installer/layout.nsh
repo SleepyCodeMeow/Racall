@@ -1,4 +1,9 @@
-﻿; Reference geometry in 96-DPI pixels, using native Windows controls.
+!ifndef RACALL_LAYOUT_INCLUDED
+!define RACALL_LAYOUT_INCLUDED
+Var RacallDpi
+Var RacallBodyFont
+Var RacallTitleFont
+; Reference geometry in 96-DPI pixels, using native Windows controls.
 !macro RacallPlace CONTROL X Y WIDTH HEIGHT
   IntOp $0 ${X} * $RacallDpi
   IntOp $0 $0 / 96
@@ -11,7 +16,7 @@
   System::Call 'user32::SetWindowPos(p ${CONTROL}, p 0, i r0, i r1, i r2, i r3, i 4)'
 !macroend
 
-!macro RacallReferenceLayout
+!macro RacallSizeWindow
   System::Call 'user32::GetDpiForWindow(p $HWNDPARENT) i .r8'
   StrCpy $RacallDpi $8
   ${If} $RacallDpi == 0
@@ -34,6 +39,10 @@
   IntOp $2 $2 - $0
   IntOp $3 $3 - $1
   System::Call 'user32::SetWindowPos(p $HWNDPARENT, p 0, i 0, i 0, i r2, i r3, i 6)'
+!macroend
+
+!macro RacallReferenceLayout
+  !insertmacro RacallSizeWindow
   ; Hide stock wizard chrome; the white page owns the content.
   System::Call 'user32::GetWindow(p $HWNDPARENT, i 5) p.r4'
   ${DoWhile} $4 != 0
@@ -45,15 +54,7 @@
     ${EndIf}
     System::Call 'user32::GetWindow(p r4, i 2) p.r4'
   ${Loop}
-  ; Match the reference's 16-pixel Segoe UI, independently of dialog-font rounding.
-  IntOp $0 16 * $RacallDpi
-  IntOp $0 $0 + 48
-  IntOp $0 $0 / 96
-  IntOp $0 0 - $0
-  System::Call 'gdi32::CreateFontW(i r0, i 0, i 0, i 0, i 400, i 0, i 0, i 0, i 1, i 0, i 0, i 5, i 0, w "Segoe UI") p.s'
-  Pop $RacallBodyFont
-  System::Call 'gdi32::CreateFontW(i r0, i 0, i 0, i 0, i 700, i 0, i 0, i 0, i 1, i 0, i 0, i 5, i 0, w "Segoe UI") p.s'
-  Pop $RacallTitleFont
+  !insertmacro RacallCreateFonts
   SendMessage $RacallTitle ${WM_SETFONT} $RacallTitleFont 1
   SendMessage $RacallIntro ${WM_SETFONT} $RacallBodyFont 1
   SendMessage $RacallContinue ${WM_SETFONT} $RacallBodyFont 1
@@ -74,3 +75,16 @@
   GetDlgItem $4 $HWNDPARENT 2
   !insertmacro RacallPlace $4 717 560 103 30
 !macroend
+
+!macro RacallCreateFonts
+  ; Match the reference's 16-pixel Segoe UI, independently of dialog-font rounding.
+  IntOp $0 16 * $RacallDpi
+  IntOp $0 $0 + 48
+  IntOp $0 $0 / 96
+  IntOp $0 0 - $0
+  System::Call 'gdi32::CreateFontW(i r0, i 0, i 0, i 0, i 400, i 0, i 0, i 0, i 1, i 0, i 0, i 5, i 0, w "Segoe UI") p.s'
+  Pop $RacallBodyFont
+  System::Call 'gdi32::CreateFontW(i r0, i 0, i 0, i 0, i 700, i 0, i 0, i 0, i 1, i 0, i 0, i 5, i 0, w "Segoe UI") p.s'
+  Pop $RacallTitleFont
+!macroend
+!endif
