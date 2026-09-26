@@ -45,6 +45,7 @@ jobs:
       - run: uv sync --frozen
       - run: npm test -- -q
       - run: npm run lint
+      - run: npm run check:installer-catalog
       - run: npm run test:i18n
       - run: npm run check:release
       - run: uv run python scripts/evaluate_model.py
@@ -53,6 +54,9 @@ jobs:
       - run: npx electron-builder --${{ matrix.platform }} --${{ matrix.arch }} --publish never
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+      - name: Check native language picker
+        if: runner.os == 'Windows'
+        run: pwsh -NoProfile -File scripts/check-installer-ui.ps1
       - name: Check packaged app (Windows and macOS)
         if: runner.os != 'Linux'
         run: npm run test:packaged

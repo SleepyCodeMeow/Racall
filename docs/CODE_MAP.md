@@ -52,6 +52,6 @@ Existing retrieval, ingestion and provider modules remain shared engine modules.
 
 ## Windows installer styling
 
-See `installer/README.md`: `appearance.nsh` controls light colors and typography, `assets/` holds logo bitmaps, and `scripts/build_installer_assets.py` regenerates them. Keep language seeding in `languages.nsh` separate from styling.
+See `installer/README.md`: `appearance.nsh` controls light colors and typography, `assets/` holds logo bitmaps, and `scripts/build_installer_assets.py` regenerates them. The searchable first screen lives in `welcome.nsh`, its translations/aliases in `catalog.json`, and the parent handoff in `selection.nsh`. Keep language seeding in `languages.nsh` separate from styling.
 
 `apps/api/on_knowledge/evidence_references.py` prepares short, request-local model citation labels. `knowledge.py` validates them exactly and restores canonical IDs before returning or saving an answer.

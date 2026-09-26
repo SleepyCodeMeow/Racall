@@ -61,9 +61,16 @@ const checks = [];
 if (process.platform === "win32") {
   const installer = path.join(root, "release", `Racall-${version}-win-x64.exe`);
   const destination = path.join(run, "installed");
-  command(installer, ["/S", "/D=" + destination], {
+  command(installer, ["/S", "/LANGUAGE=1049", "/D=" + destination], {
     windowsVerbatimArguments: true,
   });
+  const seed = path.join(destination, "resources", "installer-language.json");
+  assert.equal(JSON.parse(fs.readFileSync(seed, "utf8")).locale, "ru");
+  checks.push("Russian installer choice seeds first launch");
+  command(installer, ["/S", "/LANGUAGE=1033", "/D=" + destination], {
+    windowsVerbatimArguments: true,
+  });
+  assert.equal(JSON.parse(fs.readFileSync(seed, "utf8")).locale, "en");
   const executable = path.join(destination, "Racall.exe");
   check(executable);
   checks.push("NSIS silent installation and installed app");
