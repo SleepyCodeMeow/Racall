@@ -247,3 +247,18 @@ def test_windows_crt_read_conflict_without_winerror_is_retried(tmp_path, monkeyp
     monkeypatch.setattr(Path, "read_text", temporarily_locked)
     assert storage.read_text(path) == '{"safe":true}'
     assert calls == 3
+
+
+def test_partial_staged_original_is_replaced_before_promotion(client):
+    c, n = client, notebook(client)
+    old = upload(c, n)
+    body = b"Marigold has a complete replacement document."
+    version = hashlib.sha256(body).hexdigest()
+    folder = c.app.state.store.source_path(n, old["id"]) / "versions" / version
+    folder.mkdir(parents=True)
+    (folder / "original.md").write_bytes(b"partial")
+    prefix = f"/api/notebooks/{n}/sources/{old['id']}"
+    assert c.put(prefix, files={"file": ("new.md", body)}).status_code == 202
+    new = ready(c, n, old["id"], refresh=True)
+    assert new["version"] == version and not new.get("refresh_error")
+    assert c.get(prefix + "/original").content == body

@@ -267,5 +267,6 @@
   "error.parserMemory": "Document parsing exceeded the memory limit.",
   "error.parserFormat": "This document could not be parsed. Check the file or try another format.",
   "error.parserStopped": "The document parser stopped unexpectedly. Try a smaller or repaired file.",
-  "error.parserOutput": "The parsed document exceeds the output limit."
+  "error.parserOutput": "The parsed document exceeds the output limit.",
+  "error.sourceModified": "The stored source file changed outside Racall. Reimport it as a new source."
 }

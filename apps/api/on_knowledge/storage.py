@@ -42,10 +42,13 @@ def write_json(path: Path, value: object):
     atomic_write(path, json.dumps(value, ensure_ascii=False, indent=2))
 
 
-def atomic_write(path: Path, text: str):
+def atomic_write(path: Path, text: str | bytes):
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(path.name + "." + uid() + ".tmp")
-    temporary.write_text(text, encoding="utf-8")
+    if isinstance(text, bytes):
+        temporary.write_bytes(text)
+    else:
+        temporary.write_text(text, encoding="utf-8")
     try:
         for attempt in range(8):
             try:

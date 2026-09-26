@@ -3,11 +3,10 @@ from __future__ import annotations
 import hashlib
 import json
 import re
-import shutil
 from pathlib import Path
 
 from ...ingestion import EXTENSIONS, MAX_BYTES
-from ...storage import ConflictError, Store, now, read_text, uid, write_json
+from ...storage import ConflictError, Store, atomic_write, now, read_text, uid, write_json
 
 
 def version_id(value: str) -> str:
@@ -37,8 +36,11 @@ class Sources:
         folder = root / "versions" / version_id(item["version"])
         folder.mkdir(parents=True, exist_ok=True)
         original = folder / ("original." + item["type"])
-        if not original.exists():
-            shutil.copyfile(self.file(notebook, item["id"], item["original"]), original)
+        data = self.file(notebook, item["id"], item["original"]).read_bytes()
+        if hashlib.sha256(data).hexdigest() != item["version"]:
+            raise ValueError("The stored source file changed outside Racall. Reimport it as a new source.")
+        if not original.exists() or hashlib.sha256(original.read_bytes()).hexdigest() != item["version"]:
+            atomic_write(original, data)
         doc = self.document(notebook, item)
         if doc is not None and not (folder / "document.json").exists():
             write_json(folder / "document.json", doc)
@@ -108,8 +110,9 @@ class Sources:
             folder = root / source / "versions" / digest
             folder.mkdir(parents=True, exist_ok=True)
             original = folder / ("original" + suffix)
-            if not original.exists():
-                original.write_bytes(data)
+            if not original.exists() or hashlib.sha256(original.read_bytes()).hexdigest() != digest:
+                # Recover an orphaned/partial stage from an interrupted prior write.
+                atomic_write(original, data)
             item = {
                 "id": source,
                 "title": name,
