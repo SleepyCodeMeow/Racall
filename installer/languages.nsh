@@ -1,3 +1,5 @@
+!include "${PROJECT_DIR}\installer\appearance.nsh"
+
 ; Use the installer choice only to seed a profile that has no saved preference.
 ; Persist beside the application, not in the elevated installer's user profile.
 !include "FileFunc.nsh"

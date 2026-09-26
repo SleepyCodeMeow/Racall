@@ -104,7 +104,10 @@
       ],
       "displayLanguageSelector": true,
       "language": "1033",
-      "include": "installer/languages.nsh"
+      "include": "installer/languages.nsh",
+      "installerHeader": "installer/assets/header.bmp",
+      "installerSidebar": "installer/assets/sidebar.bmp",
+      "uninstallerSidebar": "installer/assets/sidebar.bmp"
     },
     "mac": {
       "target": [

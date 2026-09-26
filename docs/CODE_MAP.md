@@ -49,3 +49,7 @@ Use matching feature names under `apps/web/features/` and `apps/api/on_knowledge
 Keep JSX focused on rendering; extract long asynchronous state/lifecycle logic into a named hook. Use explicit imports and names that explain the responsibility. Avoid catch-all `utils` or `manager` files and unrelated behavior in the application shell. Follow the [reference-project review process](REFERENCE_PROJECTS.md) before implementing a substantial new workflow.
 
 Existing retrieval, ingestion and provider modules remain shared engine modules. Split them further when feature growth warrants it; do not silently change their public behavior during a directory move.
+
+## Windows installer styling
+
+See `installer/README.md`: `appearance.nsh` controls light colors and typography, `assets/` holds logo bitmaps, and `scripts/build_installer_assets.py` regenerates them. Keep language seeding in `languages.nsh` separate from styling.
