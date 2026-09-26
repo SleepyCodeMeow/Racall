@@ -19,11 +19,11 @@ Publication is **on hold** at the owner's request. No release date or interval h
 
 - [x] Local backend regression checks and production frontend/frozen backend builds.
 - [x] Local Windows maintenance smoke: version replacement, historical citations/originals, failure preservation, notebook rename/trash/restore and restart.
-- [x] Full Windows packaged regression suite for code commit `4eeb07e` in native CI; includes the light installer and model citation-label fix.
-- [x] Native CI: Windows x64, Linux x64, macOS arm64 and macOS x64 — [run 36248218995](https://github.com/SleepyCodeMeow/Racall/actions/runs/36248218995), code commit `4eeb07e`.
+- [x] Full Windows packaged regression suite for code commit `d909076` in native CI; includes the searchable installer and model citation-label fix.
+- [x] Native CI: Windows x64, Linux x64, macOS arm64 and macOS x64 — [run 36251019854](https://github.com/SleepyCodeMeow/Racall/actions/runs/36251019854), code commit `d909076`.
 - [x] Installer checks on disposable native hosts: NSIS install/uninstall, DMG copy/launch, Debian install/remove, extracted AppImage launch.
 - [x] Searchable Windows language picker: local native UI/filter/translation/handoff checks, rebuilt EXE and actual bundled-screen cancellation check.
-- [ ] Native CI for the new searchable installer, including EN/RU installation seeds. Earlier CI above covers `4eeb07e`.
+- [x] Native CI for the searchable installer: immediate translation, search/selection, path handoff, actual Russian installation seed and English reinstall seed. All four platform jobs passed in the run above; publication was skipped.
 - [ ] Real cloud/Ollama acceptance using [MODEL_EVALUATION.md](MODEL_EVALUATION.md). The first local Ollama run did not pass: two missing answers and four provider failures; see [report](OLLAMA_EVALUATION_2026-09-26.md). Rerun after investigation; do not replace with mock tests.
 - [ ] Owner's hands-on review of the candidate on their computer.
 
