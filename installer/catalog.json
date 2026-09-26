@@ -9,7 +9,7 @@
         "intro": "Your sources, connected notes and AI research in one place.",
         "language": "Language",
         "spaceError": "There is not enough free space on the selected drive.",
-        "setup": "Setup — Racall version {version}",
+        "setup": "Setup - Racall version {version}",
         "install": "Install",
         "cancel": "Cancel",
         "seedError": "Could not save the installation language. Check access to the app folder.",

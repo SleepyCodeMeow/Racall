@@ -23,6 +23,7 @@ Publication is **on hold** at the owner's request. No release date or interval h
 - [x] Native CI: Windows x64, Linux x64, macOS arm64 and macOS x64 — [run 36251019854](https://github.com/SleepyCodeMeow/Racall/actions/runs/36251019854), code commit `d909076`.
 - [x] Installer checks on disposable native hosts: NSIS install/uninstall, DMG copy/launch, Debian install/remove, extracted AppImage launch.
 - [x] Reference-style Windows first screen and language dropdown: local native opening/translation/handoff checks, rebuilt EXE and actual bundled-screen cancellation check. Separate search, directory controls and size summary removed from the first screen.
+- [x] Reference caption geometry: local Windows 11 native-frame/client-size checks, disabled edge resizing, EN/RU selection and rebuilt EXE cancellation. Title-bar colors remain native.
 - [ ] Native CI for the revised first-screen layout; the run below covers the earlier searchable picker.
 - [x] Native CI for the searchable installer: immediate translation, search/selection, path handoff, actual Russian installation seed and English reinstall seed. All four platform jobs passed in the run above; publication was skipped.
 - [ ] Real cloud/Ollama acceptance using [MODEL_EVALUATION.md](MODEL_EVALUATION.md). The first local Ollama run did not pass: two missing answers and four provider failures; see [report](OLLAMA_EVALUATION_2026-09-26.md). Rerun after investigation; do not replace with mock tests.

@@ -38,6 +38,13 @@ public static class InstallerUI {
     [DllImport("user32.dll")] public static extern bool RedrawWindow(IntPtr h, IntPtr rect, IntPtr region, uint flags);
     [DllImport("user32.dll")] public static extern bool PrintWindow(IntPtr h, IntPtr dc, uint flags);
     [StructLayout(LayoutKind.Sequential)] public struct Rect { public int left, top, right, bottom; }
+    [DllImport("user32.dll")] public static extern uint GetDpiForWindow(IntPtr h);
+    [DllImport("user32.dll")] public static extern int GetWindowLong(IntPtr h, int index);
+    [DllImport("user32.dll")] public static extern bool GetClientRect(IntPtr h, out Rect rect);
+    [DllImport("user32.dll")] public static extern IntPtr GetSystemMenu(IntPtr h, bool revert);
+    [DllImport("user32.dll")] public static extern uint GetMenuState(IntPtr h, uint item, uint flags);
+    [DllImport("user32.dll")] public static extern IntPtr SendMessageTimeout(IntPtr h, uint m, IntPtr w, IntPtr l, uint flags, uint timeout, out IntPtr result);
+    [DllImport("dwmapi.dll")] public static extern int DwmGetWindowAttribute(IntPtr h, int attribute, out Rect rect, int size);
     [DllImport("user32.dll")] public static extern bool GetWindowRect(IntPtr h, out Rect rect);
     public static IntPtr Find(int pid) {
         IntPtr result=IntPtr.Zero;
@@ -70,7 +77,13 @@ function Capture-Window([IntPtr]$window, [string]$path) {
         $dc = $graphics.GetHdc()
         try { $ok = [InstallerUI]::PrintWindow($window, $dc, 2) } finally { $graphics.ReleaseHdc($dc) }
         if (!$ok) { throw 'PrintWindow failed' }
-        $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png)
+        # PrintWindow includes invisible resize margins; capture the visible DWM frame only.
+        $visible = New-Object InstallerUI+Rect
+        if ([InstallerUI]::DwmGetWindowAttribute($window, 9, [ref]$visible, 16) -eq 0) {
+            $crop = [System.Drawing.Rectangle]::new($visible.left-$rect.left, $visible.top-$rect.top, $visible.right-$visible.left, $visible.bottom-$visible.top)
+            $capture = $bitmap.Clone($crop, $bitmap.PixelFormat)
+            try { $capture.Save($path, [System.Drawing.Imaging.ImageFormat]::Png) } finally { $capture.Dispose() }
+        } else { $bitmap.Save($path, [System.Drawing.Imaging.ImageFormat]::Png) }
     } finally { $graphics.Dispose(); $bitmap.Dispose() }
 }
 function Assert-UI($condition, [string]$message) { if (!$condition) { throw $message } }
@@ -92,10 +105,16 @@ try {
     Assert-UI ($list) 'Language controls missing'
     [InstallerUI]::ShowWindow($window, 4) | Out-Null
     Start-Sleep -Milliseconds 200
+    $dpi = [InstallerUI]::GetDpiForWindow($window)
+    $client = New-Object InstallerUI+Rect
+    [InstallerUI]::GetClientRect($window, [ref]$client) | Out-Null
+    Assert-UI ($client.right -eq [math]::Floor(835*$dpi/96) -and $client.bottom -eq [math]::Floor(605*$dpi/96)) 'Reference client dimensions'
+    Assert-UI (([InstallerUI]::GetWindowLong($window,-16) -band 0x40000) -ne 0) 'Standard desktop caption frame'
+    Assert-UI ([InstallerUI]::GetMenuState([InstallerUI]::GetSystemMenu($window,$false),0xF000,0) -eq [uint32]::MaxValue) 'Size must be absent from the system menu'
     $install = [InstallerUI]::GetDlgItem($window, 1)
     Assert-UI ((Count-Languages) -eq 2) 'Initial language count'
     Assert-UI ([InstallerUI]::Send($list,0x147,0,0).ToInt32() -eq 0) 'English must be selected'
-    Assert-UI ([InstallerUI]::Text($window) -eq "Setup — Racall version $releaseLabel") 'English must be the default UI'
+    Assert-UI ([InstallerUI]::Text($window) -eq "Setup - Racall version $releaseLabel") 'English must be the default UI'
     Assert-UI ([InstallerUI]::IsWindowEnabled($install)) 'Install must initially be enabled'
     Assert-UI (!($controls | Where-Object { [InstallerUI]::Class($_) -in @('Edit','ListBox') })) 'No separate search or list'
     $texts = [InstallerUI]::Children($window) | ForEach-Object { [InstallerUI]::Text($_) }
@@ -113,8 +132,17 @@ try {
     Assert-UI ($texts -contains 'Нажмите «Установить», чтобы продолжить установку.') 'Russian continuation instruction'
     Capture-Window $window "$output/russian.png"
     [InstallerUI]::Select($list,0)
-    Assert-UI ([InstallerUI]::Text($window) -eq "Setup — Racall version $releaseLabel") 'Switching back to English'
+    Assert-UI ([InstallerUI]::Text($window) -eq "Setup - Racall version $releaseLabel") 'Switching back to English'
     [InstallerUI]::Select($list,1)
+    $before = New-Object InstallerUI+Rect
+    [InstallerUI]::GetWindowRect($window, [ref]$before) | Out-Null
+    $point = (($before.bottom-2) -shl 16) -bor ($before.right-2)
+    $result = [IntPtr]::Zero
+    $handled = [InstallerUI]::SendMessageTimeout($window,0xA1,17,$point,2,500,[ref]$result)
+    Assert-UI ($handled -ne [IntPtr]::Zero) 'Edge press must not enter an interactive resize loop'
+    $after = New-Object InstallerUI+Rect
+    [InstallerUI]::GetWindowRect($window, [ref]$after) | Out-Null
+    Assert-UI ($before.right-$before.left -eq $after.right-$after.left -and $before.bottom-$before.top -eq $after.bottom-$after.top) 'Edge press must preserve window size'
     [InstallerUI]::Send($install,0xF5,0,0) | Out-Null
     Assert-UI ($fixture.WaitForExit(5000)) 'Helper must return after Install'
     Assert-UI ($fixture.ExitCode -eq 0) 'Successful selection exit code'
@@ -122,7 +150,7 @@ try {
     Assert-UI ($selection -match 'language=1049') 'Selected Russian must reach parent'
     Assert-UI ($selection.Contains("directory=$chosenPath")) 'Chosen path with spaces must reach parent'
     Assert-UI (!(Test-Path -LiteralPath $chosenPath)) 'Helper must not install files'
-    @{passed=$true; checks=@('English default','Native dropdown opens','Immediate translation','No separate search or list','Language and path handoff'); fixture='Production language helper, test size 512 MiB'} |
+    @{passed=$true; checks=@('Native frame geometry','Fixed window size','English default','Native dropdown opens','Immediate translation','No separate search or list','Language and path handoff'); fixture='Production language helper, test size 512 MiB'} |
         ConvertTo-Json | Set-Content -Encoding utf8 "$output/result.json"
     Get-Content "$output/result.json"
 } finally {
