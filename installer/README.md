@@ -18,6 +18,7 @@ A disk-space check runs when Install is clicked, using the parent section size a
 - `appearance.nsh`: white surfaces, neutral text, Segoe UI, the versioned caption and Windows title-bar theme integration.
 - `assets/welcome.bmp`: 221 × 84, rendered directly from the full-resolution icon for the larger first-screen mascot.
 - `assets/header.bmp`: 150 × 57; `assets/sidebar.bmp`: 164 × 314; both 24-bit RGB.
+- `../scripts/build_windows_icon.py`: regenerates `assets/icon.ico` with tight artwork bounds and native 16/20/24/32/40/48/64/128/256-pixel frames for Windows captions, taskbar and Explorer. The shared PNG and large installer artwork keep their existing presentation padding.
 - `../scripts/build_installer_assets.py`: regenerates bitmaps from `assets/icon.png`.
 - `../scripts/check-installer-ui.ps1`: native UI test; the helper writes only a test selection file and cannot install Racall. The fixture supplies a 512 MiB payload size to the hidden disk-space guard.
 - `../package.json` → `build.nsis`: resource paths and standard installer options.
