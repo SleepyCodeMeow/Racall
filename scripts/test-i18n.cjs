@@ -25,6 +25,12 @@ for (const [count, ending] of [[0, 'источников готовы'], [1, 'и
 assert.equal(localizeMessage('Провайдер вернул HTTP 401. Проверьте URL, ключ и имя модели.', 'en'), 'The provider returned HTTP 401. Check the URL, key, and model name.');
 assert.equal(localizeMessage('The file exceeds 25 MB', 'ru'), 'Размер файла превышает 25 МБ');
 assert.equal(localizeMessage('Unrecognized provider diagnostic', 'ru'), 'Unrecognized provider diagnostic');
+assert.equal(localizeMessage(ru['answer.languageMismatch'], 'en'), en['answer.languageMismatch']);
+assert.equal(localizeMessage(en['answer.languageMismatch'], 'ru'), ru['answer.languageMismatch']);
+for (const key of ['service.providerDeadline', 'service.providerIdleTimeout', 'service.providerStream', 'service.providerKeyRequired', 'service.sharedEndpointKey']) {
+  assert.equal(localizeMessage(ru[key], 'en'), en[key]);
+  assert.equal(localizeMessage(en[key], 'ru'), ru[key]);
+}
 const run = path.join(root, 'test-results', 'locale-unit-' + Date.now());
 const resources = path.join(run, 'resources'); fs.mkdirSync(resources, { recursive: true });
 assert.equal(initializeLocale(path.join(run, 'default'), resources), 'en');

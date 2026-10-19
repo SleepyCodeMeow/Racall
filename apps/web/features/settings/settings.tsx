@@ -2,6 +2,8 @@
 import { useI18n } from "../../lib/i18n";
 import { languages, type Locale } from "../../lib/translations";
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
+import { AppearanceSettings } from "./appearance";
 import {
   ArrowUpRight,
   Check,
@@ -9,7 +11,16 @@ import {
   Key,
   PlugsConnected,
 } from "@phosphor-icons/react";
-import { api, Settings } from "../../lib/api";
+import {
+  api,
+  type EmbeddingProviderId,
+  type ProviderId,
+  type ProviderProfile,
+  type Settings,
+} from "../../lib/api";
+import { ProviderConnection } from "./provider-connection";
+import { EmbeddingConnection } from "./embedding-settings";
+import { emptyProfile } from "./providers";
 
 export function SettingsPanel({
   close,
@@ -19,8 +30,11 @@ export function SettingsPanel({
   report: (message: string) => void;
 }) {
   const { tr, locale, setLanguage, savingLanguage } = useI18n();
+  const client = useQueryClient();
   const [settings, setSettings] = useState<Settings>();
-  const [key, setKey] = useState("");
+  const [keys, setKeys] = useState<Partial<Record<ProviderId, string>>>({});
+  const [embeddingKeys, setEmbeddingKeys] = useState<Partial<Record<EmbeddingProviderId, string>>>({});
+  const [embeddingDrafts, setEmbeddingDrafts] = useState<Partial<Record<EmbeddingProviderId, ProviderProfile>>>({});
   const [busy, setBusy] = useState(false);
   const [saved, setSaved] = useState(false);
   useEffect(() => {
@@ -34,10 +48,45 @@ export function SettingsPanel({
         <div className="skeleton h-12" />
       </div>
     );
-  const edit = (field: keyof Settings, value: string) => {
-    setSettings({ ...settings, [field]: value });
+  const editProfile = (field: "base_url" | "model", value: string) => {
+    setSettings({
+      ...settings,
+      profiles: {
+        ...settings.profiles,
+        [settings.provider]: {
+          ...settings.profiles[settings.provider],
+          [field]: value,
+          ...(field === "base_url" ? { has_key: false } : {}),
+        },
+      },
+    });
     setSaved(false);
   };
+  const selectProvider = (provider: ProviderId) => {
+    setSettings({ ...settings, provider });
+    setSaved(false);
+  };
+  const selectEmbeddingProvider = (provider: EmbeddingProviderId) => {
+    setEmbeddingDrafts({ ...embeddingDrafts, [settings.embeddings.provider]: settings.embeddings });
+    setSettings({
+      ...settings,
+      embeddings: { ...(embeddingDrafts[provider] || emptyProfile(provider)), provider },
+    });
+    setSaved(false);
+  };
+  const editEmbeddings = (field: "base_url" | "model", value: string) => {
+    setSettings({
+      ...settings,
+      embeddings: {
+        ...settings.embeddings,
+        [field]: value,
+        ...(field === "base_url" ? { has_key: false } : {}),
+      },
+    });
+    setSaved(false);
+  };
+  const pendingOtherKeys = Object.entries(keys).some(([id, value]) => id !== settings.provider && value)
+    || Object.entries(embeddingKeys).some(([id, value]) => id !== settings.embeddings.provider && value);
   return (
     <section className="settings page-content">
       <div className="eyebrow">{tr("settings.eyebrow")}</div>
@@ -61,36 +110,39 @@ export function SettingsPanel({
           {savingLanguage ? tr("common.saving") : tr("settings.languageHint")}
         </p>
       </div>
+      <AppearanceSettings />
       <div className="section-heading">
         <PlugsConnected size={22} />
         <h2>{tr("settings.connection")}</h2>
-      </div>
-      <div className="segmented">
-        <button
-          className={!settings.base_url.includes("11434") ? "selected" : ""}
-          onClick={() => edit("base_url", "https://api.openai.com/v1")}
-        >
-          {tr("settings.cloud")}
-        </button>
-        <button
-          className={settings.base_url.includes("11434") ? "selected" : ""}
-          onClick={() => edit("base_url", "http://127.0.0.1:11434/v1")}
-        >
-          Ollama
-        </button>
       </div>
       <form
         onSubmit={async (e) => {
           e.preventDefault();
           setBusy(true);
           try {
+            const key = keys[settings.provider];
+            const embeddingKey = embeddingKeys[settings.embeddings.provider];
             await api("/settings", "PUT", {
-              base_url: settings.base_url,
-              model: settings.model,
-              embedding_model: settings.embedding_model,
+              provider: settings.provider,
+              profiles: Object.fromEntries(Object.entries(settings.profiles).map(([id, profile]) => [id, {
+                base_url: profile.base_url,
+                model: profile.model,
+              }])),
+              embeddings: {
+                provider: settings.embeddings.provider,
+                base_url: settings.embeddings.base_url,
+                model: settings.embeddings.model,
+              },
               ...(key ? { api_key: key } : {}),
+              ...(embeddingKey ? { embedding_api_key: embeddingKey } : {}),
             });
-            setKey("");
+            const refreshed = await api<Settings>("/settings");
+            setSettings(refreshed);
+            client.setQueryData(["settings"], refreshed);
+            void client.invalidateQueries({ queryKey: ["models"] });
+            void client.invalidateQueries({ queryKey: ["provider"] });
+            setKeys((drafts) => ({ ...drafts, [settings.provider]: "" }));
+            setEmbeddingKeys((drafts) => ({ ...drafts, [settings.embeddings.provider]: "" }));
             setSaved(true);
           } catch (error) {
             report((error as Error).message);
@@ -98,56 +150,32 @@ export function SettingsPanel({
             setBusy(false);
           }
         }}
-        className="grid gap-5 mt-6"
+        className="grid gap-5 provider-settings-form"
       >
-        <label>
-          {tr("settings.apiUrl")}
-          <input
-            value={settings.base_url}
-            required
-            onChange={(e) => edit("base_url", e.target.value)}
-            placeholder="https://api.openai.com/v1"
-          />
-          <small>{tr("settings.apiHint")}</small>
-        </label>
-        <label>
-          {tr("settings.key")}{" "}
-          <span className="optional">
-            {settings.has_key
-              ? tr("settings.keySaved")
-              : tr("settings.keyMissing")}
-          </span>
-          <input
-            type="password"
-            value={key}
-            autoComplete="off"
-            onChange={(e) => {
-              setKey(e.target.value);
-              setSaved(false);
-            }}
-            placeholder={tr("settings.keyPlaceholder")}
-          />
-        </label>
-        <div className="grid sm:grid-cols-2 gap-4">
-          <label>
-            {tr("settings.model")}
-            <input
-              value={settings.model}
-              onChange={(e) => edit("model", e.target.value)}
-              placeholder={tr("settings.modelPlaceholder")}
-              required
-            />
-          </label>
-          <label>
-            {tr("settings.embedding")}{" "}
-            <span className="optional">{tr("common.optional")}</span>
-            <input
-              value={settings.embedding_model}
-              onChange={(e) => edit("embedding_model", e.target.value)}
-              placeholder={tr("settings.embeddingPlaceholder")}
-            />
-          </label>
-        </div>
+        <ProviderConnection
+          provider={settings.provider}
+          profile={settings.profiles[settings.provider]}
+          apiKey={keys[settings.provider] || ""}
+          disabled={busy}
+          selectProvider={selectProvider}
+          editProfile={editProfile}
+          editKey={(value) => {
+            setKeys({ ...keys, [settings.provider]: value });
+            setSaved(false);
+          }}
+        />
+        <EmbeddingConnection
+          settings={settings.embeddings}
+          apiKey={embeddingKeys[settings.embeddings.provider] || ""}
+          disabled={busy}
+          selectProvider={selectEmbeddingProvider}
+          editProfile={editEmbeddings}
+          editKey={(value) => {
+            setEmbeddingKeys({ ...embeddingKeys, [settings.embeddings.provider]: value });
+            setSaved(false);
+          }}
+        />
+        {pendingOtherKeys && <p className="pending-provider-keys" role="status">{tr("settings.pendingKeys")}</p>}
         <p className="notice">
           <Key size={18} /> {tr("settings.cloudNotice")}
         </p>

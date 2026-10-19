@@ -145,8 +145,8 @@ def test_answer_rejects_invented_citations_and_critic_failures(client, monkeypat
     notebook = create(client)
     upload(client, notebook)
     def complete(self, system, data):
-        if "supported_indices" in system:
-            return {"supported_indices": [0]}
+        if "supported_claim_ids" in system:
+            return {"supported_claim_ids": [data["claims"][0]["claim_id"]]}
         return {"claims": [
             {"text": "The codename is Marigold.", "evidence_ids": [data["evidence"][0]["id"]]},
             {"text": "Invented!", "evidence_ids": ["nonexistent"]},
@@ -167,8 +167,8 @@ def test_research_and_memory_gate(client, monkeypatch):
     def complete(self, system, data):
         if "Plan research" in system:
             return {"queries": ["codename"]}
-        if "supported_indices" in system:
-            return {"supported_indices": [0]}
+        if "supported_claim_ids" in system:
+            return {"supported_claim_ids": [data["claims"][0]["claim_id"]]}
         return {"claims": [{"text": "Marigold is the codename.", "evidence_ids": [data["evidence"][0]["id"]]}]}
     monkeypatch.setattr(OpenAICompatible, "complete", complete)
     session = client.post(f"/api/notebooks/{notebook}/research", json={"question": "Marigold"}).json()
@@ -242,9 +242,9 @@ def test_model_citation_labels_resolve_without_fuzzy_hash_matching(client, monke
         calls.append(data)
         assert data["evidence"][0]["id"] == "E1"
         assert all("source_id" not in e and "version" not in e for e in data["evidence"])
-        if "supported_indices" in system:
-            assert data["claims"] == [{"text": "The codename is Marigold.", "evidence_ids": ["E1"]}]
-            return {"supported_indices": [0]}
+        if "supported_claim_ids" in system:
+            assert data["claims"] == [{"claim_id": "C1", "text": "The codename is Marigold.", "evidence_ids": ["E1"]}]
+            return {"supported_claim_ids": [data["claims"][0]["claim_id"]]}
         return {"claims": [
             {"text": "The codename is Marigold.", "evidence_ids": ["E1", "E1"]},
             {"text": "Unknown label", "evidence_ids": ["E999"]},

@@ -28,6 +28,9 @@ function run(command, args) {
 }
 run(process.execPath, ['scripts/smoke-desktop.cjs']);
 run(process.execPath, ['scripts/smoke-languages.cjs']);
+run(process.execPath, ['scripts/smoke-providers.cjs']);
+run(process.execPath, ['scripts/smoke-workbench.cjs']);
 run(process.execPath, ['scripts/smoke-persistence.cjs']);
 run(process.execPath, ['scripts/smoke-maintenance.cjs']);
 run('uv', ['run', 'python', 'scripts/check_bundle.py']);
+run('uv', ['run', 'python', 'scripts/check_provider_bundle.py']);

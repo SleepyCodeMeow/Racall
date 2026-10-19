@@ -1,10 +1,84 @@
 # Reference projects and implementation priorities
 
-Reviewed 2026-09-26. [Roadmap](ROADMAP.md) · [Architecture decisions](adr) · [Project home](../README.md)
+Last refreshed 2026-10-17; the original 2026-09-26 review is retained below. [Roadmap](ROADMAP.md) · [Architecture decisions](adr) · [Project home](../README.md)
 
-Use comparable projects to learn which workflows matter and how they are implemented. Adapt useful patterns to Racall's desktop application, local files and Python service. This review reads selected source files and documentation; none of the reference applications was installed or tested. Code presence is evidence of an implementation path, not proof of output quality, completeness, security or cross-platform support.
+Use comparable projects to learn which workflows matter and how they are implemented. Adapt useful patterns to Racall's desktop application, local files and Python service. Source reviews and observations of an installed application are distinguished below. Code presence is evidence of an implementation path, not proof of output quality, completeness, security or cross-platform support.
 
-## Reviewed snapshots
+## Refresh: 2026-10-17
+
+This refresh is an audit and adaptation proposal. It does not implement the proposed features, change the release version or publish a release. The current Racall workbench is documented in [Workbench](WORKBENCH.md) and its [verification record](WORKBENCH_2026-10-17.md).
+
+### Current source snapshots
+
+| Project | Reviewed commit | Primary reference |
+| --- | --- | --- |
+| Ollama | [`d1ed3fd13ac7`](https://github.com/ollama/ollama/tree/d1ed3fd13ac73f60cff00bbead8af24a68c4200d) | Minimal chat, model discovery, Apps and settings |
+| Open Notebook | [`a0f6f3081ae0`](https://github.com/lfnovo/open-notebook/tree/a0f6f3081ae06328f0a451b3a3ef2959ca25721d) | Sources/notes context and persistent multi-turn conversations |
+| SurfSense | [`176aed261a24`](https://github.com/MODSetter/SurfSense/tree/176aed261a24a85d217538960e91c59746561bd2) | Studio, background jobs and durable generated outputs |
+
+Open-NotebookLM was not refreshed in this audit; its September snapshot below remains historical. These repositories were inspected as source, not installed or executed.
+
+### Installed Ollama: observed separately
+
+On the inspected Windows computer, Ollama is installed under `%LOCALAPPDATA%\Programs\Ollama`. The desktop executable is `ollama app.exe`, with `ollama.exe` beside it. The CLI and running local API reported **0.40.5**. Settings showed the model directory as `%USERPROFILE%\.ollama\models`. The exact source commit of the installed binary was not established; current upstream source must not be treated as an exact build match.
+
+The preinstalled app was opened and its sidebar, Apps grid, empty Chat, model popup and Settings were inspected. Observed flows:
+
+- The sidebar collapses and exposes Apps, Chat and Settings; chat history is grouped separately.
+- Apps uses a two-column grid of 14 compact tool cards. No command was copied during this inspection. Command-copy behavior and feedback were traced in source.
+- Empty Chat places the mascot above the composer, with attachment, web-search, model and send controls. The model popup has search at the top and seven entries marked as cloud, downloadable or selected locally.
+- Settings groups account, cloud, updates, network exposure, model folder and context length into simple rows. No setting or account state was changed.
+
+Only metadata was requested from the local API: version, currently loaded models (zero at the time checked), and model recommendations. The experimental recommendations endpoint returned the same seven model IDs seen in the popup. No prompt was sent, model downloaded, cloud sign-in attempted or answer quality evaluated. Opening the app started its local service; this was not an inference test. Search filtering, generated-answer controls and download behavior were reviewed in source rather than exercised in the installed UI.
+
+### Ollama appearance and behavior to adapt
+
+The following dimensions come from the pinned upstream source, not pixel measurements of the installed binary.
+
+| Element | Upstream Ollama | Racall at this audit | Proposed adaptation |
+| --- | --- | --- | --- |
+| Sidebar | 192 px, collapsible | 214 px normally / 192 px at smaller widths, no collapse | Add collapse while retaining notebooks, sources, notes and research |
+| Navigation | 14 px text, 20 px icons, 8 px radius | 13 px text, 7 px radius | Shared navigation tokens and consistent hit areas |
+| Composer | Up to 768 px wide, minimum 88 px high, 24 px radius | Wrapper up to 748 px, inner width about 700 px, 20 px radius | Calm central composer; move to the bottom once the conversation has content |
+| Composer buttons | 36 × 36 px | Attachment 30 px, Send 31 px | Consistent 36 px controls |
+| Model popup | 256 px wide, 16 px radius; search first | 350 px wide, 13 px radius; provider/header before search | Compact searchable list; advanced connection and manual-ID controls secondary |
+| Apps grid | Up to 620 px, 8 px gap, 16 px card radius | 584 px wrapper including padding, 7 px gap, 12 px radius | Tight two-column grid and feedback on the clicked card |
+| Dark colors | Neutral 900 background / neutral 800 composer | Already close: `#171717` / `#262626` | Preserve the existing light/dark/system themes and orange Racall branding |
+
+Sources: [layout](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/components/layout/layout.tsx#L25), [navigation](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/components/AppSidebar.tsx#L8), [composer](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/components/ChatForm.tsx#L685), [model popup](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/components/ModelPicker.tsx#L187), [Apps and copy feedback](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/components/Onboarding.tsx#L812), [settings](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/components/Settings.tsx#L488).
+
+**Model discovery is a functional difference.** Ollama [merges recommendations and installed models](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/hooks/useModels.ts#L23), deduplicates entries and filters cloud entries when Cloud is disabled. Its [recommendations request](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/api.ts#L563) uses `GET /api/experimental/model-recommendations`; the [hook](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/ui/app/src/hooks/useFeaturedModels.ts) caches it for five minutes. Selecting a row saves the selection and closes the popup; it does not itself call the download API.
+
+Racall currently discovers installed Ollama models through `/api/tags`; manual model IDs and explicit confirmed downloads are already available. A recommendations adapter should be optional, bounded by a timeout and fall back to installed models. Do not hardcode today's seven recommendations or equate a cloud listing with an authenticated account or entitlement. Retain explicit download confirmation and cancellation. The selected-model glyph issue identified in this audit was addressed during 0.2 finalization: it uses catalog metadata and avoids asserting a local type before an ambiguous Ollama ID is resolved.
+
+**Apps are tool integrations, not chat providers.** Copying a launch command for Claude Code or Codex does not authenticate that tool or make it a Racall model backend. Ollama's current source also contains macOS desktop integrations that are excluded on Windows. Keep platform-specific entries explicit. The missing selectable command on clipboard failure identified in this audit was added during 0.2 finalization, with stale success feedback cleared. Recommendations, sidebar collapse and the larger layout adaptations remain proposals for a separately selected milestone.
+
+The [Ollama app](https://github.com/ollama/ollama/blob/d1ed3fd13ac73f60cff00bbead8af24a68c4200d/app/README.md) uses Go and platform WebViews with a React frontend. Racall can adopt its interaction patterns within the existing Electron/React/Python structure; changing desktop frameworks is not required.
+
+### NotebookLM alternatives: useful functional differences
+
+| Reference workflow | Source evidence | Racall adaptation |
+| --- | --- | --- |
+| Open Notebook: sources, notes and chat | [Notebook page](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/frontend/src/app/%28dashboard%29/notebooks/%5Bid%5D/page.tsx) uses collapsible columns and mobile tabs. [Chat context](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/frontend/src/app/%28dashboard%29/notebooks/components/ChatColumn.tsx) exposes source/insight/note counts. | Keep source access close to Chat; show a compact context summary, with advanced controls expandable. Do not force three open columns on a narrow window. |
+| Open Notebook: conversational context | [Chat graph](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/open_notebook/graphs/chat.py) supplies accumulated messages and persists graph state. | Racall saves transcripts, but its current chat route passes only the new question to `knowledge.answer`. Add bounded thread context, notebook isolation and citation-aware follow-up retrieval; persistence alone is not model memory. |
+| Open Notebook: transformations | [Transformation graph](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/open_notebook/graphs/transformation.py) applies instructions to a source, validates output and persists an insight. | Start Studio with a few working outputs: summary, study guide and quiz; preserve source versions and allow saving as a Markdown note. |
+| SurfSense: Studio | [Studio panel](https://github.com/MODSetter/SurfSense/blob/176aed261a24a85d217538960e91c59746561bd2/surfsense_local/frontend/src/features/studio/studio-panel.tsx) selects a format, ready sources and instructions; [format capabilities](https://github.com/MODSetter/SurfSense/blob/176aed261a24a85d217538960e91c59746561bd2/surfsense_local/backend/modules/artifacts/formats.py) govern availability. | Show only implemented formats and explain missing model capabilities. A working chat connection does not establish speech or image support. |
+| SurfSense: jobs and artifacts | [Queues](https://github.com/MODSetter/SurfSense/blob/176aed261a24a85d217538960e91c59746561bd2/surfsense_local/backend/shared/queue.py) separate workloads. [Artifact records](https://github.com/MODSetter/SurfSense/blob/176aed261a24a85d217538960e91c59746561bd2/surfsense_local/backend/modules/artifacts/models.py) preserve files/checksums when a chat is deleted. | Durable jobs with progress, cancel/retry/restart and an output catalog; evaluate a small SQLite runner before adding a queue framework. |
+| Slides and audio | SurfSense [dispatches output formats](https://github.com/MODSetter/SurfSense/blob/176aed261a24a85d217538960e91c59746561bd2/surfsense_local/backend/worker/studio/job_router.py); Open Notebook [separates outline/transcript/TTS and speaker profiles](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/open_notebook/podcasts/models.py). | Editable outline → structured slides → template renderer/export; reviewed script → separately configured speech → audio. These are later milestones, not completed Racall features. |
+
+Racall evidence: [chat persistence and dispatch](../apps/api/on_knowledge/features/chats/router.py), [answer pipeline](../apps/api/on_knowledge/knowledge.py), [model service](../apps/api/on_knowledge/features/models/service.py), [model picker](../apps/web/features/models/ModelPicker.tsx), [Apps](../apps/web/features/apps/apps.tsx), [settings](../apps/web/features/settings/settings.tsx).
+
+### Proposed order and acceptance
+
+1. Finish 0.2 acceptance within the already agreed scope. Any chosen UI refinement must preserve EN/RU, source citations, notes, saved provider behavior and keyboard access. Keep publication on hold.
+2. Adapt the compact model popup, collapsible sidebar and grouped settings. Introduce shared size tokens in feature styles rather than adding another layer of global overrides. Check light/dark/system themes, long model names, small windows, focus/Escape and clipboard failure.
+3. Add optional model recommendations with installed/downloadable/cloud distinctions. Check missing/slow/unsupported recommendation endpoints, cloud visibility and duplicate IDs. Selecting a model must not download or load it.
+4. Add bounded conversation context and clearer source controls after 0.2 acceptance. Test follow-up questions, isolated notebooks/threads, context limits, interrupted turns and preserved citation provenance.
+5. Build jobs and the first Studio outputs for the 0.3 milestone, followed by editable slides and audio in later milestones. Verify restart/retry without duplicate outputs; evaluate actual EN/RU output with a real provider before claiming quality.
+
+This audit reused no upstream code, assets or dependencies. It does not establish working cloud login, downloaded-model execution, generated-answer quality or native macOS/Linux parity. Future implementation still needs Racall's own acceptance checks.
+
+## Historical snapshots: 2026-09-26
 
 Pinned links below keep the findings reproducible even when upstream main changes.
 
@@ -14,7 +88,7 @@ Pinned links below keep the findings reproducible even when upstream main change
 | [MODSetter/SurfSense](https://github.com/MODSetter/SurfSense) | [`014e47a7efa1`](https://github.com/MODSetter/SurfSense/tree/014e47a7efa18f7e5c4f726cb8640b0a9e9ba94e) | Desktop workers, Studio dispatch and durable output files |
 | [Anionex/Open-NotebookLM](https://github.com/Anionex/Open-NotebookLM) | [`36ecc9336eb5`](https://github.com/Anionex/Open-NotebookLM/tree/36ecc9336eb5fb9b9e91e48a057ef9fb010ea50a) | Slide generation stages, segmented speech and optional local TTS |
 
-## Findings and adaptation decisions
+## Findings and adaptation decisions from 2026-09-26
 
 ### Open Notebook
 

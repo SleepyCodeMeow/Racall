@@ -212,10 +212,10 @@ class Store:
         self.notes.discard_draft(notebook, draft_id)
 
     def settings(self) -> dict:
+        from .provider_settings import normalize_settings
+
         path = self.root / "settings.json"
-        return json.loads(read_text(path)) if path.exists() else {
-            "base_url": "https://api.openai.com/v1", "model": "", "embedding_model": "",
-        }
+        return normalize_settings(json.loads(read_text(path)) if path.exists() else None)
 
     def audit(self, event: str, notebook: str = "", detail: dict | None = None):
         with self.lock, (self.root / "audit.jsonl").open("a", encoding="utf-8") as f:

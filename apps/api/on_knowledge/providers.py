@@ -7,6 +7,8 @@ from urllib.parse import urlsplit
 import httpx
 import keyring
 
+from .completion_stream import CompletionDeadlineError, CompletionProtocolError, complete_json
+
 
 class LLMProvider(Protocol):
     def complete(self, system: str, data: dict) -> dict: ...
@@ -17,7 +19,13 @@ class EmbeddingProvider(Protocol):
 
 
 def validate_endpoint(url: str) -> str:
-    p = urlsplit(url)
+    if not isinstance(url, str) or not url or len(url) > 2000 or any(char.isspace() or ord(char) < 32 for char in url):
+        raise ValueError("Неверный URL API")
+    try:
+        p = urlsplit(url)
+        p.port  # Reject malformed/out-of-range ports before constructing a request.
+    except ValueError as exc:
+        raise ValueError("Неверный URL API") from exc
     if p.username or p.password or p.query or p.fragment:
         raise ValueError("URL API не должен содержать пароль, query или fragment")
     if p.scheme != "https" and not (p.scheme == "http" and p.hostname in ("localhost", "127.0.0.1", "::1")):
@@ -31,10 +39,34 @@ def get_key(base_url: str) -> str:
     override = os.getenv("OPENNOTEBOOK_API_KEY")
     if override:
         return override
+    return _stored_key(base_url)
+
+
+def _stored_key(base_url: str) -> str:
     try:
         return keyring.get_password("OpenNotebook", base_url) or ""
     except keyring.errors.KeyringError:
         return ""
+
+
+def provider_key(settings: dict) -> str:
+    """Keep legacy overrides while scoping new environment keys to their provider."""
+    # Transport historically stripped trailing slashes before keychain lookup.
+    # Preserve that key identity without rewriting old embedding index identities.
+    base = settings["base_url"].rstrip("/")
+    provider = settings.get("provider", "openai_compatible")
+    if provider == "openai_compatible":
+        return get_key(base)
+    variable = {"openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY",
+                "ollama_cloud": "OLLAMA_API_KEY"}.get(provider)
+    return _stored_key(base) or (os.getenv(variable, "") if variable else "")
+
+
+def _authorization(settings: dict) -> dict[str, str]:
+    key = provider_key(settings)
+    if settings.get("provider") in ("openai", "ollama_cloud") and not key:
+        raise ValueError("Укажите API-ключ для выбранного провайдера в настройках AI")
+    return {"Authorization": "Bearer " + (key or "ollama")}
 
 
 def save_key(base_url: str, value: str):
@@ -55,8 +87,7 @@ class OpenAICompatible:
     def request(self, route: str, body: dict) -> dict:
         try:
             with httpx.Client(timeout=httpx.Timeout(120, connect=15), trust_env=False) as client:
-                response = client.post(self.base + route, json=body,
-                                       headers={"Authorization": "Bearer " + (get_key(self.base) or "ollama")})
+                response = client.post(self.base + route, json=body, headers=_authorization(self.settings))
                 if response.status_code >= 400:
                     raise ValueError(f"Провайдер вернул HTTP {response.status_code}. Проверьте URL, ключ и имя модели.")
                 return response.json()
@@ -66,16 +97,27 @@ class OpenAICompatible:
     def complete(self, system: str, data: dict) -> dict:
         if not self.settings.get("model"):
             raise ValueError("Укажите имя модели в настройках AI")
-        response = self.request("/chat/completions", {
+        body = {
             "model": self.settings["model"], "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(data, ensure_ascii=False)},
             ], "response_format": {"type": "json_object"},
-        })
+        }
         try:
-            return json.loads(response["choices"][0]["message"]["content"])
-        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
-            raise ValueError("Модель не вернула ожидаемый JSON. Выберите модель с JSON mode.") from exc
+            return complete_json(
+                self.base + "/chat/completions",
+                _authorization(self.settings), body,
+            )
+        except CompletionDeadlineError as exc:
+            raise ValueError("Превышено общее время генерации ответа. Уточните вопрос или выберите более быструю модель.") from exc
+        except httpx.ReadTimeout as exc:
+            raise ValueError("Модель перестала передавать данные. Проверьте AI-провайдер или повторите запрос.") from exc
+        except CompletionProtocolError as exc:
+            raise ValueError("Провайдер вернул неполный или некорректный поток ответа. Повторите запрос или выберите другую модель.") from exc
+        except httpx.HTTPStatusError as exc:
+            raise ValueError(f"Провайдер вернул HTTP {exc.response.status_code}. Проверьте URL, ключ и имя модели.") from exc
+        except httpx.HTTPError as exc:
+            raise ValueError("Не удалось связаться с AI-провайдером. Проверьте подключение и настройки.") from exc
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         vectors = []

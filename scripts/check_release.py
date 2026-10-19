@@ -5,6 +5,8 @@ import re
 import tomllib
 from pathlib import Path
 
+from release_policy import release_targets
+
 root = Path(__file__).resolve().parents[1]
 package = json.loads((root / "package.json").read_text(encoding="utf-8"))
 version = package["version"]
@@ -20,6 +22,7 @@ assert next(p["version"] for p in uv["package"] if p["name"] == project["project
 release = json.loads((root / "apps/shared/release.json").read_text())
 assert release["version"] == version
 assert release.get("publication") in ("hold", "approved"), "Declare publication hold/approval explicitly"
+release_targets(release)
 assert (root / "apps/api/on_knowledge/version.py").read_text().strip() == f'VERSION = "{version}"'
 assert (root / f"docs/releases/{version}.md").is_file(), "Release notes are missing"
 if os.environ.get("GITHUB_REF_TYPE") == "tag":

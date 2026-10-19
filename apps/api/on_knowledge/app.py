@@ -9,12 +9,16 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
+from .features.appearance import router as appearance
 from .features.chats import router as chats
 from .features.chats.service import Chats
 from .features.connections import router as connections
+from .features.models import router as models
+from .features.models.service import Models
 from .features.notebooks import router as notebooks
 from .features.notes import router as notes
 from .features.research import router as research
+from .features.research.service import recover_research
 from .features.settings import router as settings
 from .features.sources import router as sources
 from .knowledge import Knowledge
@@ -26,16 +30,23 @@ def create_app(root: Path, token: str, web: Path | None = None) -> FastAPI:
     store = Store(root)
     knowledge = Knowledge(store)
     chat_service = Chats(store)
+    model_service = Models(store)
 
     @asynccontextmanager
     async def lifespan(app):
         chat_service.recover()
+        recover_research(store)
         knowledge.recover()
-        yield
-        knowledge.executor.shutdown(wait=True)
+        model_service.recover()
+        try:
+            yield
+        finally:
+            await model_service.shutdown()
+            knowledge.executor.shutdown(wait=True)
 
     app = FastAPI(title="Racall", version=VERSION, lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.store, app.state.knowledge = store, knowledge
+    app.state.models = model_service
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -83,6 +94,8 @@ def create_app(root: Path, token: str, web: Path | None = None) -> FastAPI:
         notes.create_router(store),
         research.create_router(store, knowledge),
         settings.create_router(store),
+        appearance.create_router(store),
+        models.create_router(model_service),
         connections.create_router(store),
     ):
         app.include_router(router)

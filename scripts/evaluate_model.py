@@ -37,7 +37,9 @@ def main():
         return
     if not args.data_dir:
         parser.error("--run requires --data-dir pointing to configured Racall settings")
-    settings = json.loads((args.data_dir / "settings.json").read_text(encoding="utf-8"))
+    from on_knowledge.provider_settings import normalize_settings
+
+    settings = normalize_settings(json.loads((args.data_dir / "settings.json").read_text(encoding="utf-8")))
     if not settings.get("model"):
         parser.error("Configure a model in Racall first")
     from on_knowledge.knowledge import Knowledge
@@ -50,7 +52,7 @@ def main():
     store = Store(output / "isolated-knowledge")
     write_json(
         store.root / "settings.json",
-        {k: settings[k] for k in ("base_url", "model", "embedding_model") if k in settings},
+        {k: settings[k] for k in ("provider", "profiles", "embeddings")},
     )
     knowledge = Knowledge(store)
     notebook = store.create_notebook("Synthetic 0.2 evaluation")["id"]
@@ -83,7 +85,8 @@ def main():
                 results.append({**case, "error": str(error), "human_verdict": "pending"})
             write_json(
                 output / "results.json",
-                {"model": settings["model"], "provider": settings["base_url"], "results": results},
+                {"model": settings["model"], "provider": settings["provider"],
+                 "base_url": settings["base_url"], "results": results},
             )
     finally:
         knowledge.executor.shutdown(wait=True)

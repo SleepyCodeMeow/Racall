@@ -19,28 +19,35 @@
 
 ## ⚡ Get started
 
-Development of **0.2 Beta** has started. [Development notes](docs/releases/0.2.0-beta.1.md) · [Code map](docs/CODE_MAP.md). The downloads below are still **0.1 Beta**.
-
-Download **Racall 0.1 Beta** for your operating system:
+**Racall 0.2 Beta is available for Windows.** Keep your sources, cited answers and connected notes in one desktop workspace.
 
 | Platform | Link |
 | :--- | :--- |
-| **Windows x64** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-win-x64.exe) |
-| **macOS Apple Silicon** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-arm64.dmg) |
-| **macOS Intel** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-mac-x64.dmg) |
-| **Linux x64 / Ubuntu (DEB)** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-amd64.deb) |
-| **Linux x64 (AppImage)** | [Download](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.1.0-beta.1/Racall-0.1.0-beta.1-linux-x86_64.AppImage) |
+| **Windows x64 — 0.2 Beta** | [Download installer](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.2.0-beta.1/Racall-0.2.0-beta.1-win-x64.exe) |
+| **macOS / Linux — 0.2 Beta** | Not included in this release; platform testing and contributor help are welcome |
 
-More packages and checksums: [GitHub Releases](https://github.com/SleepyCodeMeow/Racall/releases). No Python, Node.js or Docker installation is required. [Russian documentation](README.ru.md).
+[Release notes](https://github.com/SleepyCodeMeow/Racall/releases/tag/v0.2.0-beta.1) · [SHA-256 checksums](https://github.com/SleepyCodeMeow/Racall/releases/download/v0.2.0-beta.1/SHA256SUMS.txt) · [Russian documentation](README.ru.md)
 
-All four native build and packaged smoke-test jobs passed for this release. See the [release notes](docs/releases/0.1.0-beta.1.md) for verification scope. Beta packages are unsigned; macOS packages are not notarized. Mobile apps are planned for a later release.
+The Windows package includes its runtime: no Python, Node.js or Docker installation is required. Back up your knowledge folder with Racall closed before upgrading. The installer is unsigned.
+
+Earlier **0.1 Beta** packages for Windows, macOS and Linux remain in the [previous release](https://github.com/SleepyCodeMeow/Racall/releases/tag/v0.1.0-beta.1). They do not contain the 0.2 changes. Mobile apps are planned for a later release.
 
 1. Open Racall and create a notebook.
 2. Open **Sources** and import a document.
 3. Use **Search** immediately, or connect your model in **Settings** to ask questions.
 4. Open a citation to inspect the passage, then capture your ideas in **Notes**.
 
-English is the default interface language. Switch to Russian in **Settings → Interface language**. The Windows installer also offers a language choice and applies it on first launch. Later updates keep your saved preference.
+English is the default interface language. Switch to Russian in **Settings → Interface language**. The compact Windows installer also offers a language choice and applies it on first launch. Later updates keep your saved preference.
+
+## New in 0.2 Beta
+
+- **Keep your work.** Saved chats with citation snapshots, note autosave and recoverable drafts.
+- **Update your knowledge.** Replace source files, refresh websites and inspect the versions used by older citations. Rename notebooks or restore them from trash.
+- **Choose your connection.** OpenAI, Claude, Ollama Local/Cloud and llama.cpp, with separate answer profiles and independent optional embeddings.
+- **Make it yours.** Light, Dark and System appearance; a searchable model picker; confirmed local Ollama downloads with progress and cancellation.
+- **Connect external tools.** Apps copies Ollama launch commands for tools such as Claude Code and Codex CLI. You choose when to run them in your terminal.
+
+Read the [full changelog](CHANGELOG.md) and [0.2 release notes](docs/releases/0.2.0-beta.1.md).
 
 ## Features
 
@@ -51,7 +58,7 @@ English is the default interface language. Switch to Russian in **Settings → I
 | Search locally, with optional embeddings | Inspect exact passages and PDF page references |
 | Keep originals on your computer | Run research across your notebook and save reports |
 
-- **Your choice of AI.** Connect an OpenAI-compatible API or an existing Ollama installation. Models need structured JSON output support; model quality varies.
+- **Your choice of AI.** Use OpenAI, Claude, Ollama Local/Cloud, llama.cpp or a custom OpenAI-compatible connection. Models need complete structured JSON output; model quality varies.
 - **Local files you own.** Notes and originals remain on disk. Open a notebook folder as an Obsidian vault, or use another Markdown editor.
 - **Evidence you can inspect.** Answers undergo citation validation and a separate model critique. AI review can still miss mistakes: follow the citations.
 - **Connect your tools.** A read-only MCP server exposes one selected notebook to compatible desktop clients.
@@ -61,7 +68,7 @@ The screenshot shows the real interface with sample content. Its orange backdrop
 
 ## Your model, your data
 
-In **Settings**, enter the API base URL, key and model, or select **Ollama** and enter a model you already installed. Racall does not download model weights. Embeddings are optional.
+In **Settings → AI connection**, save your provider, API URL, key and model. Profiles stay separate when switching providers. Use the model picker beside the message box to browse a saved connection. Local Ollama model downloads require explicit confirmation; opening or selecting a model starts neither a download nor a question. Embeddings are optional and configured separately. [Provider setup →](docs/PROVIDERS.md)
 
 API keys use the operating system keychain. With a cloud provider, questions and retrieved passages are sent to that provider; cloud embeddings send the extracted document text. Local storage does not mean cloud inference stays on your machine.
 
@@ -69,9 +76,9 @@ Back up your knowledge folder with Racall closed. The exact location is shown in
 
 ## What to expect from the beta
 
-0.1 focuses on the desktop knowledge workflow. Chat history is not persisted; save important output as notes or reports. Research runs synchronously and is interrupted when the app closes. Scanned PDFs need OCR elsewhere. Notebook rename/delete, source refresh, sync, mobile apps, graph view and remote MCP/OAuth are not included yet.
+0.2 focuses on a more reliable desktop knowledge workflow. Chats are saved, but earlier messages are not yet supplied as conversational context to the model. Research is interrupted when the app closes and is not automatically replayed. Scanned PDFs need OCR elsewhere. Sync, mobile apps, graph view, presentations/audio generation and remote MCP/OAuth are not included yet.
 
-Automated AI tests use deterministic mock providers. Real model evaluation is still pending. Build checks do not replace manual installation and OS integration testing. [Release notes →](docs/releases/0.1.0-beta.1.md)
+The Windows candidate passed 372 backend tests, EN/RU checks and the full packaged regression suite. These final checks use deterministic provider fixtures; final live-provider acceptance and an owner's hands-on review were not performed. Current Linux/macOS desktop packages are not part of this release. [Verification scope and limitations →](docs/releases/0.2.0-beta.1.md)
 
 ## Built with
 
@@ -111,14 +118,16 @@ npm run dist
 
 Python binaries are built on each target OS and architecture. [Contributing](CONTRIBUTING.md) · [Release process](docs/RELEASING.md) · [Architecture decisions](docs/adr)
 
+The project is developed with assistance from OpenAI Codex. See the [code map](docs/CODE_MAP.md) for the files behind each feature.
+
 ## Follow the project
 
-Everything lives on GitHub for now: [downloads](https://github.com/SleepyCodeMeow/Racall/releases), [documentation](docs/README.md), [bugs and ideas](https://github.com/SleepyCodeMeow/Racall/issues), and [the roadmap](docs/ROADMAP.md). Read [CHANGELOG.md](CHANGELOG.md) for each release.
+Everything lives on GitHub for now: [downloads](https://github.com/SleepyCodeMeow/Racall/releases), [documentation](docs/README.md), [bugs and ideas](https://github.com/SleepyCodeMeow/Racall/issues), and [the roadmap](docs/ROADMAP.md). Read [CHANGELOG.md](CHANGELOG.md) for each release. Trying the beta, reporting a reproducible bug, improving translations or helping with macOS/Linux testing are all useful contributions.
 
 ## License
 
 Python core and tools: [Apache 2.0](LICENSE). Interface and desktop application: [AGPLv3](COPYING). Both allow commercial use and sale subject to their terms. [Component boundaries and contributor rights](LICENSING.md).
 
-The already-published **0.1 Beta** downloads remain under their original MIT terms. This update changes the current branch's licensing documents without changing the application version or replacing existing release files.
+The already-published **0.1 Beta** source and downloads remain under their original MIT terms. The component licenses above apply to the current release as described in [LICENSING.md](LICENSING.md); earlier grants are preserved.
 
 Racall is independently developed and is not affiliated with NotebookLM, Obsidian or Unsloth.

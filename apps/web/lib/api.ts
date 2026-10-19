@@ -86,10 +86,30 @@ export type Research = {
     accepted?: boolean;
   }[];
 };
+export type ProviderId =
+  | "openai"
+  | "anthropic"
+  | "ollama"
+  | "ollama_cloud"
+  | "llama_cpp"
+  | "openai_compatible";
+export type EmbeddingProviderId = Exclude<ProviderId, "anthropic" | "ollama_cloud">;
+export type ProviderProfile = {
+  base_url: string;
+  model: string;
+  has_key: boolean;
+};
+export type EmbeddingSettings = ProviderProfile & {
+  provider: EmbeddingProviderId;
+};
 export type Settings = {
+  provider: ProviderId;
+  profiles: Record<ProviderId, ProviderProfile>;
+  embeddings: EmbeddingSettings;
   base_url: string;
   model: string;
   embedding_model: string;
+  embedding_base_url: string;
   has_key: boolean;
   vault_path: string;
 };
@@ -98,6 +118,8 @@ declare global {
     desktop?: {
       connection: () => Promise<{ origin: string }>;
       openVault: () => Promise<string>;
+      setTheme?: (theme: "light" | "dark" | "system") => Promise<void>;
+      copyLaunchCommand?: (integration: string) => Promise<void>;
     };
   }
 }

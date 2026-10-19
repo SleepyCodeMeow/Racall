@@ -6,6 +6,8 @@ const http = require("node:http");
 const root = path.resolve(__dirname, "..");
 const run = path.join(root, "test-results", "persistence-" + Date.now());
 const data = path.join(run, "data");
+const en = JSON.parse(fs.readFileSync(path.join(root, "apps/shared/locales/en.json"), "utf8"));
+const ru = JSON.parse(fs.readFileSync(path.join(root, "apps/shared/locales/ru.json"), "utf8"));
 fs.mkdirSync(data, { recursive: true });
 const errors = [];
 let app, server;
@@ -90,7 +92,7 @@ async function capture(name) {
           const payload = JSON.parse(text);
           const input = JSON.parse(payload.messages[1].content);
           const result = input.claims
-            ? { supported_indices: [0] }
+            ? { supported_claim_ids: [input.claims[0].claim_id] }
             : {
                 claims: [
                   {
@@ -103,12 +105,18 @@ async function capture(name) {
                 ],
                 message: "",
               };
-          response.writeHead(200, { "Content-Type": "application/json" });
-          response.end(
-            JSON.stringify({
-              choices: [{ message: { content: JSON.stringify(result) } }],
-            }),
+          assert.equal(payload.stream, true, "Packaged completion must request streaming");
+          response.writeHead(200, { "Content-Type": "text/event-stream" });
+          const send = (delta, finish_reason = null) => response.write(
+            `data: ${JSON.stringify({ choices: [{ index: 0, delta, finish_reason }] })}\n\n`,
           );
+          send({ role: "assistant", reasoning: "Internal draft must never become an answer." });
+          const content = JSON.stringify(result);
+          const split = Math.floor(content.length / 2);
+          send({ content: content.slice(0, split) });
+          send({ content: content.slice(split) });
+          send({}, "stop");
+          response.end("data: [DONE]\n\n");
         } catch (e) {
           response.writeHead(500);
           response.end(String(e));
@@ -182,6 +190,14 @@ async function capture(name) {
       .click();
     await page.locator(".search-results button").first().waitFor();
     const oldOrigin = new URL(page.url()).origin;
+    const research = {
+      id: require("node:crypto").randomUUID(),
+      question: "Interrupted research fixture",
+      status: "running",
+      created_at: new Date().toISOString(),
+      steps: [],
+    };
+    fs.writeFileSync(path.join(data, "notebooks", notebook.id, "research", research.id + ".json"), JSON.stringify(research));
     await close();
     page = await launch();
     await page.getByLabel("Chat history").selectOption(firstThread);
@@ -196,6 +212,13 @@ async function capture(name) {
     await page
       .getByRole("button", { name: "Close source", exact: true })
       .click();
+    await page.getByRole("tab", { name: en["nav.research"], exact: true }).click();
+    const interruptedResearch = page.locator("button.research-history").filter({ hasText: research.question });
+    await expect(interruptedResearch).toContainText(en["research.interrupted"]);
+    await interruptedResearch.click();
+    await expect(page.getByText(en["research.interruptedDetail"], { exact: true })).toBeVisible();
+    assert.equal((await api(page, `/notebooks/${notebook.id}/research`)).find(item => item.id === research.id).status, "interrupted");
+    assert.equal(modelCalls, 2, "Research recovery and opening details must not replay model requests");
     await page.getByRole("tab", { name: "Notes", exact: true }).click();
     await page.getByRole("button", { name: "Create", exact: true }).click();
     await page.getByLabel("Note title").fill("Daily note");
@@ -204,6 +227,69 @@ async function capture(name) {
       .fill("Autosaved without pressing Save. [[Next step]]");
     await page.getByRole("button", { name: "Saved", exact: true }).waitFor();
     const saved = (await api(page, `/notebooks/${notebook.id}/notes`))[0];
+    // A title-less edit cannot be autosaved. Every workspace exit must leave
+    // the mounted editor intact instead of relying on fire-and-forget cleanup.
+    const unsavedBody = "Keep this title-less draft when navigation is blocked.";
+    await page.getByLabel("Note title").fill("");
+    await page.getByLabel("Markdown text").fill(unsavedBody);
+    const blockedExits = [
+      page.locator(".global-nav button"),
+      page.locator(".nav-bottom > button"),
+      page.locator(".provider-button"),
+      page.locator(".new-notebook"),
+      page.getByRole("button", { name: "Separate notebook", exact: true }),
+    ];
+    for (const exit of blockedExits) {
+      await exit.click();
+      await expect(page.locator(".error-banner")).toContainText(en["notebook.unsaved"]);
+      await expect(page.getByRole("tab", { name: "Notes", exact: true })).toHaveAttribute("aria-selected", "true");
+      await expect(page.getByLabel("Note title")).toHaveValue("");
+      await expect(page.getByLabel("Markdown text")).toHaveValue(unsavedBody);
+      await expect(page.locator(".apps-page, .settings, .modal-backdrop")).toHaveCount(0);
+      await page.locator(".error-banner button").click();
+    }
+    assert.equal((await api(page, "/notebooks")).length, 2, "Blocked new-notebook navigation must not create a notebook");
+    assert.equal((await api(page, `/notebooks/${notebook.id}/notes`))[0].body, saved.body, "A title-less edit must not overwrite the saved note");
+    await page.getByLabel("Note title").fill(saved.title);
+    await page.getByLabel("Markdown text").fill(saved.body);
+    await page.getByRole("button", { name: "Saved", exact: true }).waitFor();
+    // A late create response must recheck edits made after closing its dialog.
+    await page.evaluate(() => {
+      const original = window.fetch.bind(window);
+      let release;
+      const gate = new Promise(resolve => { release = resolve; });
+      window.__releaseNotebookCreation = release;
+      window.__notebookCreationEntered = false;
+      window.__restoreNotebookFetch = () => { window.fetch = original; };
+      window.fetch = async (...args) => {
+        const response = await original(...args);
+        if (String(args[0]).endsWith("/api/notebooks") && args[1]?.method === "POST") {
+          window.__notebookCreationEntered = true;
+          await gate;
+        }
+        return response;
+      };
+    });
+    await page.locator(".new-notebook").click();
+    await page.getByLabel(en["notebook.name"], { exact: true }).fill("Delayed creation fixture");
+    await page.getByRole("button", { name: en["notebook.create"], exact: true }).click();
+    await page.waitForFunction(() => window.__notebookCreationEntered);
+    await page.locator(".modal-close").click();
+    await page.getByLabel("Note title").fill("");
+    await page.getByLabel("Markdown text").fill(unsavedBody);
+    await page.evaluate(() => window.__releaseNotebookCreation());
+    await expect(page.locator(".error-banner")).toContainText(en["notebook.unsaved"]);
+    await expect(page.locator(".workspace-header h1")).toHaveText(notebook.title);
+    await expect(page.getByLabel("Note title")).toHaveValue("");
+    await expect(page.getByLabel("Markdown text")).toHaveValue(unsavedBody);
+    await page.evaluate(() => window.__restoreNotebookFetch());
+    const delayedNotebook = (await api(page, "/notebooks")).find(item => item.title === "Delayed creation fixture");
+    assert.ok(delayedNotebook, "Creation may finish, but its late navigation must respect new edits");
+    await api(page, `/notebooks/${delayedNotebook.id}`, "DELETE");
+    await page.locator(".error-banner button").click();
+    await page.getByLabel("Note title").fill(saved.title);
+    await page.getByLabel("Markdown text").fill(saved.body);
+    await page.getByRole("button", { name: "Saved", exact: true }).waitFor();
     // Delay the renderer's acknowledgement without bypassing Electron's auth headers.
     await page.evaluate(() => {
       const original = window.fetch.bind(window);
@@ -245,6 +331,10 @@ async function capture(name) {
       })
       .toBe("Keep editing");
     assert.equal((await api(page, "/notebooks")).length, 2);
+    // Apps must wait for the in-flight save and its newer queued keystrokes.
+    await page.locator(".global-nav button").click();
+    await expect(page.locator(".apps-page")).toHaveCount(0);
+    await expect(page.getByLabel("Markdown text")).toHaveValue("Newer typing must survive an older response.");
     await page.evaluate(() => window.__releaseAutosave());
     await expect
       .poll(
@@ -253,6 +343,9 @@ async function capture(name) {
         { timeout: 20000 },
       )
       .toBe("Newer typing must survive an older response.");
+    await expect(page.locator(".apps-page")).toBeVisible();
+    await page.getByRole("tab", { name: "Notes", exact: true }).click();
+    await page.locator(".note-tabs button").filter({ hasText: saved.title }).click();
     await page.getByRole("button", { name: "Saved", exact: true }).waitFor();
     assert.equal(
       await page.getByLabel("Markdown text").inputValue(),
@@ -332,6 +425,10 @@ async function capture(name) {
       .click();
     await page.getByLabel("История диалогов").waitFor();
     await capture("03-russian-history.png");
+    await page.getByRole("tab", { name: ru["nav.research"], exact: true }).click();
+    await page.locator("button.research-history").filter({ hasText: research.question }).click();
+    await expect(page.getByText(ru["research.interruptedDetail"], { exact: true })).toBeVisible();
+    assert.equal(modelCalls, 2, "Russian recovered Research details must not call a model");
     assert.equal(errors.length, 0, errors.join("\n"));
     fs.writeFileSync(
       path.join(run, "result.json"),
@@ -346,7 +443,11 @@ async function capture(name) {
             "persisted answers and citation snapshots",
             "multiple chats and rename",
             "full service restart",
+            "interrupted research recovery and English/Russian details without replay",
             "autosave without Save",
+            "workspace navigation preserves an unsavable note and blocks new-notebook creation",
+            "late notebook creation response preserves edits made after closing its dialog",
+            "workspace navigation waits for the complete in-flight autosave",
             "typing during delayed save",
             "cancel closing while dirty keeps the service alive",
             "external-edit conflict",

@@ -1,0 +1,10 @@
+[
+  { "id": "claude", "name": "Claude Code", "mark": "C", "color": "clay" },
+  { "id": "codex", "name": "Codex CLI", "mark": ">_", "color": "violet" },
+  { "id": "opencode", "name": "OpenCode", "mark": "OC", "color": "neutral" },
+  { "id": "cline", "name": "Cline", "mark": "CL", "color": "neutral" },
+  { "id": "copilot", "name": "Copilot CLI", "mark": "CP", "color": "blue" },
+  { "id": "qwen", "name": "Qwen Code", "mark": "Q", "color": "violet" },
+  { "id": "droid", "name": "Droid", "mark": "D", "color": "clay" },
+  { "id": "pi", "name": "Pi", "mark": "π", "color": "violet" }
+]

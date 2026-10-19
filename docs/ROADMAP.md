@@ -20,13 +20,13 @@ Local notebooks and portable Markdown; PDF/MD/TXT/DOCX/URL import; search and ci
 
 ## 0.2 Beta — Everyday reliability
 
-The engineering scope is implemented on `development/0.2`; the four native build, packaged-app and installer checks passed on code commit `7a73788`. Publication is on hold at the owner's request. The owner will run the real-model acceptance check later. See the [release checklist](RELEASE_02_CHECKLIST.md) for evidence and outstanding gates. See [0.2 development notes](releases/0.2.0-beta.1.md) and the [code map](CODE_MAP.md).
+The first 0.2 Beta release targets Windows x64. It adds persistent conversations, safer note editing, source history and a refreshed workbench. Current Linux/macOS desktop packages are not included; testing and contributor help are welcome. The owner chose to collect early-user feedback without a mandatory final live-model/hands-on pass. See the [release notes](releases/0.2.0-beta.1.md), [verification checklist](RELEASE_02_CHECKLIST.md) and [code map](CODE_MAP.md) for the precise scope and evidence.
 
 - Persistent chat history and safer note draft recovery/autosave.
 - Rename/delete notebooks with clear confirmation and recovery safeguards.
 - Source refresh/version tracking and better import failure handling.
-- Real cloud/Ollama model evaluation on a fixed test corpus.
-- Manual installation checks, signing/notarization when certificates are available.
+- Opt-in cloud/Ollama model evaluation on a fixed test corpus; final live-provider acceptance remains unperformed.
+- Automated Windows package checks; signing/notarization when certificates are available.
 - Parser workers with time and memory limits.
 
 ## 0.3 Beta — Research and the first Studio tools

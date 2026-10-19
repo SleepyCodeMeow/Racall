@@ -1,4 +1,5 @@
 "use client";
+import { ModelPicker } from "../models/ModelPicker";
 import { useEffect, useRef, useState } from "react";
 import {
   ArrowUp,
@@ -364,6 +365,8 @@ export function Chat({
                   </button>
                 </div>
               </div>
+              <div className="composer-controls">
+              <ModelPicker configure={settings} report={report} disabled={pending} />
               <button
                 className="send-button"
                 aria-label={tr("chat.send")}
@@ -371,6 +374,7 @@ export function Chat({
               >
                 <ArrowUp size={20} />
               </button>
+              </div>
             </div>
           </form>
           {!turns.length && !pending && (

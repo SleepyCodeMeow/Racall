@@ -1,19 +1,20 @@
 # 0.2 Beta release candidate checklist
 
-Publication is **on hold** at the owner's request. No release date or interval has been chosen. Candidate builds and source updates may be tested; do not create a release tag or publish a GitHub release until the owner explicitly selects the timing.
+On **October 19, 2026**, the owner explicitly approved publication of **Racall 0.2 Beta for Windows x64**. The release policy now declares `publication: "approved"`, `platforms: ["win-x64"]` and `github_latest: true`. Publication still requires a fresh successful Windows native build from the exact tagged source commit. Linux/macOS are outside this release's package and acceptance scope; the historical checks below do not establish acceptance of the current code on those platforms.
 
 ## Engineering scope
 
-- [x] Persist chats, answers, search results and citation snapshots; restart without automatic paid replay.
-- [x] Autosave Markdown, preserve metadata, detect external edits, recover drafts and protect unsaved edits on close/navigation.
+- [x] Persist chats, answers, search results and citation snapshots; mark unfinished Research sessions interrupted on startup without automatic paid replay.
+- [x] Autosave Markdown, preserve metadata, detect external edits, recover drafts and protect unsaved edits on close/navigation, including changes during delayed notebook creation. Keep recovered conflicts accessible through workspace tabs.
 - [x] Rename notebooks; confirmed removal to recoverable trash; restore notes, chats, source versions and files.
 - [x] Block notebook removal during active model/import work.
 - [x] Replace imported files and refresh public web sources. Preserve old versions and exact originals used by past citations.
 - [x] Keep the last working source/index if a replacement fails; recover/retry interrupted imports.
 - [x] Run file parsing and web-page extraction outside the API process, with a 60-second deadline and supervised 512 MiB RSS budget. Linux also bounds address space to 1 GiB. This is resource isolation, not a security sandbox.
 - [x] Separate feature folders and document where contributors should edit each workflow.
-- [x] EN/RU controls and errors; stable version metadata and publication hold.
+- [x] EN/RU controls and errors; stable version metadata and explicit publication/platform policy.
 - [x] Synthetic real-model evaluation fixture and owner instructions.
+- [x] Light/dark/system appearance, searchable saved-provider model picker, explicit local Ollama downloads with cancellation/restart recovery, and Apps launch-command copying with a manual fallback. Model types follow provider metadata; unresolved aliases remain neutral after restart. See [interface guide](WORKBENCH.md).
 
 ## Verification gates
 
@@ -25,10 +26,25 @@ Publication is **on hold** at the owner's request. No release date or interval h
 - [x] Reference-style Windows first screen and language dropdown: local native opening/translation/handoff checks, rebuilt EXE and actual bundled-screen cancellation check. Separate search, directory controls and size summary removed from the first screen.
 - [x] Reference caption geometry: local Windows 11 native-frame/client-size checks, disabled edge resizing, EN/RU selection and rebuilt EXE cancellation. Title-bar colors remain native.
 - [x] Matching progress-page layout: local EN/RU native control, shared dimensions, path display and no-install preview cancellation checks. Production uses the existing extraction progress control.
-- [ ] Native CI for the revised welcome/progress layouts and two-screen completion flow; the run below covers the earlier searchable picker.
+- [x] Native CI for the revised welcome/progress layouts and two-screen completion flow: all four platforms passed [run 38940737841](https://github.com/SleepyCodeMeow/Racall/actions/runs/38940737841), application commit `e708fe4`; publication skipped. See [full verification report](VERIFICATION_2026-10-16.md).
 - [x] Native CI for the searchable installer: immediate translation, search/selection, path handoff, actual Russian installation seed and English reinstall seed. All four platform jobs passed in the run above; publication was skipped.
-- [ ] Real cloud/Ollama acceptance using [MODEL_EVALUATION.md](MODEL_EVALUATION.md). The first local Ollama run did not pass: two missing answers and four provider failures; see [report](OLLAMA_EVALUATION_2026-09-26.md). Rerun after investigation; do not replace with mock tests.
-- [ ] Owner's hands-on review of the candidate on their computer.
+- [x] Local model-response and transport fixes: explicit claim-ID verifier, bounded EN/RU repair, localized Research heading and bounded internal SSE. 171 backend tests, 274-key catalog checks, fresh production builds and Windows packaged regressions passed. See [Research timeout verification](RESEARCH_TIMEOUT_2026-10-16.md).
+- [x] Latest real Ollama GPU run: all 10 questions, source replacement/history, Research, English Markdown export and service/store reopening without model replay passed independent assistant review. Full quotation/version/hash checks passed. Current weights differ from the earlier failed run; this is not a controlled speed comparison.
+- [x] Four primary provider connections, separate profiles, native Claude Messages and independent embeddings: 287 backend tests, 299-key catalogs, new Windows build and full packaged suite passed. Native HTTP fixtures cover all five explicit modes, cited Research/save/reopen and truncated Claude rejection. See [provider verification](PROVIDERS_2026-10-16.md).
+- [x] Final local 0.2 pass: 372 backend tests, 374-key EN/RU catalogs, production builds and the full rebuilt Windows packaged suite passed. Includes 15 workbench groups, 14 persistence scenarios, guarded unsavable navigation/delayed notebook creation, interrupted Research without replay, manual clipboard fallback and model-type metadata after restart. All 249 packaged files match their expected outputs. See [October 17 final candidate verification](WORKBENCH_2026-10-17.md#final-candidate-verification).
+- [x] Explicit Windows-only release scope, publication timing and Latest presentation approved by the owner on October 19. Policy tests preserve immutable tag/build matching, native-check requirements, exact artifacts/checksums and draft-before-publication behavior.
+- [ ] Fresh Windows x64 native CI for the exact release source, including model-response/transport/provider fixes, Apps/model-picker/appearance update, finalization fixes and current release policy. The existing four-platform run above tests the earlier `e708fe4` application; the October 17 local candidate also predates the publication-policy change. Neither substitutes for the fresh release build.
+
+Current Linux/macOS packaged and installer acceptance is deferred. Their packages must not be attached to this Windows-only 0.2 release or described as verified for its current source. A later release can explicitly include them after its native checks pass.
+
+## Owner-approved acceptance exceptions — October 19, 2026
+
+For the first Windows 0.2 Beta, the owner waived mandatory final live-model acceptance and an owner's hands-on review, choosing to collect feedback from early users. These checks were **not performed, not passed**, and are no longer blocking manual gates for that Windows beta:
+
+- Live acceptance of the final provider/model configurations using [MODEL_EVALUATION.md](MODEL_EVALUATION.md), including cloud providers and an actual llama.cpp server. The prior real Ollama run predates the provider-profile update. Deterministic protocol checks do not establish live account access or model quality. Earlier [model-fix timeout](MODEL_FIXES_2026-10-16.md), [October 16](VERIFICATION_2026-10-16.md) and [September 26](OLLAMA_EVALUATION_2026-09-26.md) failures remain recorded. The evaluation kit remains available for voluntary testing.
+- Owner's hands-on review of the candidate on their computer.
+
+This exception does not establish Linux or macOS acceptance or waive the fresh Windows engineering/build gate. Publication timing was subsequently approved by the owner's separate explicit request to publish 0.2 on October 19.
 
 ## Known limits to carry into release notes
 
@@ -38,4 +54,4 @@ Autosave cannot preserve keystrokes that never reached the service before a cras
 
 ## Release timing gate
 
-Even when engineering checks pass, leave `apps/shared/release.json` at `publication: "hold"`. A future release requires explicit timing approval, the remaining human checks, a matching tag build and verified checksums. Do not advance to 0.3 merely to make another release immediately.
+The owner has now approved the timing for this Windows 0.2 Beta. Keep its readable name **Racall 0.2 Beta**, machine version `0.2.0-beta.1` and tag `v0.2.0-beta.1`. Publish only after the remaining Windows gate passes, from the matching immutable tag build with verified checksums. The October 19 acceptance exceptions above remain disclosed as unperformed checks. Return the next development version to `publication: "hold"`; do not infer timing approval for 0.3 or additional platform releases.

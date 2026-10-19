@@ -21,7 +21,17 @@ The renderer fetches its preference before showing the interface. It does not re
 - `apps/web/lib/i18n.tsx` provides the reactive language context.
 - `localizeMessage` adapts existing service-owned diagnostic strings. Never apply it to user documents or AI-generated claims. New diagnostics should have stable catalog keys.
 
+Completion diagnostics distinguish a total generation deadline, an idle provider and an invalid/incomplete response stream. Their EN/RU keys are `service.providerDeadline`, `service.providerIdleTimeout` and `service.providerStream`; raw provider bodies and hidden reasoning are not user-facing error text.
+
 ## Adding a language
+
+### Generated answers and Research exports
+
+The answer language follows the question rather than the interface or retrieved source language. `answer_language.py` recognizes explicit EN/RU requests and grammatical cues, with English as the fallback for ambiguous names. The writer receives an explicit language instruction. A conservative mismatch detector can request one new generation; every regenerated claim still goes through evidence verification. This small policy is not a complete language detector: short or ambiguous prose and noun-heavy sentences may not trigger repair. It never translates stored source quotations.
+
+Research stores its chosen language with the session and uses it for the Markdown source heading. Older sessions without this field infer the heading from their question when saved; existing saved artifacts are not rewritten. Extending generated-language support requires updating this policy and the export heading in addition to the interface catalogs.
+
+### Interface catalogs
 
 1. Add a catalog with every canonical key and the same interpolation placeholders.
 2. Register its locale and native name in `translations.ts` and its catalog in `apps/desktop/locale.cjs`.
@@ -34,6 +44,8 @@ Avoid concatenating sentence fragments with variables. Use complete message keys
 ## Verification
 
 `npm run test:i18n` checks catalogs, placeholders, plural rules, service diagnostics, English defaults, installer preference seeding and preservation of saved choices.
+
+Apps notifications, model discovery/download states and appearance controls use the same EN/RU catalogs. Provider/model names remain unchanged. Theme is persisted separately in `appearance.json`; changing language does not change theme or provider profiles. `npm run test:workbench` checks their live language switches and full app restarts with an isolated model server.
 
 `npm test` includes authenticated preference writes, unsupported values, process recreation and unchanged provider settings/documents.
 

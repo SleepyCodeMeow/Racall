@@ -16,6 +16,7 @@ import {
   Flask,
   Folder,
   GearSix,
+  SquaresFour,
   SidebarSimple,
   Notebook as NotebookIcon,
   PlugsConnected,
@@ -30,6 +31,9 @@ import { Notes } from "../features/notes/notes";
 import { ResearchPanel } from "../features/research/research-panel";
 import { Connect } from "../features/connections/connect";
 import { SettingsPanel } from "../features/settings/settings";
+import { Apps } from "../features/apps/apps";
+import { ThemeProvider } from "../lib/theme";
+import { settlePendingEdits } from "../lib/pending-edits";
 
 function Application() {
   const { tr, localize } = useI18n();
@@ -44,6 +48,7 @@ function Application() {
   const [notebook, setNotebook] = useState("");
   const [tab, setTab] = useState("chat");
   const [settings, setSettings] = useState(false);
+  const [apps, setApps] = useState(false);
   const [showSources, setShowSources] = useState(false);
   const [create, setCreate] = useState(false);
   const [name, setName] = useState("");
@@ -89,14 +94,35 @@ function Application() {
       report((notebooks.error || sources.error)!.message);
   }, [notebooks.error, sources.error, report]);
   const provider = useQuery({
-    queryKey: ["provider", settings],
+    queryKey: ["settings"],
     queryFn: () => api<Settings>("/settings"),
     enabled: ready && !settings,
   });
   const active = notebooks.data?.find((n) => n.id === notebook);
+  // Keep editors mounted until every pending save has succeeded. Their cleanup
+  // cannot cancel a transition when an invalid or conflicted draft cannot save.
+  const guardNavigation = async (changeView: () => void | Promise<void>) => {
+    if (!(await settlePendingEdits())) {
+      report(tr("notebook.unsaved"));
+      return;
+    }
+    await changeView();
+  };
   const navigate = (id: string) => {
+    // Workspace tabs hide rather than unmount Notes. In particular, a recovered
+    // conflict draft must remain reachable even while it cannot be saved.
     setTab(id);
     setSettings(false);
+    setApps(false);
+  };
+  const openSettings = () => {
+    void guardNavigation(() => {
+      setSettings(true);
+      setApps(false);
+    });
+  };
+  const openCreate = () => {
+    void guardNavigation(() => setCreate(true));
   };
   const openSources = () => {
     setSelected(null);
@@ -121,10 +147,16 @@ function Application() {
           <span>racall</span>
           <small>beta</small>
         </div>
-        <button className="new-notebook" onClick={() => setCreate(true)}>
+        <button className="new-notebook" onClick={openCreate}>
           <Plus size={17} />
           {tr("notebook.new")}
         </button>
+        <nav className="global-nav" aria-label={tr("nav.application")}>
+          <button className={apps ? "active" : ""} aria-current={apps ? "page" : undefined}
+            onClick={() => void guardNavigation(() => { setApps(true); setSettings(false); })}>
+            <SquaresFour size={18} /><span>{tr("apps.title")}</span>
+          </button>
+        </nav>
         {active && (
           <nav
             className="workspace-nav"
@@ -163,7 +195,7 @@ function Application() {
                 id={`tab-${t.id}`}
                 role="tab"
                 aria-controls={`panel-${t.id}`}
-                aria-selected={!settings && tab === t.id}
+                aria-selected={!settings && !apps && tab === t.id}
                 tabIndex={
                   tab === t.id ||
                   (!tabs.some((item) => item.id === tab) && t.id === "chat")
@@ -171,14 +203,14 @@ function Application() {
                     : -1
                 }
                 onClick={() => navigate(t.id)}
-                className={!settings && tab === t.id ? "active" : ""}
+                className={!settings && !apps && tab === t.id ? "active" : ""}
               >
                 <t.icon size={18} />
                 <span>{t.title}</span>
               </button>
             ))}
             <button
-              className={tab === "connect" && !settings ? "active" : ""}
+              className={tab === "connect" && !settings && !apps ? "active" : ""}
               onClick={() => navigate("connect")}
             >
               <PlugsConnected size={18} />
@@ -192,12 +224,13 @@ function Application() {
         <NotebookList
           items={notebooks.data}
           pending={notebooks.isPending}
-          active={settings ? "" : notebook}
+          active={settings || apps ? "" : notebook}
           report={report}
           select={(id) => {
             setNotebook(id);
             setTab("chat");
             setSettings(false);
+            setApps(false);
             setSelected(null);
           }}
           removed={(id) => {
@@ -219,7 +252,7 @@ function Application() {
           </div>
           <button
             className={settings ? "selected" : ""}
-            onClick={() => setSettings(true)}
+            onClick={openSettings}
           >
             <GearSix size={18} />
             {tr("settings.title")}
@@ -241,7 +274,7 @@ function Application() {
             </button>
           </div>
         )}
-        {settings ? (
+        {apps ? <Apps report={report} /> : settings ? (
           <SettingsPanel close={() => setSettings(false)} report={report} />
         ) : active ? (
           <>
@@ -250,7 +283,7 @@ function Application() {
                 <h1>{active.title}</h1>
                 <button
                   className="provider-button"
-                  onClick={() => setSettings(true)}
+                  onClick={openSettings}
                 >
                   <span>
                     {provider.data?.model || tr("settings.chooseModel")}
@@ -294,7 +327,7 @@ function Application() {
                       }
                       cite={cite}
                       report={report}
-                      settings={() => setSettings(true)}
+                      settings={openSettings}
                       openSources={openSources}
                       navigate={navigate}
                     />
@@ -372,7 +405,7 @@ function Application() {
               <br />
               {tr("welcome.description2")}
             </p>
-            <button className="primary" onClick={() => setCreate(true)}>
+            <button className="primary" onClick={openCreate}>
               {tr("notebook.first")} <ArrowRight size={18} />
             </button>
             <p className="onboarding-footnote">{tr("welcome.ownership")}</p>
@@ -410,16 +443,23 @@ function Application() {
                 e.preventDefault();
                 setBusy(true);
                 try {
-                  const n = await api<Notebook>("/notebooks", "POST", {
-                    title: name.trim(),
+                  await guardNavigation(async () => {
+                    const n = await api<Notebook>("/notebooks", "POST", {
+                      title: name.trim(),
+                    });
+                    await client.invalidateQueries({ queryKey: ["notebooks"] });
+                    // The dialog can close while creation is in flight, letting
+                    // the editor acquire newer changes before this response.
+                    await guardNavigation(() => {
+                      setNotebook(n.id);
+                      setTab("chat");
+                      setSettings(false);
+                      setApps(false);
+                      setSelected(null);
+                      setCreate(false);
+                      setName("");
+                    });
                   });
-                  await client.invalidateQueries({ queryKey: ["notebooks"] });
-                  setNotebook(n.id);
-                  setTab("chat");
-                  setSettings(false);
-                  setSelected(null);
-                  setCreate(false);
-                  setName("");
                 } catch (e) {
                   report((e as Error).message);
                 } finally {
@@ -463,7 +503,7 @@ export default function Page() {
   return (
     <QueryClientProvider client={client}>
       <I18nProvider>
-        <Application />
+        <ThemeProvider><Application /></ThemeProvider>
       </I18nProvider>
     </QueryClientProvider>
   );

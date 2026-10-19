@@ -1,10 +1,11 @@
-const { app, BrowserWindow, session, ipcMain, dialog, shell } = require('electron');
+const { app, BrowserWindow, session, ipcMain, dialog, shell, nativeTheme, clipboard } = require('electron');
 const { spawn } = require('node:child_process');
 const { randomBytes } = require('node:crypto');
 const { createServer } = require('node:net');
 const path = require('node:path');
 const fs = require('node:fs');
 const { initializeLocale, nativeMessage } = require('./locale.cjs');
+const launchers = require('../shared/launchers.json');
 
 let backend;
 let window;
@@ -18,6 +19,17 @@ const token = randomBytes(32).toString('hex');
 const dataDir = process.env.OPENNOTEBOOK_DATA_DIR || path.join(app.getPath('userData'), 'knowledge');
 const tr = (key, params) => nativeMessage(dataDir, key, params);
 
+function savedTheme() {
+  try {
+    const theme = JSON.parse(fs.readFileSync(path.join(dataDir, 'appearance.json'), 'utf8')).theme;
+    return ['light', 'dark', 'system'].includes(theme) ? theme : 'light';
+  } catch { return 'light'; }
+}
+
+function themeBackground() {
+  return nativeTheme.shouldUseDarkColors ? '#171717' : '#ffffff';
+}
+
 async function freePort() {
   const server = createServer();
   return new Promise((resolve, reject) => {
@@ -30,6 +42,7 @@ async function freePort() {
 }
 
 async function start() {
+  nativeTheme.themeSource = savedTheme();
   const port = await freePort();
   origin = `http://127.0.0.1:${port}`;
   initializeLocale(dataDir, process.resourcesPath);
@@ -83,7 +96,7 @@ async function start() {
   });
   window = new BrowserWindow({
     width: 1440, height: 940, minWidth: 1000, minHeight: 680, show: process.env.OPENNOTEBOOK_SMOKE_MODE !== '1',
-    title: 'Racall', backgroundColor: '#ffffff', autoHideMenuBar: true,
+    title: 'Racall', backgroundColor: themeBackground(), autoHideMenuBar: true,
     webPreferences: { preload: path.join(__dirname, 'preload.cjs'), session: partition,
       contextIsolation: true, nodeIntegration: false, sandbox: true, webSecurity: true },
   });
@@ -94,6 +107,22 @@ async function start() {
   };
   ipcMain.handle('connection', event => { trusted(event); return { origin }; });
   ipcMain.handle('open-vault', event => { trusted(event); return shell.openPath(path.join(dataDir, 'notebooks')); });
+  ipcMain.handle('copy-launch-command', (event, integration) => {
+    trusted(event);
+    if (typeof integration !== 'string' || !launchers.some(item => item.id === integration)) {
+      throw new Error('Unknown launch integration');
+    }
+    return clipboard.writeText(`ollama launch ${integration}`);
+  });
+  ipcMain.handle('set-theme', (event, theme) => {
+    trusted(event);
+    if (!['light', 'dark', 'system'].includes(theme)) throw new Error('Invalid theme');
+    nativeTheme.themeSource = theme;
+    window.setBackgroundColor(themeBackground());
+  });
+  nativeTheme.on('updated', () => {
+    if (window && !window.isDestroyed()) window.setBackgroundColor(themeBackground());
+  });
   window.webContents.setWindowOpenHandler(({ url }) => {
     if (/^https?:\/\//.test(url)) shell.openExternal(url);
     return { action: 'deny' };

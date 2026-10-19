@@ -107,7 +107,9 @@ export function ResearchPanel({
               {tr(
                 session.status === "failed"
                   ? "research.failed"
-                  : "research.pending",
+                  : session.status === "interrupted"
+                    ? "research.interruptedDetail"
+                    : "research.pending",
               )}
             </p>
           )}
@@ -153,7 +155,9 @@ export function ResearchPanel({
               ? tr("common.completed")
               : s.status === "failed"
                 ? tr("common.error")
-                : tr("research.interrupted")}
+                : s.status === "interrupted"
+                  ? tr("research.interrupted")
+                  : tr("research.pending")}
           </small>
           <ArrowUpRight size={16} />
         </button>

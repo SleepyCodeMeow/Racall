@@ -3,6 +3,7 @@ from __future__ import annotations
 from concurrent.futures import ThreadPoolExecutor
 
 from ...ingestion import NormalizedDocument, chunk_document
+from ...provider_settings import embedding_settings
 from ...providers import OpenAICompatible
 from ...storage import ConflictError, Store, now, write_json
 from .parser import parse_isolated
@@ -70,7 +71,7 @@ class SourceService:
                 if not document_path.exists():
                     write_json(document_path, document.model_dump())
             chunks = chunk_document(document, source, target["version"])
-            settings = self.store.settings()
+            settings = embedding_settings(self.store.settings())
             if settings.get("embedding_model"):
                 vectors = OpenAICompatible(settings).embed([c["text"] for c in chunks])
                 for c, v in zip(chunks, vectors):
