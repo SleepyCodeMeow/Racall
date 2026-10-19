@@ -1,6 +1,6 @@
 # 0.2 Beta release candidate checklist
 
-On **October 19, 2026**, the owner explicitly approved publication of **Racall 0.2 Beta for Windows x64**. The release policy now declares `publication: "approved"`, `platforms: ["win-x64"]` and `github_latest: true`. Publication still requires a fresh successful Windows native build from the exact tagged source commit. Linux/macOS are outside this release's package and acceptance scope; the historical checks below do not establish acceptance of the current code on those platforms.
+On **October 19, 2026**, the owner explicitly approved publication of **Racall 0.2 Beta for Windows x64**. The release policy declares `publication: "approved"`, `platforms: ["win-x64"]` and `github_latest: true`. The exact tagged source passed fresh Windows native CI and was [published](https://github.com/SleepyCodeMeow/Racall/releases/tag/v0.2.0-beta.1). Linux/macOS are outside this release's package and acceptance scope; the historical checks below do not establish acceptance of the current code on those platforms.
 
 ## Engineering scope
 
@@ -33,7 +33,7 @@ On **October 19, 2026**, the owner explicitly approved publication of **Racall 0
 - [x] Four primary provider connections, separate profiles, native Claude Messages and independent embeddings: 287 backend tests, 299-key catalogs, new Windows build and full packaged suite passed. Native HTTP fixtures cover all five explicit modes, cited Research/save/reopen and truncated Claude rejection. See [provider verification](PROVIDERS_2026-10-16.md).
 - [x] Final local 0.2 pass: 372 backend tests, 374-key EN/RU catalogs, production builds and the full rebuilt Windows packaged suite passed. Includes 15 workbench groups, 14 persistence scenarios, guarded unsavable navigation/delayed notebook creation, interrupted Research without replay, manual clipboard fallback and model-type metadata after restart. All 249 packaged files match their expected outputs. See [October 17 final candidate verification](WORKBENCH_2026-10-17.md#final-candidate-verification).
 - [x] Explicit Windows-only release scope, publication timing and Latest presentation approved by the owner on October 19. Policy tests preserve immutable tag/build matching, native-check requirements, exact artifacts/checksums and draft-before-publication behavior.
-- [ ] Fresh Windows x64 native CI for the exact release source, including model-response/transport/provider fixes, Apps/model-picker/appearance update, finalization fixes and current release policy. The existing four-platform run above tests the earlier `e708fe4` application; the October 17 local candidate also predates the publication-policy change. Neither substitutes for the fresh release build.
+- [x] Fresh Windows x64 native CI for the exact release source `70fd79bd69cef06d88c03e1fa5ff88929fc1fa3e`: [run 39257810891](https://github.com/SleepyCodeMeow/Racall/actions/runs/39257810891). All jobs passed: 404 backend tests, 374-key EN/RU checks, production builds, native language picker, full packaged suite, NSIS installation/uninstallation preserving user knowledge, and publication. Earlier native/local candidates remain historical evidence; the released EXE is from this fresh tag build.
 
 Current Linux/macOS packaged and installer acceptance is deferred. Their packages must not be attached to this Windows-only 0.2 release or described as verified for its current source. A later release can explicitly include them after its native checks pass.
 
@@ -54,4 +54,4 @@ Autosave cannot preserve keystrokes that never reached the service before a cras
 
 ## Release timing gate
 
-The owner has now approved the timing for this Windows 0.2 Beta. Keep its readable name **Racall 0.2 Beta**, machine version `0.2.0-beta.1` and tag `v0.2.0-beta.1`. Publish only after the remaining Windows gate passes, from the matching immutable tag build with verified checksums. The October 19 acceptance exceptions above remain disclosed as unperformed checks. Return the next development version to `publication: "hold"`; do not infer timing approval for 0.3 or additional platform releases.
+The approved Windows release is published as **Racall 0.2 Beta**, machine version `0.2.0-beta.1`, immutable tag `v0.2.0-beta.1`. The fresh Windows gate passed, and publication uploaded the EXE with SHA-256 checksums. The October 19 acceptance exceptions above remain disclosed as unperformed checks. Return the next development version to `publication: "hold"`; do not infer timing approval for 0.3 or additional platform releases.

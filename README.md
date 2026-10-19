@@ -78,7 +78,7 @@ Back up your knowledge folder with Racall closed. The exact location is shown in
 
 0.2 focuses on a more reliable desktop knowledge workflow. Chats are saved, but earlier messages are not yet supplied as conversational context to the model. Research is interrupted when the app closes and is not automatically replayed. Scanned PDFs need OCR elsewhere. Sync, mobile apps, graph view, presentations/audio generation and remote MCP/OAuth are not included yet.
 
-The Windows candidate passed 372 backend tests, EN/RU checks and the full packaged regression suite. These final checks use deterministic provider fixtures; final live-provider acceptance and an owner's hands-on review were not performed. Current Linux/macOS desktop packages are not part of this release. [Verification scope and limitations →](docs/releases/0.2.0-beta.1.md)
+The published Windows release passed **404 backend tests**, 374-key EN/RU checks, the full packaged regression suite and native installer language/install/uninstall checks on a disposable CI host. [Release-tag CI run →](https://github.com/SleepyCodeMeow/Racall/actions/runs/39257810891) These checks use deterministic provider fixtures; final live-provider acceptance and an owner's hands-on review were not performed. Current Linux/macOS desktop packages are not part of this release. [Verification scope and limitations →](docs/releases/0.2.0-beta.1.md)
 
 ## Built with
 

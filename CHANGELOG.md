@@ -30,7 +30,7 @@ Windows x64 release. Current Linux and macOS desktop packages are not included; 
 
 ### Verification and limits
 
-- 372 backend tests, 374-key EN/RU checks, production builds and the full Windows packaged regression suite passed, including 15 workbench groups and 14 persistence scenarios.
+- [Release-tag CI](https://github.com/SleepyCodeMeow/Racall/actions/runs/39257810891) passed 404 backend tests, 374-key EN/RU checks, production builds and the full Windows packaged regression suite, including 15 workbench groups, 14 persistence scenarios and both frozen-service exercises. Native installer language selection and NSIS install/uninstall with knowledge preservation also passed on a disposable host.
 - Final provider checks use deterministic HTTP fixtures. Final live-provider acceptance and an owner's hands-on review were not performed; early-user feedback is welcome.
 - Windows installer is unsigned. Back up the knowledge folder with Racall closed before upgrading. Saved chat history is not yet model context; sync, mobile, OCR, presentations/audio generation and remote MCP/OAuth remain outside this release.
 
