@@ -1,7 +1,7 @@
-"use client";
-import { useI18n } from "../../lib/i18n";
-import { useRef, useState } from "react";
-import { SourceDetail } from "./source-detail";
+'use client';
+import { useI18n } from '../../lib/i18n';
+import { useRef, useState } from 'react';
+import { SourceDetail } from './source-detail';
 import {
   ArrowClockwise,
   CheckCircle,
@@ -10,8 +10,8 @@ import {
   LinkSimple,
   Plus,
   UploadSimple,
-} from "@phosphor-icons/react";
-import { api, Evidence, Source } from "../../lib/api";
+} from '@phosphor-icons/react';
+import { api, Evidence, Source } from '../../lib/api';
 
 export function SourcePanel({
   notebook,
@@ -32,34 +32,32 @@ export function SourcePanel({
   const fileInput = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [showUrl, setShowUrl] = useState(false);
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState('');
   const [drag, setDrag] = useState(false);
   const upload = async (files: FileList | File[]) => {
     setBusy(true);
     try {
       for (const file of Array.from(files)) {
         if (file.size > 25 * 1024 * 1024)
-          throw new Error(tr("source.fileSize", { name: file.name }));
+          throw new Error(tr('source.fileSize', { name: file.name }));
         const form = new FormData();
-        form.append("file", file);
-        await api(`/notebooks/${notebook}/sources`, "POST", form);
+        form.append('file', file);
+        await api(`/notebooks/${notebook}/sources`, 'POST', form);
         refresh();
       }
     } catch (e) {
       report((e as Error).message);
     } finally {
       setBusy(false);
-      if (fileInput.current) fileInput.current.value = "";
+      if (fileInput.current) fileInput.current.value = '';
     }
   };
   if (selected)
     return (
       <SourceDetail
-        key={`${selected.source.id}:${selected.evidence?.id || ""}`}
+        key={`${selected.source.id}:${selected.evidence?.id || ''}`}
         notebook={notebook}
-        source={
-          sources.find((s) => s.id === selected.source.id) || selected.source
-        }
+        source={sources.find((s) => s.id === selected.source.id) || selected.source}
         evidence={selected.evidence}
         close={() => select(null)}
         refresh={refresh}
@@ -82,11 +80,11 @@ export function SourcePanel({
     >
       <div className="panel-heading">
         <span>
-          {tr("source.title")} <span className="count">{sources.length}</span>
+          {tr('source.title')} <span className="count">{sources.length}</span>
         </span>
         <button
           className="icon-button"
-          aria-label={tr("source.add")}
+          aria-label={tr('source.add')}
           onClick={() => fileInput.current?.click()}
           disabled={busy}
         >
@@ -95,16 +93,14 @@ export function SourcePanel({
       </div>
       <div className="p-5">
         <button
-          className={`upload-zone ${drag ? "dragging" : ""}`}
+          className={`upload-zone ${drag ? 'dragging' : ''}`}
           onClick={() => fileInput.current?.click()}
           disabled={busy}
         >
           <UploadSimple size={26} />
-          <strong>
-            {busy ? tr("source.importing") : tr("source.addMaterials")}
-          </strong>
-          <span>{tr("source.drop")}</span>
-          <small>{tr("source.formats")}</small>
+          <strong>{busy ? tr('source.importing') : tr('source.addMaterials')}</strong>
+          <span>{tr('source.drop')}</span>
+          <small>{tr('source.formats')}</small>
         </button>
         <input
           ref={fileInput}
@@ -116,12 +112,9 @@ export function SourcePanel({
             if (e.target.files) upload(e.target.files);
           }}
         />
-        <button
-          className="secondary w-full mt-3"
-          onClick={() => setShowUrl(!showUrl)}
-        >
+        <button className="secondary w-full mt-3" onClick={() => setShowUrl(!showUrl)}>
           <LinkSimple size={17} />
-          {tr("source.addLink")}
+          {tr('source.addLink')}
         </button>
         {showUrl && (
           <form
@@ -130,8 +123,8 @@ export function SourcePanel({
               e.preventDefault();
               setBusy(true);
               try {
-                await api(`/notebooks/${notebook}/urls`, "POST", { url });
-                setUrl("");
+                await api(`/notebooks/${notebook}/urls`, 'POST', { url });
+                setUrl('');
                 setShowUrl(false);
                 refresh();
               } catch (e) {
@@ -142,7 +135,7 @@ export function SourcePanel({
             }}
           >
             <label>
-              {tr("source.url")}
+              {tr('source.url')}
               <input
                 type="url"
                 value={url}
@@ -152,7 +145,7 @@ export function SourcePanel({
               />
             </label>
             <button className="primary" disabled={busy}>
-              {busy ? tr("common.loading") : tr("source.import")}
+              {busy ? tr('common.loading') : tr('source.import')}
             </button>
           </form>
         )}
@@ -160,61 +153,50 @@ export function SourcePanel({
       <div className="source-list">
         {sources.length === 0 ? (
           <p className="empty-small">
-            {tr("source.empty1")}
+            {tr('source.empty1')}
             <br />
-            {tr("source.empty2")}
+            {tr('source.empty2')}
           </p>
         ) : (
           sources.map((source) => (
             <div key={source.id} className="source-row">
-              <button
-                className="source-open"
-                onClick={() => select({ source })}
-              >
+              <button className="source-open" onClick={() => select({ source })}>
                 <span className="file-icon">
-                  {source.type === "pdf" ? (
-                    <FilePdf size={23} />
-                  ) : (
-                    <FileText size={23} />
-                  )}
+                  {source.type === 'pdf' ? <FilePdf size={23} /> : <FileText size={23} />}
                 </span>
                 <span className="min-w-0">
                   <strong>{source.title}</strong>
                   <small>
-                    {source.refresh_status === "queued" ||
-                    source.refresh_status === "processing"
-                      ? tr("source.updating")
-                      : source.status === "ready"
-                        ? tr("source.stats", {
+                    {source.refresh_status === 'queued' || source.refresh_status === 'processing'
+                      ? tr('source.updating')
+                      : source.status === 'ready'
+                        ? tr('source.stats', {
                             chunks: source.chunks,
                             size: Math.max(1, Math.round(source.size / 1024)),
                           })
-                        : source.status === "error"
-                          ? tr("source.failed")
-                          : tr("source.processing")}
+                        : source.status === 'error'
+                          ? tr('source.failed')
+                          : tr('source.processing')}
                   </small>
                 </span>
-                {source.status === "ready" ? (
+                {source.status === 'ready' ? (
                   <CheckCircle className="ready-icon" size={15} />
-                ) : source.status !== "error" ? (
+                ) : source.status !== 'error' ? (
                   <span className="pulse-dot" />
                 ) : null}
               </button>
               {(source.error || source.refresh_error) && (
                 <div className="source-error">
-                  <p>{localize(source.refresh_error || source.error || "")}</p>
+                  <p>{localize(source.refresh_error || source.error || '')}</p>
                   <button
                     className="text-button"
                     onClick={() =>
-                      api(
-                        `/notebooks/${notebook}/sources/${source.id}/reindex`,
-                        "POST",
-                      )
+                      api(`/notebooks/${notebook}/sources/${source.id}/reindex`, 'POST')
                         .then(refresh)
                         .catch((e) => report(e.message))
                     }
                   >
-                    {tr("common.retry")}
+                    {tr('common.retry')}
                   </button>
                 </div>
               )}
@@ -224,16 +206,13 @@ export function SourcePanel({
       </div>
       <div className="panel-footer">
         <span className="status-dot" />
-        {plural(
-          "source.ready",
-          sources.filter((s) => s.status === "ready").length,
-        )}
+        {plural('source.ready', sources.filter((s) => s.status === 'ready').length)}
         <button
-          title={tr("source.reindex")}
-          aria-label={tr("source.reindex")}
+          title={tr('source.reindex')}
+          aria-label={tr('source.reindex')}
           className="icon-button ml-auto"
           onClick={() =>
-            api(`/notebooks/${notebook}/reindex`, "POST")
+            api(`/notebooks/${notebook}/reindex`, 'POST')
               .then(refresh)
               .catch((e) => report(e.message))
           }

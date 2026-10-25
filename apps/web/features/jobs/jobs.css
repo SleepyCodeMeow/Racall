@@ -1,0 +1,94 @@
+.generation-job {
+  padding: 16px 0;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+}
+.generation-job-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+.generation-job-heading > div {
+  min-width: 0;
+}
+.generation-job-heading small,
+.material-heading small {
+  display: block;
+  color: var(--muted);
+  font-size: 10px;
+  margin-bottom: 5px;
+}
+.generation-job h4 {
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.job-status {
+  flex-shrink: 0;
+  font-size: 10px;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  border-radius: 5px;
+  color: var(--text-secondary);
+}
+.job-running .job-status,
+.job-queued .job-status {
+  background: var(--accent-soft);
+  color: var(--accent-ink);
+  border-color: transparent;
+}
+.job-failed .job-status,
+.job-interrupted .job-status {
+  color: var(--warning-ink);
+}
+.job-current-stage {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 11px;
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+.job-error {
+  color: var(--warning-ink);
+  margin-top: 10px;
+  line-height: 1.7;
+}
+.job-stages {
+  color: var(--muted);
+  font-size: 11px;
+  margin-top: 10px;
+}
+.job-stages > summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.job-stages ol {
+  display: grid;
+  gap: 5px;
+  padding: 10px 0 0 18px;
+  list-style: decimal;
+}
+.job-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  margin-top: 12px;
+}
+.job-actions .text-button {
+  font-size: 11px;
+  text-align: left;
+}
+.job-footnote {
+  font-size: 10px;
+  line-height: 1.7;
+  color: var(--muted);
+  margin-top: 9px;
+}
+.studio-result {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+}

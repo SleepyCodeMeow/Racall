@@ -1,7 +1,7 @@
-"use client";
-import { useEffect, useRef, type ReactNode } from "react";
-import { X } from "@phosphor-icons/react";
-import { useI18n } from "../lib/i18n";
+'use client';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { X } from '@phosphor-icons/react';
+import { useI18n } from '../lib/i18n';
 
 export function Modal({
   title,
@@ -27,17 +27,13 @@ export function Modal({
           'button:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex="0"]',
         ),
       );
-    (
-      root.querySelector<HTMLElement>("[data-initial-focus]") ||
-      targets()[0] ||
-      root
-    ).focus();
+    (root.querySelector<HTMLElement>('[data-initial-focus]') || targets()[0] || root).focus();
     const trap = (e: KeyboardEvent) => {
-      if (e.key === "Escape" && !busy) {
+      if (e.key === 'Escape' && !busy) {
         e.preventDefault();
         dismiss.current();
       }
-      if (e.key === "Tab") {
+      if (e.key === 'Tab') {
         const list = targets(),
           first = list[0],
           last = list[list.length - 1];
@@ -54,9 +50,9 @@ export function Modal({
         }
       }
     };
-    root.addEventListener("keydown", trap);
+    root.addEventListener('keydown', trap);
     return () => {
-      root.removeEventListener("keydown", trap);
+      root.removeEventListener('keydown', trap);
       previous?.focus();
     };
   }, [busy, title]);
@@ -78,7 +74,7 @@ export function Modal({
         <button
           className="modal-close icon-button"
           disabled={busy}
-          aria-label={tr("common.close")}
+          aria-label={tr('common.close')}
           onClick={close}
         >
           <X size={19} />

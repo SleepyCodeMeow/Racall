@@ -1,0 +1,55 @@
+/* Notebook management and recoverable trash. */
+.notebook-entry {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+.notebook-entry > button:first-child {
+  min-width: 0;
+  flex: 1;
+}
+.notebook-list .notebook-options {
+  width: 30px;
+  flex: 0 0 30px;
+  padding: 7px 4px;
+}
+.notebook-trash-link {
+  padding: 9px 12px;
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.management-modal {
+  max-height: 85vh;
+  overflow-y: auto;
+}
+.management-modal h2 {
+  margin-top: 5px;
+  padding-right: 15px;
+}
+.management-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 24px;
+}
+.trash-list > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  border-top: 1px solid var(--line);
+  padding: 12px 0;
+}
+.trash-list span {
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+@media (max-width: 700px) {
+  .notebook-entry {
+    flex-shrink: 0;
+  }
+  .notebook-trash-link {
+    font-size: 11px;
+  }
+}

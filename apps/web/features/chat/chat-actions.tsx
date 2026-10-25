@@ -1,6 +1,6 @@
-"use client";
-import { useI18n } from "../../lib/i18n";
-import { useEffect, useRef, useState } from "react";
+'use client';
+import { useI18n } from '../../lib/i18n';
+import { useEffect, useRef, useState } from 'react';
 import {
   FileText,
   Flask,
@@ -8,7 +8,7 @@ import {
   PlugsConnected,
   Plus,
   UploadSimple,
-} from "@phosphor-icons/react";
+} from '@phosphor-icons/react';
 
 export function ChatActions({
   openSources,
@@ -29,16 +29,16 @@ export function ChatActions({
       if (!root.current?.contains(event.target as Node)) setOpen(false);
     };
     const escape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
+      if (event.key === 'Escape') {
         setOpen(false);
         trigger.current?.focus();
       }
     };
-    document.addEventListener("pointerdown", outside);
-    document.addEventListener("keydown", escape);
+    document.addEventListener('pointerdown', outside);
+    document.addEventListener('keydown', escape);
     return () => {
-      document.removeEventListener("pointerdown", outside);
-      document.removeEventListener("keydown", escape);
+      document.removeEventListener('pointerdown', outside);
+      document.removeEventListener('keydown', escape);
     };
   }, [open]);
   const choose = (action: () => void) => {
@@ -50,41 +50,35 @@ export function ChatActions({
       <button
         ref={trigger}
         type="button"
-        className={`add-action ${open ? "active" : ""}`}
-        aria-label={tr("chat.actions")}
+        className={`add-action ${open ? 'active' : ''}`}
+        aria-label={tr('chat.actions')}
         aria-expanded={open}
         onClick={() => setOpen(!open)}
       >
         <Plus size={19} />
       </button>
       {open && (
-        <div className="actions-popover" aria-label={tr("chat.actions")}>
+        <div className="actions-popover" aria-label={tr('chat.actions')}>
           <button type="button" onClick={() => choose(openSources)}>
             <UploadSimple size={17} />
-            {tr("source.addMaterials")}
+            {tr('source.addMaterials')}
           </button>
-          <button type="button" onClick={() => choose(() => navigate("notes"))}>
+          <button type="button" onClick={() => choose(() => navigate('notes'))}>
             <FileText size={17} />
-            {tr("nav.notes")}
+            {tr('nav.notes')}
           </button>
-          <button
-            type="button"
-            onClick={() => choose(() => navigate("research"))}
-          >
+          <button type="button" onClick={() => choose(() => navigate('research'))}>
             <Flask size={17} />
-            {tr("research.single")}
+            {tr('research.single')}
           </button>
           <div className="actions-divider" />
-          <button
-            type="button"
-            onClick={() => choose(() => navigate("connect"))}
-          >
+          <button type="button" onClick={() => choose(() => navigate('connect'))}>
             <PlugsConnected size={17} />
-            {tr("nav.connect")}
+            {tr('nav.connect')}
           </button>
           <button type="button" onClick={() => choose(settings)}>
             <GearSix size={17} />
-            {tr("settings.configureModel")}
+            {tr('settings.configureModel')}
           </button>
         </div>
       )}

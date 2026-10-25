@@ -1,15 +1,11 @@
-"use client";
-import { useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import {
-  DotsThree,
-  Notebook as NotebookIcon,
-  Trash,
-} from "@phosphor-icons/react";
-import { api, type Notebook } from "../../lib/api";
-import { settlePendingEdits } from "../../lib/pending-edits";
-import { useI18n } from "../../lib/i18n";
-import { Modal } from "../../components/modal";
+'use client';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { DotsThree, Notebook as NotebookIcon, Trash } from '@phosphor-icons/react';
+import { api, type Notebook } from '../../lib/api';
+import { settlePendingEdits } from '../../lib/pending-edits';
+import { useI18n } from '../../lib/i18n';
+import { Modal } from '../../components/modal';
 
 export function NotebookList({
   items,
@@ -29,34 +25,34 @@ export function NotebookList({
   const { tr } = useI18n(),
     client = useQueryClient();
   const [editing, setEditing] = useState<Notebook | null>(null);
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState('');
   const [confirm, setConfirm] = useState(false);
   const [trash, setTrash] = useState(false);
   const [busy, setBusy] = useState(false);
   const deleted = useQuery({
-    queryKey: ["notebook-trash"],
-    queryFn: () => api<Notebook[]>("/notebooks/trash"),
+    queryKey: ['notebook-trash'],
+    queryFn: () => api<Notebook[]>('/notebooks/trash'),
     enabled: trash,
   });
   const refresh = async () => {
-    await client.invalidateQueries({ queryKey: ["notebooks"] });
-    await client.invalidateQueries({ queryKey: ["notebook-trash"] });
+    await client.invalidateQueries({ queryKey: ['notebooks'] });
+    await client.invalidateQueries({ queryKey: ['notebook-trash'] });
   };
   const guard = async () => {
     if (await settlePendingEdits()) return true;
-    report(tr("notebook.unsaved"));
+    report(tr('notebook.unsaved'));
     return false;
   };
   return (
     <>
-      <nav className="notebook-list" aria-label={tr("nav.notebooks")}>
+      <nav className="notebook-list" aria-label={tr('nav.notebooks')}>
         {pending ? (
           <div className="skeleton h-10 m-3" />
         ) : (
           items?.map((n) => (
             <div className="notebook-entry" key={n.id}>
               <button
-                className={active === n.id ? "selected" : ""}
+                className={active === n.id ? 'selected' : ''}
                 onClick={async () => {
                   if (await guard()) select(n.id);
                 }}
@@ -66,7 +62,7 @@ export function NotebookList({
               </button>
               <button
                 className="notebook-options"
-                aria-label={tr("notebook.manage", { title: n.title })}
+                aria-label={tr('notebook.manage', { title: n.title })}
                 onClick={() => {
                   setEditing(n);
                   setTitle(n.title);
@@ -79,26 +75,19 @@ export function NotebookList({
           ))
         )}
       </nav>
-      <button
-        className="notebook-trash-link text-button"
-        onClick={() => setTrash(true)}
-      >
+      <button className="notebook-trash-link text-button" onClick={() => setTrash(true)}>
         <Trash size={15} />
-        {tr("notebook.trash")}
+        {tr('notebook.trash')}
       </button>
       {editing && (
         <Modal
-          title={
-            confirm ? tr("notebook.deleteTitle") : tr("notebook.manageTitle")
-          }
+          title={confirm ? tr('notebook.deleteTitle') : tr('notebook.manageTitle')}
           close={() => setEditing(null)}
           busy={busy}
         >
           {confirm ? (
             <>
-              <p className="muted">
-                {tr("notebook.deleteDescription", { title: editing.title })}
-              </p>
+              <p className="muted">{tr('notebook.deleteDescription', { title: editing.title })}</p>
               <div className="management-actions">
                 <button
                   className="secondary"
@@ -106,7 +95,7 @@ export function NotebookList({
                   disabled={busy}
                   onClick={() => setConfirm(false)}
                 >
-                  {tr("common.cancel")}
+                  {tr('common.cancel')}
                 </button>
                 <button
                   className="primary"
@@ -115,8 +104,8 @@ export function NotebookList({
                     setBusy(true);
                     try {
                       if (!(await guard())) return;
-                      await api(`/notebooks/${editing.id}`, "DELETE");
-                      client.setQueryData<Notebook[]>(["notebooks"], (old) =>
+                      await api(`/notebooks/${editing.id}`, 'DELETE');
+                      client.setQueryData<Notebook[]>(['notebooks'], (old) =>
                         old?.filter((n) => n.id !== editing.id),
                       );
                       removed(editing.id);
@@ -133,7 +122,7 @@ export function NotebookList({
                     }
                   }}
                 >
-                  {tr("notebook.moveToTrash")}
+                  {tr('notebook.moveToTrash')}
                 </button>
               </div>
             </>
@@ -143,7 +132,7 @@ export function NotebookList({
                 e.preventDefault();
                 setBusy(true);
                 try {
-                  await api(`/notebooks/${editing.id}`, "PUT", {
+                  await api(`/notebooks/${editing.id}`, 'PUT', {
                     title: title.trim(),
                   });
                   await refresh();
@@ -156,7 +145,7 @@ export function NotebookList({
               }}
             >
               <label>
-                {tr("notebook.name")}
+                {tr('notebook.name')}
                 <input
                   data-initial-focus
                   required
@@ -172,10 +161,10 @@ export function NotebookList({
                   disabled={busy}
                   onClick={() => setConfirm(true)}
                 >
-                  {tr("notebook.moveToTrash")}
+                  {tr('notebook.moveToTrash')}
                 </button>
                 <button className="primary" disabled={busy || !title.trim()}>
-                  {tr("common.save")}
+                  {tr('common.save')}
                 </button>
               </div>
             </form>
@@ -183,17 +172,11 @@ export function NotebookList({
         </Modal>
       )}
       {trash && (
-        <Modal
-          title={tr("notebook.trash")}
-          close={() => setTrash(false)}
-          busy={busy}
-        >
-          <p className="muted">{tr("notebook.trashDescription")}</p>
-          {deleted.isPending && <p>{tr("common.loading")}</p>}
+        <Modal title={tr('notebook.trash')} close={() => setTrash(false)} busy={busy}>
+          <p className="muted">{tr('notebook.trashDescription')}</p>
+          {deleted.isPending && <p>{tr('common.loading')}</p>}
           {deleted.error && <p role="alert">{deleted.error.message}</p>}
-          {deleted.data?.length === 0 && (
-            <p className="muted">{tr("notebook.trashEmpty")}</p>
-          )}
+          {deleted.data?.length === 0 && <p className="muted">{tr('notebook.trashEmpty')}</p>}
           <div className="trash-list">
             {deleted.data?.map((n) => (
               <div key={n.id}>
@@ -205,7 +188,7 @@ export function NotebookList({
                     setBusy(true);
                     try {
                       if (!(await guard())) return;
-                      await api(`/notebooks/${n.id}/restore`, "POST");
+                      await api(`/notebooks/${n.id}/restore`, 'POST');
                       await refresh();
                       select(n.id);
                       setTrash(false);
@@ -216,7 +199,7 @@ export function NotebookList({
                     }
                   }}
                 >
-                  {tr("notebook.restore")}
+                  {tr('notebook.restore')}
                 </button>
               </div>
             ))}

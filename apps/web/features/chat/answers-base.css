@@ -1,0 +1,147 @@
+.turn {
+  padding: 34px 0;
+  border-bottom: 1px solid var(--line);
+}
+.question-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: #9e958a;
+  margin-bottom: 8px;
+}
+.turn h3 {
+  font-size: 18px;
+  letter-spacing: -0.02em;
+  line-height: 1.6;
+}
+.assistant-label {
+  margin: 25px 0 17px;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: #776d62;
+  font-weight: 600;
+}
+.mini-logo {
+  display: flex;
+  background: #eae7e4;
+  padding: 4px;
+  border-radius: 5px;
+  color: var(--accent);
+}
+.answer-body p {
+  font-size: 13px;
+  line-height: 1.85;
+  margin-bottom: 16px;
+  white-space: pre-wrap;
+}
+.citation-buttons {
+  display: inline-flex;
+  gap: 3px;
+}
+.citation-buttons button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: monospace;
+  font-size: 11px;
+  width: 17px;
+  height: 17px;
+  border-radius: 4px;
+  background: #e8e5e1;
+  color: #685d51;
+  vertical-align: middle;
+}
+.citation-buttons button:hover {
+  background: #d5d0ca;
+}
+.evidence-list {
+  border-top: 1px solid var(--line);
+  margin-top: 23px;
+  padding-top: 17px;
+}
+.evidence-list .eyebrow {
+  font-size: 10px;
+  margin-bottom: 10px;
+}
+.evidence-list > button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 0;
+  width: 100%;
+  color: #887a6a;
+}
+.evidence-list > button > span:nth-child(2) {
+  flex: 1;
+  min-width: 0;
+}
+.evidence-list strong {
+  display: block;
+  font-weight: 500;
+  font-size: 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.evidence-list small {
+  display: block;
+  font-size: 11px;
+  color: #a69b8e;
+  margin-top: 3px;
+}
+.evidence-number {
+  font-family: monospace;
+  font-size: 12px;
+  border: 1px solid var(--line);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+.verification {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: #9a8e80;
+  margin-top: 20px;
+}
+.search-results {
+  display: grid;
+  gap: 12px;
+}
+.search-results > button {
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.search-results strong {
+  font-size: 14px;
+  display: block;
+}
+.search-results small {
+  font-size: 11px;
+  color: var(--muted);
+}
+.search-results p {
+  font-size: 13px;
+  line-height: 1.8;
+  margin-top: 8px;
+  color: #81786e;
+}
+.answer-loading {
+  padding: 30px 0;
+}
+.answer-loading > span {
+  font-size: 13px;
+  color: var(--muted);
+  display: block;
+  margin-bottom: 15px;
+}
+.skeleton {
+  height: 12px;
+  border-radius: 4px;
+  background: #eae8e5;
+  margin-bottom: 10px;
+  animation: pulse 1.5s ease infinite;
+}

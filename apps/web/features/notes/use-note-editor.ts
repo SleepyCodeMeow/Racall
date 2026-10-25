@@ -1,13 +1,13 @@
-"use client";
-import { useEffect, useRef, useState } from "react";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { api, ApiError, Note, NoteDraft } from "../../lib/api";
-import { registerPendingEdits } from "../../lib/pending-edits";
-import { useI18n } from "../../lib/i18n";
+'use client';
+import { useEffect, useRef, useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { api, ApiError, Note, NoteDraft } from '../../lib/api';
+import { registerPendingEdits } from '../../lib/pending-edits';
+import { useI18n } from '../../lib/i18n';
 
 export function useNoteEditor(
   notebook: string,
-  kind: "notes" | "artifacts",
+  kind: 'notes' | 'artifacts',
   report: (s: string) => void,
 ) {
   const { tr } = useI18n();
@@ -17,8 +17,8 @@ export function useNoteEditor(
     queryFn: () => api<Note[]>(`/notebooks/${notebook}/${kind}`),
   });
   const drafts = useQuery({
-    queryKey: ["drafts", notebook],
-    enabled: kind === "notes",
+    queryKey: ['drafts', notebook],
+    enabled: kind === 'notes',
     queryFn: () => api<NoteDraft[]>(`/notebooks/${notebook}/drafts`),
   });
   const [current, setCurrent] = useState<Note | null>(null);
@@ -29,16 +29,16 @@ export function useNoteEditor(
   const [recovered, setRecovered] = useState(false);
   const currentRef = useRef<Note | null>(null);
   const dirtyRef = useRef(false);
-  const draftId = useRef("");
+  const draftId = useRef('');
   const task = useRef<Promise<boolean> | null>(null);
   const alive = useRef(true);
   const restored = useRef(false);
   const refresh = () => {
     void client.invalidateQueries({ queryKey: [kind, notebook] });
-    void client.invalidateQueries({ queryKey: ["drafts", notebook] });
+    void client.invalidateQueries({ queryKey: ['drafts', notebook] });
   };
   const select = (note: Note, draft?: NoteDraft) => {
-    const changed = !!draft || (kind === "notes" && note.revision === "");
+    const changed = !!draft || (kind === 'notes' && note.revision === '');
     currentRef.current = note;
     dirtyRef.current = changed;
     draftId.current = draft?.draft_id || crypto.randomUUID();
@@ -49,15 +49,12 @@ export function useNoteEditor(
     setConflict(false);
   };
   useEffect(() => {
-    if (kind !== "notes" || restored.current || !drafts.data || !query.data)
-      return;
+    if (kind !== 'notes' || restored.current || !drafts.data || !query.data) return;
     restored.current = true;
-    if (!currentRef.current && drafts.data.length)
-      select(drafts.data[0].note, drafts.data[0]);
+    if (!currentRef.current && drafts.data.length) select(drafts.data[0].note, drafts.data[0]);
   }, [drafts.data, query.data, kind]);
   useEffect(() => {
-    if (query.error || drafts.error)
-      report((query.error || drafts.error)!.message);
+    if (query.error || drafts.error) report((query.error || drafts.error)!.message);
   }, [query.error, drafts.error, report]);
 
   // Serialize saves; an older acknowledgement must never replace newer keystrokes.
@@ -73,23 +70,16 @@ export function useNoteEditor(
           const snapshot = currentRef.current;
           attempted = snapshot;
           if (!snapshot.title.trim()) return false;
-          const result = await api<Note>(
-            `/notebooks/${notebook}/notes/autosave`,
-            "POST",
-            {
-              id: snapshot.id,
-              title: snapshot.title,
-              body: snapshot.body,
-              revision: snapshot.revision ?? "",
-              draft_id: draftId.current,
-            },
-          );
+          const result = await api<Note>(`/notebooks/${notebook}/notes/autosave`, 'POST', {
+            id: snapshot.id,
+            title: snapshot.title,
+            body: snapshot.body,
+            revision: snapshot.revision ?? '',
+            draft_id: draftId.current,
+          });
           const latest = currentRef.current;
-          const unchanged =
-            latest.title === snapshot.title && latest.body === snapshot.body;
-          currentRef.current = unchanged
-            ? result
-            : { ...latest, revision: result.revision };
+          const unchanged = latest.title === snapshot.title && latest.body === snapshot.body;
+          currentRef.current = unchanged ? result : { ...latest, revision: result.revision };
           dirtyRef.current = !unchanged;
           if (alive.current) {
             setCurrent(currentRef.current);
@@ -106,8 +96,7 @@ export function useNoteEditor(
           // A failed older request must not strand text typed while it was pending.
           const newer = currentRef.current !== attempted;
           setBlocked(!newer);
-          if (newer && currentRef.current)
-            setCurrent({ ...currentRef.current });
+          if (newer && currentRef.current) setCurrent({ ...currentRef.current });
           setConflict(error instanceof ApiError && error.status === 409);
         }
         report((error as Error).message);
@@ -124,11 +113,10 @@ export function useNoteEditor(
   const persistRef = useRef(persist);
   persistRef.current = persist;
   useEffect(() => {
-    if (kind === "notes")
-      return registerPendingEdits(() => persistRef.current());
+    if (kind === 'notes') return registerPendingEdits(() => persistRef.current());
   }, [kind]);
   useEffect(() => {
-    if (kind !== "notes" || !dirty || blocked || !current?.title.trim()) return;
+    if (kind !== 'notes' || !dirty || blocked || !current?.title.trim()) return;
     const timer = setTimeout(() => {
       void persistRef.current();
     }, 600);
@@ -139,20 +127,20 @@ export function useNoteEditor(
     const handler = (e: BeforeUnloadEvent) => {
       if (dirtyRef.current) {
         e.preventDefault();
-        e.returnValue = "";
+        e.returnValue = '';
         void persistRef.current();
       }
     };
-    window.addEventListener("beforeunload", handler);
+    window.addEventListener('beforeunload', handler);
     return () => {
       alive.current = false;
-      window.removeEventListener("beforeunload", handler);
+      window.removeEventListener('beforeunload', handler);
     };
   }, []);
   // Navigation inside the app can unmount this editor. Flush while the service is alive.
   useEffect(
     () => () => {
-      if (kind === "notes" && dirtyRef.current) void persistRef.current();
+      if (kind === 'notes' && dirtyRef.current) void persistRef.current();
     },
     [kind],
   );
@@ -170,10 +158,10 @@ export function useNoteEditor(
     select(note, draft);
   };
   const reload = async () => {
-    if (!window.confirm(tr("notes.reloadConfirm"))) return;
+    if (!window.confirm(tr('notes.reloadConfirm'))) return;
     try {
       const notes = await api<Note[]>(`/notebooks/${notebook}/notes`);
-      await api(`/notebooks/${notebook}/drafts/${draftId.current}`, "DELETE");
+      await api(`/notebooks/${notebook}/drafts/${draftId.current}`, 'DELETE');
       dirtyRef.current = false;
       setDirty(false);
       setBlocked(false);
@@ -189,7 +177,7 @@ export function useNoteEditor(
   };
   const saveCopy = async () => {
     if (!currentRef.current) return;
-    edit({ ...currentRef.current, id: crypto.randomUUID(), revision: "" });
+    edit({ ...currentRef.current, id: crypto.randomUUID(), revision: '' });
     setConflict(false);
     setBlocked(false);
     await persist();

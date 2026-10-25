@@ -1,0 +1,26 @@
+/* Source version controls stay beside the selected document. */
+.source-version-picker {
+  display: grid;
+  gap: 7px;
+  margin: 16px 0 10px;
+  font-size: 11px;
+}
+.source-version-picker select {
+  width: 100%;
+  min-width: 0;
+  padding: 8px;
+  font-size: 11px;
+}
+.source-version-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 14px;
+  margin-bottom: 10px;
+}
+.detail-panel .draft-notice {
+  margin: 0 20px 14px;
+  font-size: 12px;
+}
+.detail-panel > .source-error {
+  margin: 0 20px 14px;
+}

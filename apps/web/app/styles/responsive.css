@@ -1,0 +1,232 @@
+@media (min-width: 1500px) {
+  .chat-scroll {
+    padding: 0 50px;
+  }
+  .chat-welcome {
+    margin-top: 70px;
+  }
+  .composer-wrap {
+    padding: 20px 45px;
+  }
+  .workspace-body {
+    grid-template-columns: minmax(0, 1fr) 320px;
+  }
+  .chat-welcome h2 {
+    font-size: 38px;
+  }
+}
+
+@media (max-width: 1150px) {
+  .app-shell {
+    grid-template-columns: 190px minmax(0, 1fr);
+  }
+  .navigation {
+    padding: 25px 12px 16px;
+  }
+  .brand {
+    font-size: 16px;
+  }
+  .brand small {
+    font-size: 6px;
+  }
+  .brand-icon {
+    width: 30px;
+    height: 34px;
+  }
+  .workspace-header {
+    padding: 25px;
+  }
+  .workspace-body {
+    grid-template-columns: minmax(0, 1fr) 250px;
+  }
+  .with-detail .workspace-body {
+    grid-template-columns: minmax(0, 1fr) 310px;
+  }
+  .tab-bar {
+    gap: 12px;
+    padding: 0 20px;
+  }
+  .tab-bar button {
+    font-size: 12px;
+    gap: 4px;
+  }
+  .tab-bar svg {
+    width: 15px;
+  }
+  .chat-welcome h2 {
+    font-size: 28px;
+  }
+  .chat-scroll {
+    padding: 0 25px;
+  }
+  .chat-welcome {
+    margin-top: 35px;
+  }
+  .composer-wrap {
+    padding: 12px 20px;
+  }
+  .page-content {
+    padding: 27px;
+  }
+  .workspace-header h1 {
+    font-size: 24px;
+  }
+  .source-panel .p-5 {
+    padding: 16px;
+  }
+}
+
+@media (max-width: 850px) {
+  .app-shell {
+    grid-template-columns: 170px minmax(0, 1fr);
+  }
+  .workspace-body,
+  .with-detail .workspace-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .source-panel {
+    max-height: 360px;
+    border-left: 0;
+    border-top: 1px solid var(--line);
+  }
+  .workspace-body {
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+  }
+  .center-panel {
+    min-height: 550px;
+    flex-shrink: 0;
+  }
+  .source-panel {
+    flex-shrink: 0;
+  }
+  .detail-panel {
+    max-height: 650px;
+  }
+  .chat-scroll {
+    max-height: 440px;
+  }
+  .source-list {
+    min-height: 70px;
+  }
+  .upload-zone {
+    padding: 12px;
+  }
+  .upload-zone span,
+  .upload-zone small {
+    display: none;
+  }
+  .upload-zone strong {
+    margin-top: 6px;
+  }
+  .source-panel > .p-5 {
+    padding: 12px;
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .source-panel .secondary {
+    margin-top: 0;
+  }
+  .workspace-header {
+    padding: 20px;
+    align-items: flex-start;
+  }
+  .connect-button {
+    font-size: 0;
+    width: 36px;
+    padding: 8px;
+  }
+  .connect-button svg {
+    width: 19px;
+    height: 19px;
+  }
+  .settings {
+    padding: 30px;
+  }
+  .onboarding {
+    padding: 35px;
+  }
+  .onboarding-steps {
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-top: 40px;
+  }
+}
+
+@media (max-width: 600px) {
+  .app-shell {
+    grid-template-columns: minmax(0, 1fr);
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+  .navigation {
+    padding: 14px;
+    border-right: 0;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+  }
+  .brand small,
+  .nav-label,
+  .nav-bottom,
+  .notebook-list {
+    display: none;
+  }
+  .new-notebook {
+    margin: 0;
+    font-size: 12px;
+    padding: 8px;
+  }
+  .brand {
+    font-size: 16px;
+  }
+  .main-shell {
+    min-height: 80dvh;
+  }
+  .workspace-content {
+    overflow: visible;
+  }
+  .onboarding h1 {
+    font-size: 34px;
+  }
+  .onboarding {
+    padding: 35px 24px;
+  }
+  .onboarding-steps {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .chat-welcome h2 {
+    font-size: 30px;
+  }
+  .workspace-header h1 {
+    font-size: 22px;
+  }
+  .modal {
+    padding: 26px;
+  }
+  .settings {
+    padding: 24px;
+  }
+  .tab-bar {
+    gap: 15px;
+    padding: 0 15px;
+  }
+  .notes-layout {
+    padding: 20px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *:before,
+  *:after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+}

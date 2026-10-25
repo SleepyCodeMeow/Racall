@@ -1,0 +1,64 @@
+.studio > .eyebrow {
+  margin-bottom: 12px;
+}
+.studio-form {
+  display: grid;
+  gap: 16px;
+  margin: 25px 0;
+}
+.studio-form > label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+}
+.studio-form select {
+  width: 100%;
+  max-width: 410px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--ink);
+  font: inherit;
+}
+.studio-form textarea {
+  width: 100%;
+  min-height: 96px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--input-bg);
+  color: var(--ink);
+  font: inherit;
+  font-size: 13px;
+  line-height: 1.7;
+  resize: vertical;
+}
+.studio-form textarea::placeholder {
+  color: var(--muted);
+}
+.generation-form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+.generation-form-actions > .primary {
+  margin-left: auto;
+}
+.studio-model-missing {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 12px 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.studio-model-missing .secondary {
+  font-size: 11px;
+}

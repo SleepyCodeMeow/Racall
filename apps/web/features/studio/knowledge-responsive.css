@@ -1,0 +1,21 @@
+@media (max-width: 750px) {
+  .chat-context-bar {
+    padding: 6px 13px 0;
+  }
+  .context-menu {
+    width: min(340px, 62vw);
+    padding: 12px;
+  }
+  .generation-job-heading {
+    gap: 8px;
+  }
+  .generation-form-actions {
+    align-items: flex-start;
+  }
+  .generation-form-actions > .primary {
+    margin-left: 0;
+  }
+  .material-heading h2 {
+    font-size: 18px;
+  }
+}

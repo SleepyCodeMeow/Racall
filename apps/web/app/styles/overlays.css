@@ -1,0 +1,57 @@
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+  background: #27231e4d;
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.modal {
+  width: 420px;
+  max-width: 100%;
+  padding: 35px;
+  background: var(--paper);
+  border: 1px solid #dbd7d2;
+  border-radius: 14px;
+  box-shadow: 0 20px 80px #27231e26;
+  position: relative;
+  animation: enter 0.2s ease;
+}
+.modal-close {
+  position: absolute;
+  right: 15px;
+  top: 15px;
+}
+.modal h2 {
+  margin: 18px 0 10px;
+}
+.modal > .muted {
+  font-size: 14px;
+  line-height: 1.8;
+  margin-bottom: 25px;
+}
+.w-full {
+  width: 100%;
+}
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+@keyframes enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

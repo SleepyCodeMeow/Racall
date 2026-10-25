@@ -1,0 +1,86 @@
+.permission-row {
+  display: flex;
+  gap: 9px;
+  align-items: center;
+  font-size: 14px;
+  color: #958879;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--line);
+}
+.connect > .muted {
+  margin-bottom: 20px;
+}
+.config-block {
+  font-family: Consolas, monospace;
+  font-size: 13px;
+  line-height: 1.8;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 20px;
+  background: #f2f0ee;
+}
+.error-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  background: #f9e8e0;
+  color: #9b5641;
+  padding: 13px 24px;
+  font-size: 14px;
+  flex-shrink: 0;
+  z-index: 3;
+  overflow-wrap: anywhere;
+}
+.error-banner button {
+  flex-shrink: 0;
+  padding: 5px;
+}
+.onboarding {
+  max-width: 1050px;
+  margin: auto;
+  padding: 60px 70px;
+}
+.onboarding .eyebrow {
+  margin-bottom: 30px;
+}
+.onboarding h1 {
+  font-size: clamp(32px, 3.4vw, 52px);
+  font-weight: 500;
+  line-height: 1.18;
+  letter-spacing: -0.05em;
+}
+.onboarding h1 span {
+  color: #a09487;
+}
+.onboarding > p {
+  font-size: 14px;
+  line-height: 1.9;
+  color: var(--muted);
+  margin: 25px 0 30px;
+}
+.onboarding > .primary {
+  padding: 12px 20px;
+}
+.onboarding-steps {
+  display: flex;
+  gap: 45px;
+  margin-top: 80px;
+  border-top: 1px solid var(--line);
+  padding-top: 23px;
+}
+.onboarding-steps > div {
+  flex: 1;
+}
+.onboarding-steps span {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: #9c8f81;
+}
+.onboarding-steps p {
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.8;
+  color: #a59a8e;
+}

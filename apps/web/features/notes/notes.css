@@ -1,0 +1,144 @@
+.notes-layout {
+  padding: 28px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: auto;
+}
+.note-picker h2 {
+  font-size: 16px;
+}
+.note-picker > .muted {
+  font-size: 14px;
+  line-height: 1.8;
+}
+.note-tabs {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 12px;
+}
+.note-tabs button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+  padding: 7px 10px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  color: #9f9385;
+}
+.note-tabs button.selected {
+  background: #eeece9;
+  color: #6d6255;
+}
+.note-editor {
+  flex: 1;
+  min-height: 280px;
+  display: flex;
+  flex-direction: column;
+}
+.editor-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--line);
+  padding: 12px 0;
+  margin-bottom: 18px;
+}
+.note-title {
+  font-size: 23px;
+  font-weight: 550;
+  letter-spacing: -0.03em;
+  border: 0;
+  padding: 10px 0;
+  background: transparent;
+  border-radius: 0;
+}
+.markdown-editor {
+  flex: 1;
+  min-height: 230px;
+  border: 0;
+  resize: none;
+  font-family: Consolas, monospace;
+  font-size: 14px;
+  line-height: 1.9;
+  padding: 16px 0;
+  background: transparent;
+}
+.markdown-editor:focus,
+.note-title:focus {
+  outline: 0;
+}
+.editor-empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 14px;
+  color: #aea498;
+  font-size: 14px;
+  min-height: 200px;
+}
+.prose {
+  overflow-wrap: anywhere;
+  font-size: 13px;
+  line-height: 1.85;
+}
+.prose h1 {
+  font-size: 25px;
+  margin: 12px 0 22px;
+}
+.prose h2 {
+  font-size: 21px;
+  margin: 26px 0 12px;
+}
+.prose h3 {
+  margin: 18px 0 10px;
+}
+.prose p {
+  margin-bottom: 16px;
+}
+.prose ul,
+.prose ol {
+  padding-left: 22px;
+  margin-bottom: 15px;
+  list-style: revert;
+}
+.prose blockquote {
+  border-left: 2px solid #aca296;
+  padding-left: 15px;
+  color: #8e8071;
+  margin: 15px 0;
+}
+.prose pre {
+  padding: 16px;
+  background: #eeece9;
+  overflow: auto;
+  border-radius: 5px;
+}
+.prose code {
+  font-size: 13px;
+  font-family: Consolas, monospace;
+  background: #eeece9;
+  padding: 2px 4px;
+  border-radius: 3px;
+}
+.prose a,
+.inline-link {
+  color: #7a6d5f;
+  text-decoration: underline;
+}
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 15px 0;
+}
+.prose td,
+.prose th {
+  padding: 8px;
+  border: 1px solid var(--line);
+  text-align: left;
+}

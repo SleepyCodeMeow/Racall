@@ -1,0 +1,68 @@
+.material-library-hint {
+  max-width: 640px;
+}
+.material-library .note-tabs button > span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.material-library .note-tabs button > svg {
+  flex-shrink: 0;
+}
+.material-create {
+  margin: 14px 0 24px;
+  font-size: 12px;
+}
+.material-view {
+  width: 100%;
+  min-width: 0;
+}
+.material-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.material-heading > div:first-child {
+  flex: 1;
+  min-width: min(100%, 210px);
+}
+.material-heading h2 {
+  font-size: 21px;
+  font-weight: 550;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.material-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.material-actions .secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  padding: 7px 10px;
+}
+.material-feedback {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.7;
+  padding-bottom: 15px;
+}
+.material-feedback .text-button {
+  font-size: 12px;
+}
+.material-markdown {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  min-height: 0;
+}
