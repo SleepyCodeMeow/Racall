@@ -176,7 +176,11 @@ foreach ($name in @('INCLUDE', 'LIB', 'LIBPATH', 'VCINSTALLDIR', 'VSINSTALLDIR',
     if ($value) { Export-BuildEnvironment $name.ToUpperInvariant() $value }
 }
 if ($env:GITHUB_PATH) {
-    foreach ($entry in @($env:PATH -split ';' | Where-Object { $_ -and $_ -notin $previousPaths })) {
+    # The runner prepends GITHUB_PATH entries in reverse line order. Preserve
+    # Developer Shell's ARM64-first priority when it assembles the next step.
+    $newPaths = @($env:PATH -split ';' | Where-Object { $_ -and $_ -notin $previousPaths })
+    [Array]::Reverse($newPaths)
+    foreach ($entry in $newPaths) {
         if ($entry -match '[\r\n\x00]') { throw 'Invalid MSVC tool path.' }
         Add-Content -LiteralPath $env:GITHUB_PATH -Value $entry -Encoding utf8
     }
