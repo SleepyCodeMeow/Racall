@@ -44,10 +44,23 @@ jobs:
           version: '0.12.13'
           python-version: '3.12'
           enable-cache: true
+      - name: Restore native ARM64 OpenSSL build
+        if: runner.os == 'Windows' && matrix.arch == 'arm64'
+        id: native-crypto-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: build/arm64/vcpkg
+          key: native-openssl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/prepare_windows_arm64.ps1') }}
       - name: Prepare native Windows ARM64 crypto toolchain
         if: runner.os == 'Windows' && matrix.arch == 'arm64'
         shell: pwsh
         run: ./scripts/prepare_windows_arm64.ps1
+      - name: Cache verified native ARM64 OpenSSL build
+        if: runner.os == 'Windows' && matrix.arch == 'arm64' && steps.native-crypto-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: build/arm64/vcpkg
+          key: native-openssl-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('scripts/prepare_windows_arm64.ps1') }}
       - name: Prepare Intel macOS crypto source build
         if: runner.os == 'macOS' && matrix.arch == 'x64'
         shell: bash
