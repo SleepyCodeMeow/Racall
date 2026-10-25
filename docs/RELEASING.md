@@ -22,6 +22,8 @@ approval permits publication; it does not turn the open model-reliability gate
 into a passed test. Preserve the [evaluation results](MODEL_EVALUATION_03_2026-10-25.md)
 and the release's known limitations.
 
+The matching tag `v0.3.0-beta.1` at `839d5219d9269071c07e61497061905cc3f707e9` passed its fresh six-target build and publication in [run 40223957296](https://github.com/SleepyCodeMeow/Racall/actions/runs/40223957296). The [published release report](VERIFICATION_03_RELEASE_2026-10-25.md) records all eleven uploaded asset checks and the exact released-installer upgrade.
+
 Supported platform identifiers are `win-x64`, `win-arm64`, `mac-arm64`, `mac-x64`,
 `linux-x64` and `linux-arm64`. The nonempty, unique list is validated by
 `scripts/release_policy.py` and drives the CI matrix, required native jobs,

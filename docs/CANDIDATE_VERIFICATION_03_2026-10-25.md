@@ -1,7 +1,9 @@
 # 0.3 candidate verification — October 25, 2026
 
-**Publication remains on hold.** No tag, GitHub release or existing 0.2 asset is
-changed by these checks. Model quality is a separate gate and is not certified:
+**Publication was on hold during these candidate checks.** The owner later
+approved 0.3 Beta; see the [published release verification](VERIFICATION_03_RELEASE_2026-10-25.md)
+for the fresh tag build and public files. The candidate checks below did not
+change the old 0.2 assets. Model quality is a separate gate and is not certified:
 see the [local-model report](MODEL_EVALUATION_03_2026-10-25.md) for actual false
 positives, failed runs, controls and the final functional run.
 

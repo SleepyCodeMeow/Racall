@@ -6,6 +6,7 @@ Racall is an open-source alternative to NotebookLM + Obsidian, combining AI rese
 
 - [Get started, connect AI, back up your data](GETTING_STARTED.md)
 - [0.3 Beta: downloads for six platforms, changes and limitations](releases/0.3.0-beta.1.md)
+- [Published 0.3: exact tag, native builds, download hashes and upgrade verification](VERIFICATION_03_RELEASE_2026-10-25.md)
 - [Choose context, create Studio materials and manage jobs](STUDIO.md)
 - [Earlier 0.2 Beta: Windows release](releases/0.2.0-beta.1.md)
 - [Earlier 0.1 Beta release notes](releases/0.1.0-beta.1.md)

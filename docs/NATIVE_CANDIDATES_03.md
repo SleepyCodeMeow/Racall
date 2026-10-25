@@ -2,8 +2,10 @@
 
 The owner requested Windows, Linux and macOS packages, then expanded the request
 to the full supported processor-architecture matrix. These builds are candidates.
-`apps/shared/release.json` remains on publication hold. Do not create a release
-tag or publish a GitHub release merely because a candidate build passes.
+Publication was on hold during the candidate checks. The owner subsequently
+approved the six-target release; its separate [tag-build and public-asset verification](VERIFICATION_03_RELEASE_2026-10-25.md)
+records the published files. Passing a future candidate build alone does not
+authorize publication.
 
 | Target | Native GitHub runner | Distribution files |
 | --- | --- | --- |

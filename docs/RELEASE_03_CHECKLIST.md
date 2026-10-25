@@ -1,6 +1,6 @@
 # 0.3 Beta release checklist
 
-The owner approved publishing **0.3 Beta on October 25, 2026**, accepting the limited hardware/model coverage and known AI-critic false positives. **Release publication is in progress.** This supersedes the earlier timing hold; it does not turn incomplete model certification into a passed check or authorize replacing existing 0.2 assets. See [source review and scope](REFERENCE_PROJECTS.md#refresh-2026-10-25).
+The owner approved publishing **0.3 Beta on October 25, 2026**, accepting the limited hardware/model coverage and known AI-critic false positives. **[Racall 0.3 Beta is published](https://github.com/SleepyCodeMeow/Racall/releases/tag/v0.3.0-beta.1) and is GitHub Latest.** This supersedes the earlier timing hold; it does not turn incomplete model certification into a passed check. Existing 0.2 assets are unchanged. See [published release verification](VERIFICATION_03_RELEASE_2026-10-25.md).
 
 Earlier dated verification reports retain the hold status that applied when their checks ran. The [release notes](releases/0.3.0-beta.1.md) state the current user-facing scope and beta limits.
 
@@ -24,6 +24,7 @@ Earlier dated verification reports retain the hold status that applied when thei
 - [x] Production frontend build and isolated UI workflow smoke without real model requests/downloads.
 - [x] Portable 0.2 chat/note/report compatibility regressions and preserved citation versions; this is not an installed binary upgrade test.
 - [x] Separate installed Windows x64 0.2 → exact final 0.3 candidate upgrade, same default profile/path, preserved data and uninstall retention: [run 40222132278](https://github.com/SleepyCodeMeow/Racall/actions/runs/40222132278).
+- [x] Repeat installed upgrade with the exact released Windows x64 EXE from the tag build: [run 40225220035](https://github.com/SleepyCodeMeow/Racall/actions/runs/40225220035), all nineteen prior file records preserved.
 - [x] Fresh native candidate build and installer/copy checks for all six declared x64/ARM64 targets.
 - [ ] Stable live-model semantic acceptance: recorded unsupported claims passed the local critic. **Accepted by the owner as a known beta limitation, not a passed certification gate.** Later successful examples do not establish reliability; see the [October 25 model report](MODEL_EVALUATION_03_2026-10-25.md).
 
@@ -32,7 +33,7 @@ Final application-source and binary upgrade checks are tracked in the
 from model reliability and owner hands-on acceptance.
 
 The owner subsequently expanded the candidate scope to x64 and ARM64 on Windows,
-macOS and Linux. All six passed again on final application source
+macOS and Linux. All six candidate targets passed on pre-release application source
 `50e1a65a80f86c2f66c6132289904057ec89bbb2` in
 [Actions run 40221003598](https://github.com/SleepyCodeMeow/Racall/actions/runs/40221003598).
 See [native candidates](NATIVE_CANDIDATES_03.md) and the
@@ -45,9 +46,12 @@ tag-triggered release verification and uploaded-asset checks.
 
 - [x] Owner explicitly approved releasing 0.3 Beta with the documented hardware, platform and model-quality limits.
 - [x] Public release notes and changelog explain the changes from 0.2, six native targets, unsigned distribution and AI review requirements.
-- [ ] Matching tag-triggered release verification completes for the approved source and target matrix.
-- [ ] GitHub release contains all declared packages, source/target manifests and matching checksums; uploaded assets are verified.
-- [ ] Confirm the existing public 0.2 release and assets remain unchanged.
+- [x] Matching tag-triggered release verification completes for approved source `839d5219d9269071c07e61497061905cc3f707e9`: [run 40223957296](https://github.com/SleepyCodeMeow/Racall/actions/runs/40223957296), six native targets and successful publication.
+- [x] GitHub release contains exactly ten packages and SHA256SUMS.txt. All remote digests match source/target manifests retained in CI artifacts and the public checksum file; all eleven download URLs respond successfully.
+- [x] Existing public 0.2 metadata and both asset IDs/sizes/digests/upload timestamps remain unchanged.
+
+The [published release report](VERIFICATION_03_RELEASE_2026-10-25.md) records the
+exact tag, build, package hashes, upload checks and released-installer upgrade.
 
 Development evidence is recorded in [the October 25 verification report](VERIFICATION_03_2026-10-25.md).
 The completed [maintainability refactor](REFACTOR_03_2026-10-25.md) includes

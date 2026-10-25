@@ -1,7 +1,9 @@
 # 0.3 local-model evaluation — October 25, 2026
 
-Publication remains on hold. These checks use a synthetic knowledge vault and
-the owner's local Ollama, not personal documents or cloud credentials.
+Publication was on hold while these checks ran. The owner later approved the
+beta with these model limitations; see the [published release verification](VERIFICATION_03_RELEASE_2026-10-25.md).
+These checks use a synthetic knowledge vault and the owner's local Ollama, not
+personal documents or cloud credentials.
 
 **Model reliability is not certified:** recorded unsupported claims passed the
 critic, including a repeat under the extended policy. Functional workflow
