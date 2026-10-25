@@ -94,3 +94,44 @@ def test_review_question_with_unsupported_premise_is_not_saved_as_valid_material
             lambda *args: None,
         )
     assert len(calls) == 2
+
+
+def test_study_guide_drops_entire_compound_record_with_wrong_event_date(monkeypatch):
+    path = (
+        Path(__file__).resolve().parents[1] / "evals/release03/regressions/approval-versus-finalization.json"
+    )
+    failure = json.loads(path.read_text("utf-8"))
+    calls = []
+
+    class Provider:
+        def complete(self, system, data):
+            calls.append((system, data))
+            assert EVIDENCE_SCOPE in system
+            if "supported_claim_ids" in system:
+                assert ENTAILMENT_CHECK in system
+                assert data == failure["critic_data"]
+                return failure["expected_critic"]
+            return failure["writer_response"]
+
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: Provider()
+    )
+    result = generate_material(
+        "study_guide",
+        failure["writer_data"]["question"],
+        "Study guide",
+        "en",
+        failure["writer_data"]["evidence"],
+        {},
+        lambda: None,
+        lambda *args: None,
+    )
+    accepted_ids = set(failure["expected_critic"]["supported_claim_ids"])
+    expected = [
+        {"text": claim["text"], "evidence_ids": claim["evidence_ids"]}
+        for claim in failure["critic_data"]["claims"]
+        if claim["claim_id"] in accepted_ids
+    ]
+    assert result["answer"]["claims"] == expected
+    assert "finalized" not in result["body"]
+    assert len(calls) == 2

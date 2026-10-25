@@ -1,0 +1,234 @@
+{
+  "origin": "Observed 0.3 Ollama Study Guide failure, 2026-10-25",
+  "source_commit": "6c1a59da070d50637c34cb170c48d8653aa76a77",
+  "model_digest": "6114515d63c17436a7c0417d82820ac65ad643e2806c5a3c89cb62846436ed0b",
+  "writer_data": {
+    "question": "A study guide comparing the approved mission and station schedules, sensor inventories, lead names and the station's planned power.",
+    "format": "study_guide",
+    "answer_language": "en",
+    "evidence": [
+      {
+        "id": "E1",
+        "title": "mission-en.md",
+        "quote": "# Marigold mission — approved plan",
+        "location": {
+          "type": "heading",
+          "page": null,
+          "section": "Marigold mission — approved plan",
+          "line_start": 1,
+          "line_end": 1,
+          "element": 0,
+          "offset_start": 0,
+          "offset_end": 34
+        }
+      },
+      {
+        "id": "E2",
+        "title": "station-ru.md",
+        "quote": "# Станция «Лис» — утверждённый план",
+        "location": {
+          "type": "heading",
+          "page": null,
+          "section": "Станция «Лис» — утверждённый план",
+          "line_start": 1,
+          "line_end": 1,
+          "element": 0,
+          "offset_start": 0,
+          "offset_end": 35
+        }
+      },
+      {
+        "id": "E3",
+        "title": "mission-en.md",
+        "quote": "Revision: 1. Approved on September 20, 2030.\nThe Marigold mission is scheduled to launch on October 18, 2030.\nIt carries three environmental sensors. Its approved budget is USD 120,000.\nThe mission lead is Mira Chen. The destination is Europa.\nThe plan does not identify a sponsor. The launch has not happened yet.",
+        "location": {
+          "type": "paragraph",
+          "page": null,
+          "section": "Marigold mission — approved plan",
+          "line_start": 3,
+          "line_end": 7,
+          "element": 1,
+          "offset_start": 0,
+          "offset_end": 314
+        }
+      },
+      {
+        "id": "E4",
+        "title": "station-ru.md",
+        "quote": "Утверждено 21 сентября 2030 года.\nОткрытие станции «Лис» назначено на 12 ноября 2030 года.\nНа станции будет семь датчиков температуры. Руководитель — Алина Морозова.\nПлановая мощность станции составляет 40 киловатт.\nФактические результаты работы ещё не получены.",
+        "location": {
+          "type": "paragraph",
+          "page": null,
+          "section": "Станция «Лис» — утверждённый план",
+          "line_start": 3,
+          "line_end": 7,
+          "element": 1,
+          "offset_start": 0,
+          "offset_end": 262
+        }
+      }
+    ]
+  },
+  "writer_response": {
+    "sections": [
+      {
+        "title": "Approved Schedules",
+        "items": [
+          {
+            "text": "The Marigold mission was approved on September 20, 2030, and is scheduled to launch on October 18, 2030.",
+            "evidence_ids": ["E3"]
+          },
+          {
+            "text": "The Station Lis approved plan was finalized on September 21, 2030, with an opening scheduled for November 12, 2030.",
+            "evidence_ids": ["E4"]
+          }
+        ]
+      },
+      {
+        "title": "Sensor Inventories",
+        "items": [
+          {
+            "text": "The Marigold mission carries three environmental sensors.",
+            "evidence_ids": ["E3"]
+          },
+          {
+            "text": "Station Lis will have seven temperature sensors.",
+            "evidence_ids": ["E4"]
+          }
+        ]
+      },
+      {
+        "title": "Leadership",
+        "items": [
+          {
+            "text": "Mira Chen is the lead for the Marigold mission.",
+            "evidence_ids": ["E3"]
+          },
+          {
+            "text": "Alina Morozova is the lead for Station Lis.",
+            "evidence_ids": ["E4"]
+          }
+        ]
+      },
+      {
+        "title": "Station Planned Power",
+        "items": [
+          {
+            "text": "The planned power for Station Lis is 40 kilowatts.",
+            "evidence_ids": ["E4"]
+          }
+        ]
+      }
+    ]
+  },
+  "critic_data": {
+    "question": "A study guide comparing the approved mission and station schedules, sensor inventories, lead names and the station's planned power.",
+    "claims": [
+      {
+        "claim_id": "C1",
+        "text": "Approved Schedules\nThe Marigold mission was approved on September 20, 2030, and is scheduled to launch on October 18, 2030.",
+        "evidence_ids": ["E3"]
+      },
+      {
+        "claim_id": "C2",
+        "text": "Approved Schedules\nThe Station Lis approved plan was finalized on September 21, 2030, with an opening scheduled for November 12, 2030.",
+        "evidence_ids": ["E4"]
+      },
+      {
+        "claim_id": "C3",
+        "text": "Sensor Inventories\nThe Marigold mission carries three environmental sensors.",
+        "evidence_ids": ["E3"]
+      },
+      {
+        "claim_id": "C4",
+        "text": "Sensor Inventories\nStation Lis will have seven temperature sensors.",
+        "evidence_ids": ["E4"]
+      },
+      {
+        "claim_id": "C5",
+        "text": "Leadership\nMira Chen is the lead for the Marigold mission.",
+        "evidence_ids": ["E3"]
+      },
+      {
+        "claim_id": "C6",
+        "text": "Leadership\nAlina Morozova is the lead for Station Lis.",
+        "evidence_ids": ["E4"]
+      },
+      {
+        "claim_id": "C7",
+        "text": "Station Planned Power\nThe planned power for Station Lis is 40 kilowatts.",
+        "evidence_ids": ["E4"]
+      }
+    ],
+    "evidence": [
+      {
+        "id": "E1",
+        "title": "mission-en.md",
+        "quote": "# Marigold mission — approved plan",
+        "location": {
+          "type": "heading",
+          "page": null,
+          "section": "Marigold mission — approved plan",
+          "line_start": 1,
+          "line_end": 1,
+          "element": 0,
+          "offset_start": 0,
+          "offset_end": 34
+        }
+      },
+      {
+        "id": "E2",
+        "title": "station-ru.md",
+        "quote": "# Станция «Лис» — утверждённый план",
+        "location": {
+          "type": "heading",
+          "page": null,
+          "section": "Станция «Лис» — утверждённый план",
+          "line_start": 1,
+          "line_end": 1,
+          "element": 0,
+          "offset_start": 0,
+          "offset_end": 35
+        }
+      },
+      {
+        "id": "E3",
+        "title": "mission-en.md",
+        "quote": "Revision: 1. Approved on September 20, 2030.\nThe Marigold mission is scheduled to launch on October 18, 2030.\nIt carries three environmental sensors. Its approved budget is USD 120,000.\nThe mission lead is Mira Chen. The destination is Europa.\nThe plan does not identify a sponsor. The launch has not happened yet.",
+        "location": {
+          "type": "paragraph",
+          "page": null,
+          "section": "Marigold mission — approved plan",
+          "line_start": 3,
+          "line_end": 7,
+          "element": 1,
+          "offset_start": 0,
+          "offset_end": 314
+        }
+      },
+      {
+        "id": "E4",
+        "title": "station-ru.md",
+        "quote": "Утверждено 21 сентября 2030 года.\nОткрытие станции «Лис» назначено на 12 ноября 2030 года.\nНа станции будет семь датчиков температуры. Руководитель — Алина Морозова.\nПлановая мощность станции составляет 40 киловатт.\nФактические результаты работы ещё не получены.",
+        "location": {
+          "type": "paragraph",
+          "page": null,
+          "section": "Станция «Лис» — утверждённый план",
+          "line_start": 3,
+          "line_end": 7,
+          "element": 1,
+          "offset_start": 0,
+          "offset_end": 262
+        }
+      }
+    ]
+  },
+  "critic_response": {
+    "supported_claim_ids": ["C1", "C2", "C3", "C4", "C5", "C6", "C7"]
+  },
+  "unsupported_claim_id": "C2",
+  "expected_critic": {
+    "supported_claim_ids": ["C1", "C3", "C4", "C5", "C6", "C7"]
+  },
+  "reason": "Approval on a date does not establish when drafting or finalization occurred. The unsupported clause must not be rescued by the supported opening date."
+}

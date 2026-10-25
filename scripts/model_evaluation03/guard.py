@@ -124,6 +124,7 @@ class LiveGuard:
         self.case = "initialization"
         self.expected_interrupt = False
         self.digests = None
+        self.shutdown = None
 
     def save(self):
         with self.lock:
@@ -137,6 +138,7 @@ class LiveGuard:
                     "calls": self.calls,
                     "resource_checks": self.resources,
                     "stop_reason": self.failure,
+                    "shutdown": self.shutdown,
                     "transport_entry_meaning": "Before production complete_json; response headers may not exist yet.",
                 },
             )
@@ -283,9 +285,41 @@ class LiveGuard:
             self.runtime("before acceptance")
             yield self
         finally:
-            providers.OpenAICompatible.complete = original_complete
-            providers.complete_json = original_transport
-            self.save()
+            try:
+                self.drain_shutdown()
+            finally:
+                providers.OpenAICompatible.complete = original_complete
+                providers.complete_json = original_transport
+                self.save()
+
+    def drain_shutdown(self, timeout=30):
+        """Let an already cancelled worker finish its trace before restoring hooks.
+
+        Cleanup has its own bounded wait: STOP, a provider failure or the global
+        deadline must not short-circuit it. No runtime/model/resource requests
+        belong here. A timeout stays explicitly incomplete, without inventing a
+        completion result or claiming that its HTTP connection was observed closed.
+        """
+        started = time.monotonic()
+        acquired = self.serial.acquire(timeout=timeout)
+        try:
+            with self.lock:
+                self.shutdown = {
+                    "status": "drained" if acquired else "timed_out",
+                    "at": timestamp(),
+                    "elapsed_seconds": time.monotonic() - started,
+                    "unfinished_call_ids": [
+                        call.get("id") for call in self.calls if call["status"] == "running"
+                    ],
+                }
+                if not acquired:
+                    self.failure = self.failure or "Evaluation shutdown did not drain the active completion."
+                self.save()
+            if not acquired:
+                raise EvaluationStop("Evaluation shutdown timed out; completion cleanup is incomplete.")
+        finally:
+            if acquired:
+                self.serial.release()
 
     def wait_idle(self, timeout=30):
         end = time.monotonic() + timeout
