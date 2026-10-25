@@ -10,9 +10,12 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
 from .features.appearance import router as appearance
+from .features.artifacts import router as artifacts
 from .features.chats import router as chats
 from .features.chats.service import Chats
 from .features.connections import router as connections
+from .features.jobs import router as jobs
+from .features.jobs.service import GenerationService
 from .features.models import router as models
 from .features.models.service import Models
 from .features.notebooks import router as notebooks
@@ -31,6 +34,7 @@ def create_app(root: Path, token: str, web: Path | None = None) -> FastAPI:
     knowledge = Knowledge(store)
     chat_service = Chats(store)
     model_service = Models(store)
+    generation_service = GenerationService(store, knowledge)
 
     @asynccontextmanager
     async def lifespan(app):
@@ -38,15 +42,18 @@ def create_app(root: Path, token: str, web: Path | None = None) -> FastAPI:
         recover_research(store)
         knowledge.recover()
         model_service.recover()
+        generation_service.start()
         try:
             yield
         finally:
+            generation_service.close()
             await model_service.shutdown()
             knowledge.executor.shutdown(wait=True)
 
     app = FastAPI(title="Racall", version=VERSION, lifespan=lifespan, docs_url=None, redoc_url=None)
     app.state.store, app.state.knowledge = store, knowledge
     app.state.models = model_service
+    app.state.jobs = generation_service
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
@@ -97,6 +104,8 @@ def create_app(root: Path, token: str, web: Path | None = None) -> FastAPI:
         appearance.create_router(store),
         models.create_router(model_service),
         connections.create_router(store),
+        jobs.create_router(generation_service),
+        artifacts.create_router(generation_service.materials),
     ):
         app.include_router(router)
 

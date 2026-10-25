@@ -1,6 +1,10 @@
 import json
 import math
 import os
+from collections.abc import Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
+from types import MappingProxyType
 from typing import Protocol
 from urllib.parse import urlsplit
 
@@ -16,6 +20,31 @@ class LLMProvider(Protocol):
 
 class EmbeddingProvider(Protocol):
     def embed(self, texts: list[str]) -> list[list[float]]: ...
+
+
+_frozen_keys: ContextVar[Mapping[tuple[str, str], str] | None] = ContextVar("provider_keys", default=None)
+
+
+def provider_identity(settings: dict) -> tuple[str, str]:
+    return settings.get("provider", "openai_compatible"), settings["base_url"].rstrip("/")
+
+
+@contextmanager
+def frozen_provider_keys(keys: Mapping[tuple[str, str], str]):
+    """Keep a generation's credentials in its execution context, never on disk.
+
+    An empty key is deliberately frozen too: changing environment/keychain values
+    must not change an already started generation. Unknown endpoints fail closed.
+    ContextVar isolation keeps other requests and worker threads unaffected.
+    """
+    snapshot = dict(keys)
+    if any(not isinstance(value, str) for value in snapshot.values()):
+        raise ValueError("Invalid frozen credential")
+    token = _frozen_keys.set(MappingProxyType(snapshot))
+    try:
+        yield
+    finally:
+        _frozen_keys.reset(token)
 
 
 def validate_endpoint(url: str) -> str:
@@ -53,8 +82,12 @@ def provider_key(settings: dict) -> str:
     """Keep legacy overrides while scoping new environment keys to their provider."""
     # Transport historically stripped trailing slashes before keychain lookup.
     # Preserve that key identity without rewriting old embedding index identities.
-    base = settings["base_url"].rstrip("/")
-    provider = settings.get("provider", "openai_compatible")
+    provider, base = provider_identity(settings)
+    frozen = _frozen_keys.get()
+    if frozen is not None:
+        if (provider, base) not in frozen:
+            raise ValueError("AI connection changed during generation.")
+        return frozen[provider, base]
     if provider == "openai_compatible":
         return get_key(base)
     variable = {"openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY",

@@ -20,6 +20,7 @@ import {
   SidebarSimple,
   Notebook as NotebookIcon,
   PlugsConnected,
+  Sparkle,
   Plus,
   X,
 } from "@phosphor-icons/react";
@@ -29,6 +30,9 @@ import { SourcePanel } from "../features/sources/source-panel";
 import { Chat } from "../features/chat/chat";
 import { Notes } from "../features/notes/notes";
 import { ResearchPanel } from "../features/research/research-panel";
+import { StudioPanel } from "../features/studio/studio-panel";
+import { MaterialLibrary } from "../features/artifacts/material-library";
+import { NoteCitation } from "../features/context/note-citation";
 import { Connect } from "../features/connections/connect";
 import { SettingsPanel } from "../features/settings/settings";
 import { Apps } from "../features/apps/apps";
@@ -41,6 +45,7 @@ function Application() {
     { id: "chat", title: tr("nav.chat"), icon: ChatCircle },
     { id: "notes", title: tr("nav.notes"), icon: FileText },
     { id: "research", title: tr("nav.research"), icon: Flask },
+    { id: "studio", title: tr("nav.studio"), icon: Sparkle },
     { id: "artifacts", title: tr("nav.artifacts"), icon: Folder },
   ];
   const client = useQueryClient();
@@ -54,11 +59,13 @@ function Application() {
   const [name, setName] = useState("");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
+  const [noteCitation, setNoteCitation] = useState<Evidence | null>(null);
   const [selected, setSelected] = useState<{
     source: Source;
     evidence?: Evidence;
   } | null>(null);
   const report = useCallback((message: string) => setError(message), []);
+  useEffect(() => { setNoteCitation(null); }, [notebook]);
   useEffect(() => {
     const hash = new URLSearchParams(window.location.hash.slice(1));
     if (hash.has("token")) {
@@ -133,6 +140,7 @@ function Application() {
     client.invalidateQueries({ queryKey: ["notebooks"] });
   };
   const cite = (e: Evidence) => {
+    if (e.kind === "note" || e.note_id) { setNoteCitation(e); return; }
     const source = sources.data?.find((s) => s.id === e.source_id);
     if (source) {
       setSelected({ source, evidence: e });
@@ -348,10 +356,11 @@ function Application() {
                       aria-labelledby="tab-artifacts"
                       className="tab-content"
                     >
-                      <Notes
+                      <MaterialLibrary
                         notebook={notebook}
-                        kind="artifacts"
+                        cite={cite}
                         report={report}
+                        navigate={navigate}
                       />
                     </div>
                   )}
@@ -367,6 +376,11 @@ function Application() {
                       cite={cite}
                       report={report}
                     />
+                  </div>
+                  <div id="panel-studio" role="tabpanel" aria-labelledby="tab-studio"
+                    hidden={tab !== "studio"} className="tab-content">
+                    <StudioPanel notebook={notebook} cite={cite} report={report}
+                      navigate={navigate} settings={openSettings} />
                   </div>
                   {tab === "connect" && (
                     <Connect notebook={notebook} report={report} />
@@ -412,6 +426,7 @@ function Application() {
           </section>
         )}
       </main>
+      {noteCitation && <NoteCitation evidence={noteCitation} close={() => setNoteCitation(null)} />}
       {create && (
         <div
           className="modal-backdrop"

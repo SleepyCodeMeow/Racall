@@ -14,7 +14,13 @@ Only after the owner explicitly chooses the release timing may the maintainer ch
 
 On **October 19, 2026**, the owner explicitly approved publishing **Racall 0.2 Beta for Windows x64**. Its policy is `publication: "approved"`, `platforms: ["win-x64"]`, `github_latest: true`. macOS and Linux are not included in this release's packages or acceptance claim. The required fresh native build and publication passed in [run 39257810891](https://github.com/SleepyCodeMeow/Racall/actions/runs/39257810891), from the exact tagged source `70fd79bd69cef06d88c03e1fa5ff88929fc1fa3e`; old native CI and the earlier local candidate were not reused as the released build.
 
-Supported platform identifiers are `win-x64`, `mac-arm64`, `mac-x64` and `linux-x64`. The nonempty, unique list is validated by `scripts/release_policy.py` and drives the CI matrix, required native jobs, reusable artifacts and exact package names. Expanding a future release requires explicitly adding its platforms and passing their native checks. Do not silently treat missing platform builds as accepted.
+Supported platform identifiers are `win-x64`, `win-arm64`, `mac-arm64`, `mac-x64`,
+`linux-x64` and `linux-arm64`. The nonempty, unique list is validated by
+`scripts/release_policy.py` and drives the CI matrix, required native jobs,
+reusable artifacts and exact package names. Expanding a future release requires
+explicitly adding its platforms and passing their native checks. Do not silently
+treat missing platform builds as accepted. The 0.3 candidate matrix declares all
+six targets while keeping publication on hold.
 
 ## Before tagging
 
@@ -24,7 +30,7 @@ Push the prepared source branch. A branch CI pass can provide a preliminary chec
 
 ## Publication
 
-After every declared platform passes, the workflow downloads exactly its installers/archives, computes SHA-256 checksums, creates a draft GitHub release, uploads all assets, verifies the exact asset names and sizes, then publishes. Windows-only 0.2 has one EXE plus `SHA256SUMS.txt`; all four platform targets would require seven installers/archives plus checksums. Extra or missing distribution packages/assets cause publication to stop. It never uploads API keys, test profiles or source documents. A failed upload leaves a draft rather than a partial public release; rerunning can finish that draft. It will not replace an already-published release.
+After every declared platform passes, the workflow downloads exactly its installers/archives, computes SHA-256 checksums, creates a draft GitHub release, uploads all assets, verifies the exact asset names and sizes, then publishes. Windows-only 0.2 has one EXE plus `SHA256SUMS.txt`; all six platform targets require ten installers/archives plus checksums. Extra or missing distribution packages/assets cause publication to stop. It never uploads API keys, test profiles or source documents. A failed upload leaves a draft rather than a partial public release; rerunning can finish that draft. It will not replace an already-published release.
 
 Before publication, CI checks unpacked apps plus the installer paths for each declared platform: Windows NSIS installation/uninstallation, macOS DMG copy/launch, Debian package installation/removal and extracted AppImage launch. These automated checks do not cover every interactive permissions or Gatekeeper dialog. Describe any unperformed manual acceptance and signing status honestly. The owner waived mandatory final live-model and hands-on acceptance for the first Windows 0.2 Beta, as recorded in the checklist. This beta has no automatic updater; users install later releases manually. Existing data and language preferences must survive upgrades.
 

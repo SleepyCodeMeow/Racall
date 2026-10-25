@@ -4,12 +4,17 @@ from fastapi import APIRouter
 
 from ...knowledge import Knowledge
 from ...schemas import Question, Title
-from .schemas import ChatQuestion
+from ...storage import ConflictError, identifier
+from ..context.history import bounded_history, retrieval_query
+from ..context.schemas import ContextSelection, normalize_selection
+from ..context.service import ContextService
+from .schemas import ChatCreate, ChatQuestion
 from .service import Chats
 
 
 def create_router(chats: Chats, knowledge: Knowledge) -> APIRouter:
     router = APIRouter()
+    contexts = ContextService(chats.store)
 
     @router.post("/api/notebooks/{notebook}/search")
     def search(notebook: str, body: Question):
@@ -24,14 +29,18 @@ def create_router(chats: Chats, knowledge: Knowledge) -> APIRouter:
         return chats.list(notebook)
 
     @router.post("/api/notebooks/{notebook}/chats", status_code=201)
-    def chat_create(notebook: str, body: Title):
+    def chat_create(notebook: str, body: ChatCreate):
         if not body.title.strip():
             raise ValueError("A chat title is required.")
-        return chats.create(notebook, body.title.strip())
+        return chats.create(notebook, body.title.strip(), context=body.context)
 
     @router.get("/api/notebooks/{notebook}/chats/{thread}")
     def chat_get(notebook: str, thread: str):
         return chats.get(notebook, thread)
+
+    @router.put("/api/notebooks/{notebook}/chats/{thread}/context")
+    def chat_context(notebook: str, thread: str, body: ContextSelection):
+        return chats.set_context(notebook, thread, body)
 
     @router.put("/api/notebooks/{notebook}/chats/{thread}")
     def chat_rename(notebook: str, thread: str, body: Title):
@@ -50,18 +59,36 @@ def create_router(chats: Chats, knowledge: Knowledge) -> APIRouter:
             question = body.question.strip()
             if not question:
                 raise ValueError("A question is required.")
-            turn, fresh = chats.begin(notebook, thread, body.request_id, question, body.mode)
-            if not fresh:
-                return turn
+            with chats.store.lock:
+                current = chats.get(notebook, thread)
+                selection = normalize_selection(body.context if body.context is not None else current.get("context"))
+                if any(turn["id"] == identifier(body.request_id) for turn in current["turns"]):
+                    return chats.begin(notebook, thread, body.request_id, question, body.mode,
+                                       context=selection)[0]
+                snapshot = contexts.snapshot(notebook, selection)
+                history, trimmed = bounded_history(current["turns"], snapshot)
+                turn, fresh = chats.begin(notebook, thread, body.request_id, question, body.mode,
+                                          context=selection, snapshot=snapshot)
+                if not fresh:
+                    return turn
+            info = {**contexts.info(snapshot), "history_turns": len(history), "history_truncated": trimmed}
             try:
-                result = (
-                    {"answer": knowledge.answer(notebook, question)}
-                    if body.mode == "ask"
-                    else {"evidence": knowledge.search(notebook, question)["evidence"]}
-                )
-                return chats.finish(notebook, thread, body.request_id, status="completed", **result)
+                if body.mode == "ask":
+                    result = {"answer": knowledge.answer(notebook, question, context=snapshot, history=history)}
+                    info.update(result["answer"].get("context_info", {}))
+                else:
+                    found = knowledge.search(notebook, retrieval_query(question, history), context=snapshot)
+                    result = {"evidence": found["evidence"]}
+                    info.update(found.get("context_info", contexts.info(snapshot, result["evidence"])))
+                with chats.store.lock:
+                    contexts.validate_snapshot(notebook, snapshot)
+                    return chats.finish(notebook, thread, body.request_id, status="completed",
+                                        context_info=info, **result)
+            except ConflictError:
+                return chats.finish(notebook, thread, body.request_id, status="failed",
+                                    error_code="context_changed", context_info=info)
             except Exception:
                 # Persist the failed question without retaining provider responses or credentials.
-                return chats.finish(notebook, thread, body.request_id, status="failed")
+                return chats.finish(notebook, thread, body.request_id, status="failed", context_info=info)
 
     return router

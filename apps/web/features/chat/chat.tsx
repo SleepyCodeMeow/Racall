@@ -13,12 +13,14 @@ import {
   api,
   ChatThread,
   ChatTurn,
+  ContextSelection,
   Evidence,
   locationLabel,
 } from "../../lib/api";
 import { useI18n } from "../../lib/i18n";
 import { AnswerView } from "./answer-view";
 import { ChatActions } from "./chat-actions";
+import { allMaterials, ContextPicker, copySelection } from "../context/context-picker";
 
 type Props = {
   notebook: string;
@@ -45,6 +47,11 @@ export function Chat({
   const [busy, setBusy] = useState(false);
   const [mode, setMode] = useState<"ask" | "search">("ask");
   const [rename, setRename] = useState<string | null>(null);
+  const [context, setContext] = useState<ContextSelection>(allMaterials);
+  const contextRef = useRef(context);
+  const [contextSaving, setContextSaving] = useState(false);
+  const savingContext = useRef(false);
+  const [contextThread, setContextThread] = useState("");
   const threadsKey = ["chats", notebook];
   const threadKey = ["chat", notebook, thread];
   const threads = useQuery({
@@ -65,31 +72,65 @@ export function Chat({
     if (threads.error || selected.error)
       report((threads.error || selected.error)!.message);
   }, [threads.error, selected.error, report]);
+  useEffect(() => {
+    if (!thread || selected.data?.id !== thread || contextThread === thread || savingContext.current) return;
+    const restored = copySelection(selected.data.context || allMaterials());
+    contextRef.current = restored;
+    setContext(restored);
+    setContextThread(thread);
+  }, [thread, selected.data, contextThread]);
   const turns = selected.data?.turns || [];
-  const pending = busy || turns.some((t) => t.status === "running");
-  const loading = threads.isPending || (!!thread && selected.isPending);
+  const pending = busy || contextSaving || turns.some((t) => t.status === "running");
+  const loading = threads.isPending || (!!thread && (selected.isPending || contextThread !== thread));
+  const hasContext = (context.source_ids === null ? count : context.source_ids.length) > 0 || context.note_ids.length > 0;
   const end = useRef<HTMLDivElement>(null);
   useEffect(() => {
     end.current?.scrollIntoView({ behavior: "smooth", block: "end" });
   }, [turns.length, pending]);
   const refresh = () => client.invalidateQueries({ queryKey: threadsKey });
-  const create = async (title: string) => {
+  const changeContext = async (next: ContextSelection) => {
+    if (savingContext.current) return;
+    const previous = contextRef.current;
+    const selection = copySelection(next);
+    savingContext.current = true;
+    setContextSaving(true);
+    contextRef.current = selection;
+    setContext(selection);
+    try {
+      if (thread) {
+        // Stop an older GET from replacing the acknowledged selection in cache.
+        await client.cancelQueries({ queryKey: threadKey });
+        const item = await api<ChatThread>(`/notebooks/${notebook}/chats/${thread}/context`, "PUT", selection);
+        client.setQueryData(threadKey, item);
+      }
+    } catch (error) {
+      contextRef.current = previous;
+      setContext(previous);
+      throw error;
+    } finally { savingContext.current = false; setContextSaving(false); }
+  };
+  const create = async (title: string, selection: ContextSelection = allMaterials()) => {
     const item = await api<ChatThread>(`/notebooks/${notebook}/chats`, "POST", {
       title,
+      context: selection,
     });
     client.setQueryData(["chat", notebook, item.id], item);
+    contextRef.current = copySelection(item.context || selection);
+    setContext(contextRef.current);
+    setContextThread(item.id);
     setThread(item.id);
     setRename(null);
     await refresh();
     return item.id;
   };
   const send = async () => {
-    if (!question.trim() || pending || loading) return;
+    if (!question.trim() || pending || loading || savingContext.current || !hasContext) return;
     setBusy(true);
     const q = question.trim();
+    const selection = copySelection(contextRef.current);
     let id = thread;
     try {
-      if (!id) id = await create(q.slice(0, 160));
+      if (!id) id = await create(q.slice(0, 160), selection);
       const key = ["chat", notebook, id];
       const request_id = crypto.randomUUID();
       const optimistic: ChatTurn = {
@@ -105,6 +146,7 @@ export function Chat({
         question: q,
         mode,
         request_id,
+        context: selection,
       });
       setQuestion("");
     } catch (error) {
@@ -125,6 +167,7 @@ export function Chat({
           disabled={pending || loading}
           onChange={(e) => {
             setThread(e.target.value);
+            setContextThread("");
             setRename(null);
             setQuestion("");
           }}
@@ -174,6 +217,9 @@ export function Chat({
                   client.removeQueries({ queryKey: threadKey });
                   await refresh();
                   setThread("");
+                  setContextThread("");
+                  contextRef.current = allMaterials();
+                  setContext(contextRef.current);
                   setQuestion("");
                   setRename(null);
                 } catch (e) {
@@ -226,6 +272,8 @@ export function Chat({
           </button>
         </form>
       )}
+      <div className="chat-context-bar"><ContextPicker notebook={notebook} value={context}
+        onChange={changeContext} disabled={pending || loading} report={report} /></div>
       <div
         className={`chat-layout ${!turns.length && !pending ? "is-empty" : ""}`}
       >
@@ -259,6 +307,11 @@ export function Chat({
                 Racall
               </div>
               {turn.answer && <AnswerView answer={turn.answer} cite={cite} />}
+              {turn.context_info && <p className="context-turn-hint">{tr("context.turnSummary", {
+                sources: turn.context_info.source_count, notes: turn.context_info.note_count, turns: turn.context_info.history_turns,
+              })}</p>}
+              {turn.context_info?.history_truncated && <p className="context-turn-hint">{tr("context.historyTrimmed")}</p>}
+              {turn.context_info?.evidence_truncated && <p className="context-turn-hint">{tr("context.evidenceTrimmed")}</p>}
               {turn.evidence && (
                 <div className="search-results">
                   {turn.evidence.length === 0 ? (
@@ -290,7 +343,7 @@ export function Chat({
               {(turn.status === "failed" || turn.status === "interrupted") && (
                 <div className="turn-failure">
                   <p>
-                    {tr(
+                    {turn.error_code === "context_changed" ? tr("context.changed") : tr(
                       turn.status === "failed"
                         ? "chat.failed"
                         : "chat.interrupted",
@@ -323,11 +376,11 @@ export function Chat({
             <textarea
               aria-label={tr("chat.questionLabel")}
               placeholder={
-                count ? tr("chat.placeholder") : tr("chat.noSourcePlaceholder")
+                hasContext ? tr("chat.placeholder") : tr("chat.noSourcePlaceholder")
               }
               value={question}
               onChange={(e) => setQuestion(e.target.value)}
-              disabled={!count || pending || loading}
+              disabled={!hasContext || pending || loading}
               rows={2}
               maxLength={2000}
               onKeyDown={(e) => {
@@ -370,7 +423,7 @@ export function Chat({
               <button
                 className="send-button"
                 aria-label={tr("chat.send")}
-                disabled={pending || loading || !count || !question.trim()}
+                disabled={pending || loading || !hasContext || !question.trim()}
               >
                 <ArrowUp size={20} />
               </button>

@@ -9,7 +9,10 @@ from __future__ import annotations
 import asyncio
 import json
 import math
+from collections.abc import Callable
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import contextmanager
+from contextvars import ContextVar, copy_context
 from typing import Iterator
 
 import httpx
@@ -18,6 +21,21 @@ _WIRE_LIMIT = 1024 * 1024
 _CONTENT_LIMIT = 256 * 1024
 _LINE_LIMIT = 64 * 1024
 _EVENT_LIMIT = 64 * 1024
+_cancellation: ContextVar[Callable[[], None] | None] = ContextVar("completion_cancellation", default=None)
+
+
+@contextmanager
+def cancellable_completion(checkpoint: Callable[[], None]):
+    """Interrupt an in-flight request when a generation checkpoint raises.
+
+    Cancellation closes the client connection; providers remain responsible for
+    stopping their own computation. No partial completion is returned or retried.
+    """
+    token = _cancellation.set(checkpoint)
+    try:
+        yield
+    finally:
+        _cancellation.reset(token)
 
 
 class CompletionProtocolError(ValueError):
@@ -250,6 +268,24 @@ async def _complete_json(url: str, headers: dict, payload: dict,
         raise CompletionDeadlineError("The completion exceeded its total deadline.") from error
 
 
+async def _controlled_completion(url, headers, payload, deadline_seconds, idle_seconds, protocol):
+    checkpoint = _cancellation.get()
+    if checkpoint is None:
+        return await _complete_json(url, headers, payload, deadline_seconds, idle_seconds, protocol)
+    checkpoint()
+    task = asyncio.create_task(_complete_json(url, headers, payload, deadline_seconds, idle_seconds, protocol))
+    try:
+        while True:
+            done, _ = await asyncio.wait({task}, timeout=0.2)
+            checkpoint()  # Cancellation also wins a result delivered in the same interval.
+            if done:
+                return task.result()
+    finally:
+        if not task.done():
+            task.cancel()
+        await asyncio.gather(task, return_exceptions=True)
+
+
 def complete_json(url: str, headers: dict, payload: dict, *,
                   deadline_seconds: float = 300, idle_seconds: float = 120,
                   protocol: str = "openai") -> dict:
@@ -266,8 +302,9 @@ MCP tool. In that case the HTTP request gets its own loop in an isolated thread.
     try:
         asyncio.get_running_loop()
     except RuntimeError:
-        return asyncio.run(_complete_json(url, headers, payload, deadline_seconds, idle_seconds, protocol))
+        return asyncio.run(_controlled_completion(url, headers, payload, deadline_seconds, idle_seconds, protocol))
     with ThreadPoolExecutor(max_workers=1, thread_name_prefix="completion") as executor:
         return executor.submit(
-            asyncio.run, _complete_json(url, headers, payload, deadline_seconds, idle_seconds, protocol)
+            copy_context().run, asyncio.run,
+            _controlled_completion(url, headers, payload, deadline_seconds, idle_seconds, protocol)
         ).result()

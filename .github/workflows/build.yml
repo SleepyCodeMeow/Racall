@@ -23,7 +23,11 @@ jobs:
   desktop:
     needs: targets
     name: desktop (${{ matrix.os }}, ${{ matrix.platform }}, ${{ matrix.arch }})
-    timeout-minutes: 35
+    timeout-minutes: 60
+    env:
+      RACALL_TARGET_ARCH: ${{ matrix.arch }}
+      RACALL_TARGET_PLATFORM: ${{ matrix.platform }}
+      PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
@@ -33,14 +37,34 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '24'
+          architecture: ${{ matrix.arch }}
           cache: npm
       - uses: astral-sh/setup-uv@v6
         with:
           version: '0.12.13'
           python-version: '3.12'
           enable-cache: true
+      - name: Prepare native Windows ARM64 crypto toolchain
+        if: runner.os == 'Windows' && matrix.arch == 'arm64'
+        shell: pwsh
+        run: ./scripts/prepare_windows_arm64.ps1
+      - name: Prepare Intel macOS crypto source build
+        if: runner.os == 'macOS' && matrix.arch == 'x64'
+        shell: bash
+        run: |
+          brew list openssl@3 >/dev/null 2>&1 || brew install openssl@3
+          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> "$GITHUB_ENV"
+          echo "OPENSSL_STATIC=1" >> "$GITHUB_ENV"
+          openssl_notice=$(find -L "$(brew --prefix openssl@3)" -type f -iname 'LICENSE.txt' -print -quit)
+          test -n "$openssl_notice" && test -s "$openssl_notice"
+          echo "RACALL_OPENSSL_NOTICE=$openssl_notice" >> "$GITHUB_ENV"
+          rustc --version
+          cargo --version
       - run: npm ci
       - run: uv sync --frozen
+      - name: Verify native Node and Python architecture
+        run: uv run python scripts/check_native_arch.py
+      - run: node --test scripts/test-native-target.cjs
       - run: npm test -- -q
       - run: npm run lint
       - run: npm run check:installer-catalog
@@ -67,6 +91,8 @@ jobs:
       - name: Check installer (Linux)
         if: runner.os == 'Linux'
         run: xvfb-run -a node scripts/check-installer.cjs
+      - name: Verify candidate packages and write checksums
+        run: uv run python scripts/check_candidate_packages.py
       - uses: actions/upload-artifact@v4
         with:
           name: Racall-${{ matrix.platform }}-${{ matrix.arch }}
@@ -76,6 +102,8 @@ jobs:
             release/*.zip
             release/*.AppImage
             release/*.deb
+            release/SHA256SUMS.txt
+            release/BUILD.json
           if-no-files-found: error
       - name: Save diagnostic artifacts
         if: failure()
@@ -86,6 +114,7 @@ jobs:
             test-results/**/result.json
             test-results/**/failure.png
             test-results/**/backend.log
+            test-results/**/process.log
           if-no-files-found: ignore
   publish:
     if: startsWith(github.ref, 'refs/tags/v')

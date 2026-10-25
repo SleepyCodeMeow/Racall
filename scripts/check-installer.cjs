@@ -4,10 +4,13 @@ const path = require("node:path");
 const os = require("node:os");
 const assert = require("node:assert/strict");
 const { spawnSync } = require("node:child_process");
+const { nativeTarget, distributionFiles, resourcesForExecutable, packagedExecutable } = require("./native-target.cjs");
 if (process.env.CI !== "true")
   throw new Error("Installer checks require a disposable CI host.");
 const root = path.resolve(__dirname, "..");
 const version = require("../package.json").version;
+const target = nativeTarget();
+const packages = distributionFiles(root, version, target);
 const run = path.join(root, "test-results", "installer-" + Date.now());
 assert.ok(run.startsWith(root + path.sep));
 fs.mkdirSync(run, { recursive: true });
@@ -25,8 +28,15 @@ function command(file, args, options = {}) {
     );
   return result.stdout.trim();
 }
-function check(executable) {
+function check(executable, nativeExecutable = executable) {
   assert.ok(fs.existsSync(executable), executable);
+  const resources = resourcesForExecutable(nativeExecutable, target);
+  const backend = path.join(resources, "backend", process.platform === "win32" ? "open-notebook-api.exe" : "open-notebook-api");
+  // Check the installed payload, not only the unpacked build used earlier in CI.
+  // AppImage's AppRun is a shell launcher; nativeExecutable identifies its ELF payload.
+  const architecture = JSON.parse(command("uv", ["run", "python", "scripts/check_native_arch.py",
+    "--binary", nativeExecutable, "--binary", backend]));
+  nativeChecks.push(architecture);
   const result = spawnSync(
     process.execPath,
     ["scripts/smoke-maintenance.cjs"],
@@ -58,8 +68,9 @@ fs.writeFileSync(sentinel, "User knowledge must survive uninstall.", {
   flag: "wx",
 });
 const checks = [];
+const nativeChecks = [];
 if (process.platform === "win32") {
-  const installer = path.join(root, "release", `Racall-${version}-win-x64.exe`);
+  const installer = packages.installer;
   const destination = path.join(run, "installed");
   command(installer, ["/S", "/LANGUAGE=1049", "/D=" + destination], {
     windowsVerbatimArguments: true,
@@ -88,11 +99,7 @@ if (process.platform === "win32") {
   );
   checks.push("NSIS uninstall preserves user knowledge");
 } else if (process.platform === "darwin") {
-  const dmg = path.join(
-    root,
-    "release",
-    `Racall-${version}-mac-${process.arch}.dmg`,
-  );
+  const dmg = packages.dmg;
   const mount = path.join(run, "mounted");
   fs.mkdirSync(mount);
   command("hdiutil", [
@@ -112,7 +119,9 @@ if (process.platform === "win32") {
   check(path.join(bundle, "Contents", "MacOS", "Racall"));
   checks.push("DMG mount, application copy and installed app");
 } else {
-  const deb = path.join(root, "release", `Racall-${version}-linux-amd64.deb`);
+  const deb = packages.deb;
+  assert.equal(command("dpkg-deb", ["--field", deb, "Architecture"]),
+    target.arch === "x64" ? "amd64" : "arm64", "Debian package architecture does not match native host");
   const name = command("dpkg-deb", ["--field", deb, "Package"]);
   assert.match(name, /^[a-z0-9][a-z0-9+.-]+$/);
   command("sudo", ["apt-get", "update"]);
@@ -134,13 +143,14 @@ if (process.platform === "win32") {
     command("sudo", ["dpkg", "--remove", name]);
   }
   checks.push("Debian removal preserves user knowledge");
-  const appImage = path.join(
-    root,
-    "release",
-    `Racall-${version}-linux-x86_64.AppImage`,
-  );
+  const appImage = packages.appImage;
   command(appImage, ["--appimage-extract"], { cwd: run });
-  check(path.join(run, "squashfs-root", "AppRun"));
+  const appDir = path.join(run, "squashfs-root");
+  // electron-builder copies appOutDir to the AppDir root and AppRun executes
+  // "$APPDIR/<ExecutableName>" (targets/appimage/appImageUtil.js).
+  const payload = packagedExecutable({ unpacked: appDir, executables:
+    ["racall", "Racall", "open-notebook-desktop"].map(name => path.join(appDir, name)) });
+  check(path.join(appDir, "AppRun"), payload);
   checks.push("AppImage extracted application (FUSE mounting not exercised)");
 }
 assert.equal(
@@ -149,6 +159,6 @@ assert.equal(
 );
 fs.writeFileSync(
   path.join(run, "result.json"),
-  JSON.stringify({ passed: true, platform: process.platform, checks }, null, 2),
+  JSON.stringify({ passed: true, platform: process.platform, arch: target.arch, checks, nativeChecks }, null, 2),
 );
 console.log(JSON.stringify({ passed: true, checks, artifacts: run }));

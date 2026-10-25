@@ -23,9 +23,11 @@ class ReleaseTarget:
 
 TARGETS = {
     "win-x64": ReleaseTarget("windows-latest", "win", "x64", ("win-x64.exe",)),
+    "win-arm64": ReleaseTarget("windows-11-arm", "win", "arm64", ("win-arm64.exe",)),
     "mac-arm64": ReleaseTarget("macos-15", "mac", "arm64", ("mac-arm64.dmg", "mac-arm64.zip")),
     "mac-x64": ReleaseTarget("macos-15-intel", "mac", "x64", ("mac-x64.dmg", "mac-x64.zip")),
     "linux-x64": ReleaseTarget("ubuntu-22.04", "linux", "x64", ("linux-x86_64.AppImage", "linux-amd64.deb")),
+    "linux-arm64": ReleaseTarget("ubuntu-22.04-arm", "linux", "arm64", ("linux-arm64.AppImage", "linux-arm64.deb")),
 }
 
 

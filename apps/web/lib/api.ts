@@ -43,6 +43,16 @@ export type Evidence = {
   location: Location;
   number?: number;
   version: string;
+  kind?: "source" | "note";
+  note_id?: string;
+};
+export type ContextSelection = { source_ids: string[] | null; note_ids: string[] };
+export type ContextInfo = {
+  source_count: number;
+  note_count: number;
+  history_turns: number;
+  history_truncated?: boolean;
+  evidence_truncated?: boolean;
 };
 export type Answer = {
   claims: { text: string; evidence_ids: string[] }[];
@@ -58,12 +68,45 @@ export type ChatTurn = {
   status: "running" | "completed" | "failed" | "interrupted";
   answer?: Answer;
   evidence?: Evidence[];
+  context_info?: ContextInfo;
+  error_code?: string;
 };
 export type ChatThread = {
   id: string;
   title: string;
   updated_at: string;
   turns: ChatTurn[];
+  context?: ContextSelection;
+};
+export type GenerationKind = "research" | "summary" | "study_guide" | "review_questions";
+export type GenerationJob = {
+  id: string;
+  request_id: string;
+  kind: GenerationKind;
+  status: "queued" | "running" | "completed" | "failed" | "cancelled" | "interrupted";
+  stage: string;
+  steps: { stage: string; at: string; detail?: Record<string, unknown> }[];
+  question: string;
+  title: string;
+  language: "en" | "ru";
+  created_at: string;
+  updated_at: string;
+  error?: string;
+  retry_of?: string;
+  cancel_requested?: boolean;
+  result?: { research_id?: string; material_id?: string };
+};
+export type Material = {
+  id: string;
+  title: string;
+  kind: GenerationKind;
+  body: string;
+  answer: Answer;
+  created_at: string;
+  job_id?: string;
+  legacy?: boolean;
+  research_id?: string;
+  context_info?: Partial<ContextInfo>;
 };
 export type NoteDraft = { draft_id: string; note: Note; updated_at: string };
 export class ApiError extends Error {

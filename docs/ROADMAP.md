@@ -29,14 +29,18 @@ The first 0.2 Beta release targets Windows x64. It adds persistent conversations
 - Automated Windows package checks; signing/notarization when certificates are available.
 - Parser workers with time and memory limits.
 
-## 0.3 Beta — Research and the first Studio tools
+## 0.3 Beta in development — Context-aware research and the first Studio
 
-- Durable research and generation jobs, cancellation, progress and recovery.
-- A Studio area with saved, regenerable outputs tied to the selected source versions.
-- Start with reports/study guides, then flashcards, quizzes and mind maps as quality allows.
-- Better retrieval evaluation, reranking and scalable vector lookup.
-- Improved PDF/table handling and a richer Markdown editor.
-- Additional interface languages from maintained translations.
+Refreshed after the [October 25 source review](REFERENCE_PROJECTS.md#refresh-2026-10-25) and accepted for implementation. Development is on `codex/0.3-context-studio`; publication is on hold. The intended complete workflow is **select materials → discuss with context → generate and retain a useful learning material**. See the [development checklist](RELEASE_03_CHECKLIST.md) for verified work and outstanding release checks.
+
+- Bounded conversational history in the active thread, correct follow-up questions, explicit source selection and optional saved-note context. Previous model answers are context, not factual evidence.
+- Shared durable jobs for Research and Studio: actual stage progress, cancellation, deduplicated submission and explicit retry after interruption. Start with one generation worker and preserve the no-automatic-model-replay behavior.
+- A small Studio with three text presets: **concise summary, study guide, and review questions with answers**. Use the existing text providers, preserve source-version references and allow Markdown export or an editable copy in Notes.
+- A material library independent of chat deletion, with compatible opening of earlier 0.2 reports and no destructive notebook migration. Keep feature code in separate context/jobs/studio/artifacts modules.
+
+Build the context slice first, then move Research onto jobs, then add the Studio presets and library. Completion means thread/notebook isolation, enforced source selection, bounded context, no duplicate model calls/results, real cancellation, restart without replay, preserved citation versions and EN/RU behavior. See the reference review for the acceptance cases.
+
+Flashcards, interactive quizzes/scoring, richer retrieval/reranking, PDF/OCR improvements, extra languages, subscription/CLI backends and larger UI changes remain follow-up candidates. Presentations and audio keep their own later milestones. No new bundled GPU model is needed for this text-only slice; it uses the owner's configured local or cloud connection.
 
 ## 0.4 Beta target — Presentations and visual summaries
 

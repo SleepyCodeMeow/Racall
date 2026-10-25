@@ -4,6 +4,8 @@ import json
 import os
 
 from ...storage import ConflictError, Store, identifier, now, read_text, uid, write_json
+from ..context.schemas import normalize_selection
+from ..context.service import ContextService
 
 
 class Chats:
@@ -17,7 +19,9 @@ class Chats:
 
     def get(self, notebook: str, thread: str) -> dict:
         with self.store.lock:
-            return json.loads(read_text(self.path(notebook, thread)))
+            item = json.loads(read_text(self.path(notebook, thread)))
+            item.setdefault("context", normalize_selection())
+            return item
 
     def list(self, notebook: str) -> list[dict]:
         with self.store.lock:
@@ -31,11 +35,22 @@ class Chats:
                 reverse=True,
             )
 
-    def create(self, notebook: str, title: str) -> dict:
-        item = {"id": uid(), "title": title, "created_at": now(), "updated_at": now(), "turns": []}
+    def create(self, notebook: str, title: str, *, context=None) -> dict:
+        item = {"id": uid(), "title": title, "created_at": now(), "updated_at": now(), "turns": [],
+                "context": normalize_selection(context)}
         with self.store.lock:
+            ContextService(self.store).snapshot(notebook, item["context"])
             write_json(self.path(notebook, item["id"]), item)
         return item
+
+    def set_context(self, notebook: str, thread: str, selection) -> dict:
+        selection = normalize_selection(selection)
+        with self.store.lock:
+            item = self.get(notebook, thread)
+            ContextService(self.store).snapshot(notebook, selection)
+            item.update(context=selection, updated_at=now())
+            write_json(self.path(notebook, thread), item)
+            return item
 
     def rename(self, notebook: str, thread: str, title: str) -> dict:
         with self.store.lock:
@@ -56,14 +71,17 @@ class Chats:
             os.replace(self.path(notebook, thread), destination)
 
     def begin(
-        self, notebook: str, thread: str, request_id: str, question: str, mode: str
+        self, notebook: str, thread: str, request_id: str, question: str, mode: str, *,
+        context: dict | None = None, snapshot: dict | None = None,
     ) -> tuple[dict, bool]:
         request_id = identifier(request_id)
         with self.store.lock:
             item = self.get(notebook, thread)
+            selection = normalize_selection(context if context is not None else item.get("context"))
             for turn in item["turns"]:
                 if turn["id"] == request_id:
-                    if turn["question"] != question or turn["mode"] != mode:
+                    if (turn["question"] != question or turn["mode"] != mode
+                            or normalize_selection(turn.get("context")) != selection):
                         raise ConflictError("This request ID was already used for a different question.")
                     return turn, False
             if any(t["status"] == "running" for t in item["turns"]):
@@ -74,8 +92,12 @@ class Chats:
                 "mode": mode,
                 "created_at": now(),
                 "status": "running",
+                "context": selection,
             }
+            if snapshot is not None:
+                turn["context_snapshot"] = snapshot
             item["turns"].append(turn)
+            item["context"] = selection
             item["updated_at"] = now()
             write_json(self.path(notebook, thread), item)
             return turn, True

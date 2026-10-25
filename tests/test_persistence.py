@@ -41,7 +41,7 @@ def test_transcript_survives_restart_and_index_loss_with_exact_citations(tmp_pat
         n = notebook(c)
         thread = c.post(f"/api/notebooks/{n}/chats", json={"title": "Conversation"}).json()["id"]
         endpoint = f"/api/notebooks/{n}/chats/{thread}/turns"
-        monkeypatch.setattr(c.app.state.knowledge, "answer", lambda *args: calls.append(args) or answer)
+        monkeypatch.setattr(c.app.state.knowledge, "answer", lambda *args, **kwargs: calls.append(args) or answer)
         payload = {"question": "What does the source say?", "request_id": str(uuid4())}
         first = c.post(endpoint, json=payload)
         assert first.status_code == 200 and first.json()["status"] == "completed"
@@ -75,7 +75,7 @@ def test_interrupted_turn_is_not_replayed_and_failed_turn_keeps_question(tmp_pat
     with client_for(tmp_path) as c:
         endpoint = f"/api/notebooks/{n}/chats/{thread}/turns"
 
-        def fail(*args):
+        def fail(*args, **kwargs):
             raise ValueError("secret-provider-key-must-not-persist")
 
         monkeypatch.setattr(c.app.state.knowledge, "answer", fail)

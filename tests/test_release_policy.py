@@ -46,6 +46,19 @@ def test_windows_only_and_all_native_platforms_use_one_package_map():
     assert len(helpers["build_matrix"](all_policy)["include"]) == 4
 
 
+def test_six_native_targets_have_distinct_packages_and_native_arm_runners():
+    complete = policy(platforms=["win-x64", "win-arm64", "mac-x64", "mac-arm64", "linux-x64", "linux-arm64"])
+    packages = helpers["package_names"](complete, VERSION)
+    assert len(packages) == len(set(packages)) == 10
+    assert f"Racall-{VERSION}-win-arm64.exe" in packages
+    assert f"Racall-{VERSION}-linux-arm64.deb" in packages
+    assert f"Racall-{VERSION}-linux-arm64.AppImage" in packages
+    matrix = helpers["build_matrix"](complete)["include"]
+    assert len(matrix) == 6
+    assert {item["os"] for item in matrix if item["arch"] == "arm64"} == {
+        "windows-11-arm", "macos-15", "ubuntu-22.04-arm"}
+
+
 def build_evidence():
     return (
         {"status": "completed", "event": "push", "path": ".github/workflows/build.yml", "head_sha": SHA},

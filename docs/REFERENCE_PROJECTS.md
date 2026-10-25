@@ -1,8 +1,68 @@
 # Reference projects and implementation priorities
 
-Last refreshed 2026-10-17; the original 2026-09-26 review is retained below. [Roadmap](ROADMAP.md) · [Architecture decisions](adr) · [Project home](../README.md)
+Last refreshed 2026-10-25 for 0.3 planning; the October 17 and September 26 reviews are retained below. [Roadmap](ROADMAP.md) · [Architecture decisions](adr) · [Project home](../README.md)
 
 Use comparable projects to learn which workflows matter and how they are implemented. Adapt useful patterns to Racall's desktop application, local files and Python service. Source reviews and observations of an installed application are distinguished below. Code presence is evidence of an implementation path, not proof of output quality, completeness, security or cross-platform support.
+
+## Refresh: 2026-10-25
+
+This is a source audit and a proposed 0.3 scope, not a feature implementation. Racall's published baseline is [0.2 Beta for Windows](releases/0.2.0-beta.1.md), application commit `70fd79b`, with documentation at local `main` commit `38be1ae`. The [published verification](VERIFICATION_2026-10-19.md) records its 404 backend tests and exact package scope. No Docker/WSL load, real model inference or upstream application installation was started for this audit.
+
+### Pinned references and changes
+
+| Project | Current reviewed source | Change since the previous review |
+| --- | --- | --- |
+| Open Notebook | [`a0f6f3081ae0`](https://github.com/lfnovo/open-notebook/tree/a0f6f3081ae06328f0a451b3a3ef2959ca25721d) | Same HEAD as October 17; compare is identical, with zero new commits/files |
+| SurfSense | [`e3de9e0d293b`](https://github.com/MODSetter/SurfSense/tree/e3de9e0d293b2ebb1fb813628ecc1d6f26909396) | 131 commits ahead of the October 17 snapshot; current HEAD is dated October 21 |
+| Open-NotebookLM | [`36ecc9336eb5`](https://github.com/Anionex/Open-NotebookLM/tree/36ecc9336eb5fb9b9e91e48a057ef9fb010ea50a) | Same HEAD as the September review; compare is identical |
+
+Open Notebook remains the primary product reference. Its [chat graph](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/open_notebook/graphs/chat.py) actually supplies accumulated conversation messages to the model and persists graph state. Its [context builder](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/open_notebook/utils/context_builder.py) supports source inclusion modes and selected notes. The viewed notebook chat node does not itself establish a bounded history window; Racall should add its own explicit budget.
+
+Its [transformations](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/docs/3-USER-GUIDE/transformations.md) are saved prompts producing Markdown insights, with built-in summaries, key insights, article analysis, reflection questions and a table of contents. Dedicated quiz, flashcard and PPTX workflows were not found in this inspected tree. [Podcast generation](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/commands/podcast_commands.py) has separate outline/transcript/speech configuration and saved outputs. However, generic [job listing and cancellation](https://github.com/lfnovo/open-notebook/blob/a0f6f3081ae06328f0a451b3a3ef2959ca25721d/api/command_service.py#L71-L89) are placeholders: listing returns an empty list, and cancellation logs then returns success. Do not infer working cancellation or stage-level recovery from the existence of these routes.
+
+SurfSense is useful for the generation lifecycle. Its [format catalog](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/modules/artifacts/formats.py) declares 12 formats, with model capability requirements rather than treating a text connection as image/speech support. Its [artifact records](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/modules/artifacts/models.py) retain generated files independently of a chat, and [grounding](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/worker/studio/shared/gather.py) has a bounded input budget. A selected source count is not evidence that all selected text reached the model.
+
+Its [worker lifecycle](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/worker/jobs.py) checks cancellation around long operations and prevents a late success from replacing cancellation. [Startup handling](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/worker/interrupted_documents.py) marks interrupted processing failed, rather than resuming an in-flight model call. The [Studio task](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/modules/artifacts/tasks.py) also configures a retry for ordinary failures; Racall should retain its own explicit-retry policy rather than copying that behavior unchanged.
+
+Recent SurfSense additions include a [Claude plan connection using installed Claude Code](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/modules/llm/subscriptions/claude/router.py) and [OCR-first scan handling](https://github.com/MODSetter/SurfSense/blob/e3de9e0d293b2ebb1fb813628ecc1d6f26909396/surfsense_local/backend/worker/ingestion/scan_ocr/switch.py). These are source-level findings, not verified account access, OCR quality or resource usage. The core Studio backend/catalog/queue/artifact modules are unchanged from the October 17 snapshot; the broad Studio is not a new feature of these eight days. The inspected Studio changes are a Word list-numbering fix and a frontend event type correction.
+
+Open-NotebookLM remains a later media-workflow reference. The inspected [slide export path](https://github.com/Anionex/Open-NotebookLM/blob/36ecc9336eb5fb9b9e91e48a057ef9fb010ea50a/workflow_engine/workflow/wf_paper2ppt_parallel_consistent_style.py#L704-L728) still passes `output_pptx_path=None` and clears the PPTX result. A variable named editable PPTX is not proof of editable export. Its [local speech manager](https://github.com/Anionex/Open-NotebookLM/blob/36ecc9336eb5fb9b9e91e48a057ef9fb010ea50a/fastapi_app/qwen_tts_manager.py) chooses CUDA or CPU and manages optional model weights; that path is unnecessary for Racall's first text-only Studio.
+
+### Racall gaps confirmed in the current code
+
+| Existing behavior in 0.2 | Proposed 0.3 improvement |
+| --- | --- |
+| [Chat turns](../apps/api/on_knowledge/features/chats/router.py) are saved, but `knowledge.answer` receives only the new question. The source panel opens sources, without selecting context for an answer | Bounded history from the active thread, explicit source selection and an optional saved-note context selection |
+| [Research POST](../apps/api/on_knowledge/features/research/router.py) runs inside the request. [Research](../apps/api/on_knowledge/knowledge.py) writes initial/final state, while intermediate steps remain in memory | A shared durable generation-job lifecycle for Research and Studio, with actual stage progress, cancellation and explicit retry |
+| Artifacts are saved Markdown Research reports shown through the notes preview | A small typed material library: summary, study guide and review questions with answers; reopen, inspect citations, save an editable note copy and export Markdown |
+
+Racall already has background import execution and a durable/cancellable model-download operation. These are useful local patterns; the gap is a shared lifecycle for text generation, not the total absence of background work. Existing Research reports, notes and citation snapshots must remain readable.
+
+### Proposed 0.3 scope and delivery order
+
+One complete workflow: **select materials → discuss them with context → generate and retain a useful learning material**.
+
+1. **Context-aware chat.** Resolve follow-up questions using bounded history from one thread. Keep source passages as evidence; previous model prose is conversation context, not a new factual source. Offer clear source selection and saved-note inclusion, with visible context limits.
+2. **Durable generation jobs.** Move Research onto the shared job lifecycle first. Use one generation worker initially, persisted stages and request IDs. Cancellation must affect actual work/results. Restart retains the job as interrupted and never silently repeats paid model calls.
+3. **First Studio.** Add exactly three text presets: concise summary, study guide, and review questions with answers. These are saved, cited learning materials; an interactive quiz/scoring engine and flashcard UI are not part of this initial slice. Reuse configured text providers and the Markdown editor/export path.
+4. **Material library and compatibility.** Keep results independently of the originating chat. Store input source versions, note revisions, model/profile identity and job ID without credentials. Open/export earlier reports and create editable note copies without a destructive migration of 0.2 notebooks.
+
+Keep these responsibilities in `features/context`, `features/jobs`, `features/studio` and `features/artifacts`, with small shared retrieval/provider modules. Durable job state must not live in `index.sqlite3`, which is a rebuildable search cache. The precise durable storage mechanism should be chosen during implementation without introducing Redis/PostgreSQL or a new graph framework by default.
+
+### Acceptance cases for the proposed slice
+
+- A follow-up such as “why?” or “compare that with the previous result” uses the correct thread; another thread/notebook cannot affect it.
+- An excluded source never enters retrieval or generation. An explicit empty selection never silently becomes all sources. Saved-note inclusion is explicit and revision-aware.
+- Long histories obey the context budget. A context-trim indication is available, and earlier assistant text never substitutes for evidence supporting a new claim.
+- Repeating a submission with the same request ID cannot start a second generation. A cancelled queued job makes no provider call; a late result cannot overwrite cancellation.
+- Restart preserves completed outputs and interrupted state without automatic model replay. Explicit retry creates a traceable attempt and does not duplicate a finished material.
+- Source replacement during a queued/running job cannot silently substitute a new version. Snapshot the inputs or detect the change and require an explicit retry.
+- A changed provider profile cannot silently change a queued job or send newly saved credentials to an older snapshotted endpoint. Persist nonsecret configuration identity/revision; invalidate incompatible queued work rather than storing keys in job metadata.
+- Old 0.2 notebooks/chats/reports reopen, and all three new formats work in EN/RU with inspectable citations and Markdown export. Provider-fixture checks remain separate from actual model-quality evaluation.
+
+**Deferred from this 0.3 proposal:** presentations, audio/video, OCR engines, Claude subscription/CLI backends, a full office-file agent, extra languages, mobile/sync, a new database stack and a major visual redesign. Flashcards and interactive quizzes can follow once the common generation/material lifecycle works. Later roadmap targets remain provisional.
+
+No upstream implementation, assets or dependencies were imported. Detailed source responses and audit notes are retained only in ignored `test-results/reference-audit-20261025/`. This planning update does not change the application version or publish a release.
 
 ## Refresh: 2026-10-17
 

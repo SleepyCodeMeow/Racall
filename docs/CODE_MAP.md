@@ -4,11 +4,15 @@ Start here when changing Racall. [Contributing](../CONTRIBUTING.md) · [Roadmap]
 
 The application is a modular desktop monolith: Electron starts one Python service and a static React interface. Feature folders contain the code for a user-facing section. Shared infrastructure stays small and explicitly named.
 
+Python owns the application logic; TypeScript/JavaScript and CSS serve the interface
+and desktop integration. See the [architecture boundaries](ARCHITECTURE.md).
+
 ## Find a feature
 
 | Change | Interface | Python service |
 | --- | --- | --- |
 | Chat history, selection and sending | [chat](../apps/web/features/chat/chat.tsx) | [chat routes](../apps/api/on_knowledge/features/chats/router.py), [transcript service](../apps/api/on_knowledge/features/chats/service.py) |
+| Selected sources/notes, snapshots and follow-up history | [context picker](../apps/web/features/context/context-picker.tsx), [note citation snapshot](../apps/web/features/context/note-citation.tsx) | [context service](../apps/api/on_knowledge/features/context/service.py), [evidence sampling](../apps/api/on_knowledge/features/context/evidence.py), [history limits](../apps/api/on_knowledge/features/context/history.py) |
 | Answer rendering and citation buttons | [answer view](../apps/web/features/chat/answer-view.tsx) | [retrieval and answer validation](../apps/api/on_knowledge/knowledge.py) |
 | Cited answer generation and verifier protocol | — | [writer](../apps/api/on_knowledge/claim_generation.py), [claim-ID verifier](../apps/api/on_knowledge/claim_verification.py), [EN/RU prose policy](../apps/api/on_knowledge/answer_language.py) |
 | Note editor and recovery actions | [notes](../apps/web/features/notes/notes.tsx) | [note routes](../apps/api/on_knowledge/features/notes/router.py) |
@@ -18,6 +22,9 @@ The application is a modular desktop monolith: Electron starts one Python servic
 | Source versions, replacement and historical citations | [source details](../apps/web/features/sources/source-detail.tsx) | [source repository](../apps/api/on_knowledge/features/sources/repository.py) |
 | Parser time/memory isolation | — | [supervisor](../apps/api/on_knowledge/features/sources/parser.py), [worker](../apps/api/on_knowledge/features/sources/parser_worker.py), [format parsers](../apps/api/on_knowledge/ingestion.py) |
 | Research and saved reports | [research](../apps/web/features/research/research-panel.tsx) | [research routes](../apps/api/on_knowledge/features/research/router.py), [startup recovery](../apps/api/on_knowledge/features/research/service.py), [research engine](../apps/api/on_knowledge/knowledge.py), [Markdown export](../apps/api/on_knowledge/features/research/export.py) |
+| Research/Studio generation jobs and recovery | [job cards](../apps/web/features/jobs/generation-job.tsx), [polling hook](../apps/web/features/jobs/use-generation-jobs.ts) | [job service](../apps/api/on_knowledge/features/jobs/service.py), [portable job repository](../apps/api/on_knowledge/features/jobs/repository.py), [request schema](../apps/api/on_knowledge/features/jobs/schemas.py) |
+| Summary, study guide and review questions | [Studio](../apps/web/features/studio/studio-panel.tsx) | [grounded material generator](../apps/api/on_knowledge/features/studio/generator.py), [Markdown rendering](../apps/api/on_knowledge/features/studio/markdown.py) |
+| Material library, export, editable note copies and legacy reports | [library](../apps/web/features/artifacts/material-library.tsx), [material view](../apps/web/features/artifacts/material-view.tsx) | [material repository](../apps/api/on_knowledge/features/artifacts/repository.py), [material routes](../apps/api/on_knowledge/features/artifacts/router.py) |
 | Models and language preferences | [settings](../apps/web/features/settings/settings.tsx) | [settings routes](../apps/api/on_knowledge/features/settings/router.py), [providers](../apps/api/on_knowledge/providers.py) |
 | Provider selection, credentials and profiles | [provider controls](../apps/web/features/settings/provider-connection.tsx), [embedding controls](../apps/web/features/settings/embedding-settings.tsx) | [profile normalization](../apps/api/on_knowledge/provider_settings.py), [completion factory](../apps/api/on_knowledge/provider_factory.py), [Claude adapter](../apps/api/on_knowledge/anthropic_provider.py) |
 | Model picker, discovery and explicit downloads | [model picker](../apps/web/features/models/ModelPicker.tsx), [model type icons](../apps/web/features/models/model-type-icon.tsx), [query/download hooks](../apps/web/features/models/use-models.ts), [download progress](../apps/web/features/models/download-status.tsx) | [model routes](../apps/api/on_knowledge/features/models/router.py), [catalog/download service](../apps/api/on_knowledge/features/models/service.py) |
@@ -29,7 +36,7 @@ The application is a modular desktop monolith: Electron starts one Python servic
 
 - [API application](../apps/api/on_knowledge/app.py): service composition, startup/recovery, authorization, CORS, errors and static web hosting. Feature endpoints belong in feature routers.
 - [Store](../apps/api/on_knowledge/storage.py): notebook paths, atomic file operations, retrieval database, audit log and a compatibility facade for notes. Note-specific file logic lives in the note repository.
-- [Completion transport](../apps/api/on_knowledge/completion_stream.py): bounded SSE/JSON handling, idle and total deadlines. [Providers](../apps/api/on_knowledge/providers.py) bind it to model settings and safe service diagnostics; embedding requests retain their separate transport.
+- [Completion transport](../apps/api/on_knowledge/completion_stream.py): bounded SSE/JSON handling, idle and total deadlines, scoped cancellation that closes in-flight completion requests. [Providers](../apps/api/on_knowledge/providers.py) bind it to model settings, execution-local credentials and safe diagnostics; embedding requests retain their separate transport.
 - [Claude stream parser](../apps/api/on_knowledge/anthropic_stream.py): native Messages events, text-only JSON assembly and terminal-state checks. It shares HTTP/framing limits with the Chat Completions transport.
 - [HTTP client and shared types](../apps/web/lib/api.ts): service requests, error status and data types. Feature state belongs in its feature folder.
 - [Markdown renderer](../apps/web/components/markdown.tsx): shared display component.
@@ -40,6 +47,8 @@ The application is a modular desktop monolith: Electron starts one Python servic
 ## Tests and commands
 
 - [Core workflow tests](../tests/test_knowledge.py): imports, retrieval, citation validation and Markdown metadata.
+- [Context tests](../tests/test_context.py), [chat integration tests](../tests/test_context_chats.py), [generation jobs](../tests/test_jobs03.py) and [Studio tests](../tests/test_studio03.py): selection before retrieval, note revisions, follow-up history, frozen profiles, durable jobs and three verified material formats. [Cancellation transport checks](../tests/test_generation_transport_cancel.py) and [credential scope checks](../tests/test_provider_credential_scope.py) use synthetic providers.
+- [Studio desktop check](../scripts/smoke-studio.cjs): selected-note chat, history, Studio presets, library/export/copy, cancellation and restart in a separate test profile. Its [synthetic HTTP provider](../scripts/smoke/studio-provider.cjs) never runs a real model. Run `npm run build:web` then `npm run test:studio`.
 - [Verifier contract tests](../tests/test_claim_verification.py), [answer workflow tests](../tests/test_answer_generation.py), [EN/RU policy tests](../tests/test_answer_language.py), [Research export tests](../tests/test_research_export.py): recorded model failures, bounded repairs, exact citations and export language.
 - [Completion transport tests](../tests/test_provider_completion.py) and [provider binding tests](../tests/test_provider_transport.py): complete-stream framing, real HTTP deadlines, size limits, interrupted/invalid output, reasoning separation and safe diagnostics without automatic inference retries.
 - [Claude protocol tests](../tests/test_anthropic_provider.py), [profile tests](../tests/test_provider_settings.py) and [routing tests](../tests/test_provider_routing.py): native protocol, old-settings migration, key isolation, independent embeddings and cited-answer/Research routing. [Provider desktop check](../scripts/smoke-providers.cjs) covers actual settings/restart behavior; [setup guide](PROVIDERS.md).
@@ -52,7 +61,7 @@ The application is a modular desktop monolith: Electron starts one Python servic
 - `npm run build:web` then `npm run test:persistence` for the development desktop. `npm run test:packaged` also runs the persistence scenario against a packaged executable.
 
 - [Real-model evaluation](../scripts/evaluate_model.py) is opt-in; [fixture and guide](MODEL_EVALUATION.md).
-- [Publication policy](../apps/shared/release.json) controls the explicit hold. See [release checklist](RELEASE_02_CHECKLIST.md).
+- [Publication policy](../apps/shared/release.json) controls the explicit hold. See the [0.3 checklist](RELEASE_03_CHECKLIST.md) and [0.2 release evidence](RELEASE_02_CHECKLIST.md).
 
 ## Adding a section
 
