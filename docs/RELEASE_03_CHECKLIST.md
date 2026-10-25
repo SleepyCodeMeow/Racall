@@ -18,14 +18,17 @@ The owner approved starting the context/jobs/Studio development scope on October
 ## Verification
 
 - [x] Targeted deterministic backend regressions for context, jobs, materials and profile changes.
-- [x] Full backend suite (462 passed), lint, TypeScript and localization/release metadata checks.
+- [x] Full backend suite, lint, TypeScript and localization/release metadata checks (462 tests at initial development verification; 486 in the later native matrix).
 - [x] Production frontend build and isolated UI workflow smoke without real model requests/downloads.
 - [x] Portable 0.2 chat/note/report compatibility regressions and preserved citation versions; this is not an installed binary upgrade test.
-- [ ] Fresh native build and installer checks for the eventual declared release scope.
+- [x] Fresh native candidate build and installer/copy checks for all six declared x64/ARM64 targets.
 
 The owner subsequently expanded the candidate scope to x64 and ARM64 on Windows,
-macOS and Linux. See [native candidates](NATIVE_CANDIDATES_03.md). Declaring these
-targets and preparing their toolchains does not mark their native checks passed.
+macOS and Linux. All six passed in [Actions run 40209217858](https://github.com/SleepyCodeMeow/Racall/actions/runs/40209217858).
+See [native candidates](NATIVE_CANDIDATES_03.md) and the
+[native verification report](NATIVE_VERIFICATION_03_2026-10-25.md) for exact
+source, package checksums and limits. These candidate checks do not authorize
+publication or replace the eventual matching tag-triggered release verification.
 
 Development evidence is recorded in [the October 25 verification report](VERIFICATION_03_2026-10-25.md).
 

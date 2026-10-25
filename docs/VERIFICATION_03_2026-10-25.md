@@ -2,8 +2,13 @@
 
 Branch: `codex/0.3-context-studio`, based on
 `38be1aed934b0f3ef2769332c1582206b3d83dfa`. The checked changes are local working
-tree changes, not a released installer. Publication remains on hold. The published
-0.2 tag and assets were not changed.
+tree changes at the initial development check, not a released installer.
+Publication remains on hold. The published 0.2 tag and assets were not changed.
+
+Later on the same day, the expanded six-target native matrix passed with 486
+Python tests per target. That separate source/run/package evidence is recorded in
+[the native verification report](NATIVE_VERIFICATION_03_2026-10-25.md); the checks
+below retain the initial development snapshot and its original test count.
 
 ## Completed checks
 
@@ -47,7 +52,8 @@ automated development verification, not owner hands-on acceptance.
 
 ## Not established
 
-No fresh 0.3 native package or installer was built or installed. No installed 0.2
-binary was upgraded. No live cloud/Ollama/llama.cpp inference, model-quality
+At this initial development check, no fresh 0.3 native package or installer was
+built or installed. No installed 0.2 binary was upgraded.
+No live cloud/Ollama/llama.cpp inference, model-quality
 evaluation, real model download, Docker/WSL, macOS/Linux acceptance or publication
 was performed. The previous 0.2 release evidence does not certify those 0.3 gates.

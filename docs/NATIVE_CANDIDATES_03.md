@@ -19,6 +19,13 @@ Each filename starts with `Racall-0.3.0-beta.1-`. Candidate archives also contai
 distribution files. The authoritative packaging matrix is
 [release_policy.py](../scripts/release_policy.py).
 
+All six native targets passed candidate build, packaged application and
+installation/copy checks in [Actions run 40209217858](https://github.com/SleepyCodeMeow/Racall/actions/runs/40209217858),
+from source `94c34702fb6e1a8e08f7cbd2cd4ceb0fc7348b78`. Ten distribution files
+were uploaded in six artifacts. See the [native verification report](NATIVE_VERIFICATION_03_2026-10-25.md)
+for checksums, exact scope and untested distribution behavior. This does not
+remove the publication hold.
+
 ## Processor and package checks
 
 The workflow selects native Node.js and Python, builds the Python service on its
@@ -34,6 +41,14 @@ mounting, all desktop environments, download-quarantine dialogs, every OS releas
 and real model quality are not certified by these automated checks.
 
 ## Dependency toolchains
+
+Windows installers use pinned `electron-builder 26.15.6`. Earlier 26.15.3 can
+produce an ARM64 archive whose branch-converter filter the embedded NSIS decoder
+cannot extract, silently omitting EXE/DLL files. The upstream
+[NSIS payload fix](https://github.com/electron-userland/electron-builder/pull/9989)
+uses a decodable compression filter. Keep the installed-application checks:
+a successful installer exit and a language seed file do not establish that the
+application payload was installed.
 
 The current lock retains `cryptography 50.0.1`. Its native wheels cover Linux and
 Apple Silicon but not Windows ARM64 or Intel macOS. The latter targets need a
