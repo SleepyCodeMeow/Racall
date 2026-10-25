@@ -4,6 +4,9 @@
 # Sources: microsoft/vcpkg tag 2026.10.16; rust-lang/rust tag 1.99.0;
 # https://cryptography.io/en/50.0.1/installation/
 # https://learn.microsoft.com/visualstudio/ide/reference/command-prompt-powershell
+[CmdletBinding()]
+param([switch]$DiagnosticsOnly)
+
 $ErrorActionPreference = 'Stop'
 Set-StrictMode -Version Latest
 
@@ -29,12 +32,65 @@ function Export-BuildEnvironment([string]$Name, [string]$Value) {
     }
 }
 
+function Write-CryptoDiagnostics([string]$Repository) {
+    $diagnosticRoot = Join-Path $Repository 'test-results/windows-arm64-crypto'
+    New-Item -ItemType Directory -Path $diagnosticRoot -Force | Out-Null
+    $logPath = Join-Path $diagnosticRoot 'process.log'
+    'Windows ARM64 cryptography build diagnostics (no environment dump)' |
+        Set-Content -LiteralPath $logPath -Encoding utf8
+    foreach ($tool in @('cl.exe', 'lib.exe', 'link.exe', 'dumpbin.exe', 'rustc.exe')) {
+        $command = Get-Command $tool -ErrorAction SilentlyContinue
+        $resolvedPath = if ($command) { $command.Source } else { 'not found' }
+        "$tool : $resolvedPath" | Tee-Object -FilePath $logPath -Append
+    }
+    if (-not $env:UV_CACHE_DIR) {
+        'UV_CACHE_DIR unavailable; no cryptography build artifacts to inspect.' |
+            Tee-Object -FilePath $logPath -Append
+        return
+    }
+    $cryptoRoot = Join-Path $env:UV_CACHE_DIR 'sdists-v9/pypi/cryptography'
+    if (-not (Test-Path -LiteralPath $cryptoRoot)) {
+        'No source-build directory was retained by uv.' | Tee-Object -FilePath $logPath -Append
+        return
+    }
+    $dumpbin = Get-Command dumpbin.exe -ErrorAction SilentlyContinue
+    $artifacts = Get-ChildItem -LiteralPath $cryptoRoot -Recurse -File |
+        Where-Object { $_.Name -match '_openssl|^libcryptography_cffi' -and
+                       $_.Extension -in @('.obj', '.o', '.lib', '.a', '.rlib', '.c') } |
+        Select-Object -First 20
+    foreach ($artifact in $artifacts) {
+        "Artifact: $($artifact.FullName)" | Tee-Object -FilePath $logPath -Append
+        if ($artifact.Extension -eq '.c') {
+            Select-String -LiteralPath $artifact.FullName -Pattern 'PyInit__openssl|PyMODINIT_FUNC' -Context 2,2 |
+                Out-String -Stream | Tee-Object -FilePath $logPath -Append
+        } elseif ($dumpbin) {
+            & $dumpbin.Source /headers $artifact.FullName 2>&1 |
+                Select-String -Pattern 'machine|File Type|error|warning' |
+                Out-String -Stream | Tee-Object -FilePath $logPath -Append
+            & $dumpbin.Source /symbols $artifact.FullName 2>&1 |
+                Select-String -Pattern 'PyInit|openssl|error|warning' |
+                Select-Object -First 50 |
+                Out-String -Stream | Tee-Object -FilePath $logPath -Append
+        }
+    }
+    Get-ChildItem -LiteralPath $cryptoRoot -Recurse -File -Filter 'output' |
+        Where-Object { $_.FullName -match 'cryptography-cffi' } |
+        Select-Object -First 6 | ForEach-Object {
+            "Cargo CFFI build output: $($_.FullName)" | Tee-Object -FilePath $logPath -Append
+            Get-Content -LiteralPath $_.FullName | Tee-Object -FilePath $logPath -Append
+        }
+}
+
 $repoRoot = [IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..'))
 $buildRoot = Join-Path $repoRoot 'build/arm64'
 $vcpkgRoot = Join-Path $buildRoot 'vcpkg'
 $vcpkgRevision = '9eec002df1cd109f8f104cd966a763daf9751489'
 $rustToolchain = '1.99.0-aarch64-pc-windows-msvc'
 $triplet = 'arm64-windows-static-md'
+if ($DiagnosticsOnly) {
+    Write-CryptoDiagnostics $repoRoot
+    exit 0
+}
 foreach ($tool in @('git', 'node', 'uv', 'rustup')) {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) {
         throw "$tool is required; use the standard windows-11-arm runner toolchain."
@@ -83,6 +139,34 @@ if ($env:VSCMD_ARG_TGT_ARCH -ne 'arm64') { throw 'MSVC did not activate the ARM6
 foreach ($tool in @('cl.exe', 'link.exe', 'nmake.exe')) {
     if (-not (Get-Command $tool -ErrorAction SilentlyContinue)) { throw "MSVC tool missing: $tool" }
 }
+# cc-rs may use PATH when a Developer Shell is detected. Bind the ARM64-target
+# compiler/archive/linker explicitly so GITHUB_PATH ordering cannot change them.
+$msvcBin = Join-Path $env:VCToolsInstallDir 'bin/Hostx64/arm64'
+$armCompiler = Join-Path $msvcBin 'cl.exe'
+$armArchiver = Join-Path $msvcBin 'lib.exe'
+$armLinker = Join-Path $msvcBin 'link.exe'
+$armDumpbin = Join-Path $msvcBin 'dumpbin.exe'
+foreach ($toolPath in @($armCompiler, $armArchiver, $armLinker, $armDumpbin)) {
+    if (-not (Test-Path -LiteralPath $toolPath)) { throw "ARM64-target MSVC tool missing: $toolPath" }
+}
+New-Item -ItemType Directory -Path $buildRoot -Force | Out-Null
+$probeSource = Join-Path $buildRoot 'compiler-probe.c'
+$probeObject = Join-Path $buildRoot 'compiler-probe.obj'
+'__declspec(dllexport) void *PyInit__openssl(void) { return (void *)0; }' |
+    Set-Content -LiteralPath $probeSource -Encoding ascii
+Invoke-Checked $armCompiler @('/nologo', '/c', '/GL-', "/Fo$probeObject", $probeSource)
+$probeBytes = [IO.File]::ReadAllBytes($probeObject)
+if ($probeBytes.Length -lt 20 -or [BitConverter]::ToUInt16($probeBytes, 0) -ne 0xAA64) {
+    throw 'The selected C compiler did not generate an ARM64 COFF object.'
+}
+$probeSymbols = & $armDumpbin /symbols $probeObject
+if ($LASTEXITCODE -ne 0 -or -not ($probeSymbols -match '\|\s+PyInit__openssl\s*$')) {
+    throw 'The ARM64 C probe did not expose the expected CFFI-compatible C symbol.'
+}
+Write-Output "ARM64 C compiler: $armCompiler"
+Write-Output "ARM64 archive tool: $armArchiver"
+Write-Output "ARM64 target linker: $armLinker"
+Write-Output 'C probe passed: COFF machine AA64; external symbol PyInit__openssl.'
 # Persist only build-tool variables, never a complete environment dump.
 foreach ($name in @('INCLUDE', 'LIB', 'LIBPATH', 'VCINSTALLDIR', 'VSINSTALLDIR',
                     'VCToolsInstallDir', 'VCToolsVersion', 'WindowsSdkDir', 'WindowsSDKVersion',
@@ -142,6 +226,12 @@ Export-BuildEnvironment 'OPENSSL_INCLUDE_DIR' (Join-Path $opensslRoot 'include')
 Export-BuildEnvironment 'OPENSSL_STATIC' '1'
 Export-BuildEnvironment 'OPENSSL_NO_VENDOR' '1'
 Export-BuildEnvironment 'RACALL_OPENSSL_NOTICE' (Join-Path $opensslRoot 'share/openssl/copyright')
+Export-BuildEnvironment 'CC' $armCompiler
+Export-BuildEnvironment 'AR' $armArchiver
+Export-BuildEnvironment 'CC_AARCH64_PC_WINDOWS_MSVC' $armCompiler
+Export-BuildEnvironment 'AR_AARCH64_PC_WINDOWS_MSVC' $armArchiver
+Export-BuildEnvironment 'CARGO_TARGET_AARCH64_PC_WINDOWS_MSVC_LINKER' $armLinker
+Export-BuildEnvironment 'CC_ENABLE_DEBUG_OUTPUT' '1'
 Export-BuildEnvironment 'CARGO_BUILD_TARGET' 'aarch64-pc-windows-msvc'
 Export-BuildEnvironment 'CARGO_BUILD_JOBS' '2'
 Export-BuildEnvironment 'UV_NO_BINARY_PACKAGE' 'cryptography'
