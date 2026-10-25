@@ -27,8 +27,8 @@ jobs:
       - name: Download immutable verified Windows x64 candidate
         uses: actions/download-artifact@v4
         with:
-          artifact-ids: '12606896781'
-          run-id: '40212923810'
+          artifact-ids: '12609985853'
+          run-id: '40221003598'
           merge-multiple: true
           github-token: ${{ github.token }}
           path: ${{ runner.temp }}/racall-upgrade-candidate

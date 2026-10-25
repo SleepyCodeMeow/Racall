@@ -15,12 +15,12 @@ const BASELINE = Object.freeze({
 });
 const CANDIDATE = Object.freeze({
   version: '0.3.0-beta.1',
-  source: '4389b888daa2c3b8825e55ca4beec9a13bdc0b24',
-  run: 40212923810,
-  artifact: 12606896781,
+  source: '50e1a65a80f86c2f66c6132289904057ec89bbb2',
+  run: 40221003598,
+  artifact: 12609985853,
   name: 'Racall-0.3.0-beta.1-win-x64.exe',
-  size: 153279052,
-  sha256: '9d682aee901526141e85d82e4bdf9a5cd71bd87c75eeb3a51675a9deae4e471b',
+  size: 153279558,
+  sha256: '7aa36844f6893335299bdca2f4d906e2ef980ccd3c443634eb6303dd507d5af5',
 });
 
 function assertHostedWindows(root, env = process.env, host = process) {
