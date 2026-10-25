@@ -108,6 +108,7 @@ Developer setup helpers: `./scripts/setup.sh` on macOS/Linux, or `./scripts/setu
 ```sh
 npm test -- -q
 npm run lint
+npm run format:check
 npm run test:i18n
 npm run check:release
 npm run build
@@ -118,7 +119,10 @@ npm run dist
 
 Python binaries are built on each target OS and architecture. [Contributing](CONTRIBUTING.md) · [Release process](docs/RELEASING.md) · [Architecture decisions](docs/adr)
 
-The project is developed with assistance from OpenAI Codex. See the [code map](docs/CODE_MAP.md) for the files behind each feature.
+The project is developed with assistance from OpenAI Codex. Start with the
+[development tour](docs/DEVELOPMENT.md), [architecture](docs/ARCHITECTURE.md) and
+[code map](docs/CODE_MAP.md) for the files behind each feature. `npm run format`
+applies the project's Python and interface formatting rules.
 
 ## Follow the project
 

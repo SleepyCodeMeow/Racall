@@ -80,6 +80,7 @@ jobs:
       - run: node --test scripts/test-native-target.cjs
       - run: npm test -- -q
       - run: npm run lint
+      - run: npm run format:check
       - run: npm run check:installer-catalog
       - run: npm run test:i18n
       - run: npm run check:release

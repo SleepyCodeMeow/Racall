@@ -14,7 +14,15 @@ For source ingestion, chat, Studio, presentation or audio changes, consult [Refe
 
 ## Code organization
 
-Use the [code map](docs/CODE_MAP.md) to find the section you want to change. Keep feature UI and Python routes in their named feature folders. Separate substantial state/save logic from rendering, and avoid collecting unrelated handlers in the application shell.
+Use the [development tour](docs/DEVELOPMENT.md), [code map](docs/CODE_MAP.md) and
+[architecture boundaries](docs/ARCHITECTURE.md) to find the section you want to
+change. Keep feature UI and Python routes in their named folders. Separate
+substantial state/save logic from rendering; avoid unrelated handlers in the app shell.
+
+Run `npm run format` to apply Ruff to Python and pinned Prettier to maintained
+JavaScript, TypeScript and CSS. `npm run format:check` checks the same files in CI.
+Keep a module together while it has one clear responsibility; do not introduce
+empty layers or split each function into a separate file.
 
 Python is the primary application language. Put document processing, retrieval,
 AI/provider logic, generation workflows and durable storage in the Python service.
@@ -31,6 +39,7 @@ Before a pull request:
 ```sh
 npm test -- -q
 npm run lint
+npm run format:check
 npm run test:i18n
 npm run check:release
 npm run build

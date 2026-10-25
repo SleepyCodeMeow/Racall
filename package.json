@@ -29,7 +29,11 @@
     "test:packaged": "node scripts/test-packaged.cjs",
     "test:persistence": "node scripts/smoke-persistence.cjs",
     "test:maintenance": "node scripts/smoke-maintenance.cjs",
-    "check:installer-catalog": "uv run python scripts/build_installer_catalog.py --check"
+    "check:installer-catalog": "uv run python scripts/build_installer_catalog.py --check",
+    "format:python": "uv run ruff format apps/api tests scripts",
+    "format:web": "prettier --write \"apps/**/*.{js,cjs,mjs,ts,tsx,css}\" \"scripts/**/*.{js,cjs,mjs,ts,tsx}\"",
+    "format": "npm run format:python && npm run format:web",
+    "format:check": "uv run ruff format --check apps/api tests scripts && prettier --check \"apps/**/*.{js,cjs,mjs,ts,tsx,css}\" \"scripts/**/*.{js,cjs,mjs,ts,tsx}\""
   },
   "devDependencies": {
     "@playwright/test": "^1.63.0",
@@ -47,7 +51,8 @@
     "react-dom": "19.3.0",
     "react-markdown": "^10.1.0",
     "remark-gfm": "^4.0.1",
-    "tailwindcss": "4.3.3"
+    "tailwindcss": "4.3.3",
+    "prettier": "3.9.10"
   },
   "build": {
     "appId": "org.opennotebook.desktop",
