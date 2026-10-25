@@ -1,7 +1,8 @@
-# Context and Studio in 0.3 development
+# Context and Studio in 0.3 Beta
 
-This workflow is in development, with publication on hold. The public download
-remains 0.2 Beta. See the [development checklist](RELEASE_03_CHECKLIST.md).
+Choose materials, continue a conversation and turn the result into a reusable
+learning document. See the [0.3 release notes](releases/0.3.0-beta.1.md) and
+[verification checklist](RELEASE_03_CHECKLIST.md).
 
 ## Choose the material
 

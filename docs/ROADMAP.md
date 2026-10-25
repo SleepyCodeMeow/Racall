@@ -20,7 +20,7 @@ Local notebooks and portable Markdown; PDF/MD/TXT/DOCX/URL import; search and ci
 
 ## 0.2 Beta — Everyday reliability
 
-The first 0.2 Beta release targets Windows x64. It adds persistent conversations, safer note editing, source history and a refreshed workbench. Current Linux/macOS desktop packages are not included; testing and contributor help are welcome. The owner chose to collect early-user feedback without a mandatory final live-model/hands-on pass. See the [release notes](releases/0.2.0-beta.1.md), [verification checklist](RELEASE_02_CHECKLIST.md) and [code map](CODE_MAP.md) for the precise scope and evidence.
+The 0.2 Beta release targets Windows x64. It added persistent conversations, safer note editing, source history and a refreshed workbench. That release did not include Linux/macOS packages; 0.3 adds them with native architecture checks. The owner chose to collect early-user feedback without a mandatory final live-model/hands-on pass. See the [release notes](releases/0.2.0-beta.1.md), [verification checklist](RELEASE_02_CHECKLIST.md) and [code map](CODE_MAP.md) for its precise scope and evidence.
 
 - Persistent chat history and safer note draft recovery/autosave.
 - Rename/delete notebooks with clear confirmation and recovery safeguards.
@@ -29,16 +29,16 @@ The first 0.2 Beta release targets Windows x64. It adds persistent conversations
 - Automated Windows package checks; signing/notarization when certificates are available.
 - Parser workers with time and memory limits.
 
-## 0.3 Beta in development — Context-aware research and the first Studio
+## 0.3 Beta — Context-aware research and the first Studio
 
-Refreshed after the [October 25 source review](REFERENCE_PROJECTS.md#refresh-2026-10-25) and accepted for implementation. Development is on `codex/0.3-context-studio`; publication is on hold. The intended complete workflow is **select materials → discuss with context → generate and retain a useful learning material**. See the [development checklist](RELEASE_03_CHECKLIST.md) for verified work and outstanding release checks.
+Implemented after the [October 25 source review](REFERENCE_PROJECTS.md#refresh-2026-10-25), with publication approved by the owner. The workflow is **select materials → discuss with context → generate and retain a useful learning material**. Separate x64 and ARM64 packages cover Windows, macOS and Linux. See the [release notes](releases/0.3.0-beta.1.md) and [verification checklist](RELEASE_03_CHECKLIST.md) for exact scope, model limitations and testing evidence.
 
 - Bounded conversational history in the active thread, correct follow-up questions, explicit source selection and optional saved-note context. Previous model answers are context, not factual evidence.
 - Shared durable jobs for Research and Studio: actual stage progress, cancellation, deduplicated submission and explicit retry after interruption. Start with one generation worker and preserve the no-automatic-model-replay behavior.
 - A small Studio with three text presets: **concise summary, study guide, and review questions with answers**. Use the existing text providers, preserve source-version references and allow Markdown export or an editable copy in Notes.
 - A material library independent of chat deletion, with compatible opening of earlier 0.2 reports and no destructive notebook migration. Keep feature code in separate context/jobs/studio/artifacts modules.
 
-Build the context slice first, then move Research onto jobs, then add the Studio presets and library. Completion means thread/notebook isolation, enforced source selection, bounded context, no duplicate model calls/results, real cancellation, restart without replay, preserved citation versions and EN/RU behavior. See the reference review for the acceptance cases.
+The implemented checks cover thread/notebook isolation, source selection, bounded context, duplicate submissions, cancellation, restart without replay, preserved citation versions and EN/RU behavior. Live local-model tests also exposed critic false positives; review generated facts and their citations. Additional hardware, operating-system and model feedback is welcome.
 
 Flashcards, interactive quizzes/scoring, richer retrieval/reranking, PDF/OCR improvements, extra languages, subscription/CLI backends and larger UI changes remain follow-up candidates. Presentations and audio keep their own later milestones. No new bundled GPU model is needed for this text-only slice; it uses the owner's configured local or cloud connection.
 

@@ -1,6 +1,8 @@
-# 0.3 Beta development checklist
+# 0.3 Beta release checklist
 
-The owner approved starting the context/jobs/Studio development scope on October 25, 2026. **Publication remains on hold**; this is not permission to publish another release or change the existing 0.2 assets. See [source review and scope](REFERENCE_PROJECTS.md#refresh-2026-10-25).
+The owner approved publishing **0.3 Beta on October 25, 2026**, accepting the limited hardware/model coverage and known AI-critic false positives. **Release publication is in progress.** This supersedes the earlier timing hold; it does not turn incomplete model certification into a passed check or authorize replacing existing 0.2 assets. See [source review and scope](REFERENCE_PROJECTS.md#refresh-2026-10-25).
+
+Earlier dated verification reports retain the hold status that applied when their checks ran. The [release notes](releases/0.3.0-beta.1.md) state the current user-facing scope and beta limits.
 
 ## Workflow
 
@@ -23,7 +25,7 @@ The owner approved starting the context/jobs/Studio development scope on October
 - [x] Portable 0.2 chat/note/report compatibility regressions and preserved citation versions; this is not an installed binary upgrade test.
 - [x] Separate installed Windows x64 0.2 → exact final 0.3 candidate upgrade, same default profile/path, preserved data and uninstall retention: [run 40222132278](https://github.com/SleepyCodeMeow/Racall/actions/runs/40222132278).
 - [x] Fresh native candidate build and installer/copy checks for all six declared x64/ARM64 targets.
-- [ ] Stable live-model semantic acceptance: recorded unsupported claims passed the local critic. Later successful examples do not close this gate; see the [October 25 model report](MODEL_EVALUATION_03_2026-10-25.md).
+- [ ] Stable live-model semantic acceptance: recorded unsupported claims passed the local critic. **Accepted by the owner as a known beta limitation, not a passed certification gate.** Later successful examples do not establish reliability; see the [October 25 model report](MODEL_EVALUATION_03_2026-10-25.md).
 
 Final application-source and binary upgrade checks are tracked in the
 [candidate verification report](CANDIDATE_VERIFICATION_03_2026-10-25.md), separately
@@ -35,12 +37,21 @@ macOS and Linux. All six passed again on final application source
 [Actions run 40221003598](https://github.com/SleepyCodeMeow/Racall/actions/runs/40221003598).
 See [native candidates](NATIVE_CANDIDATES_03.md) and the
 [final candidate verification report](CANDIDATE_VERIFICATION_03_2026-10-25.md) for exact
-source, package checksums and limits. These candidate checks do not authorize
-publication or replace the eventual matching tag-triggered release verification.
+source, package checksums and limits. Publication is authorized by the owner's
+October 25 decision; these candidate checks do not replace the matching
+tag-triggered release verification and uploaded-asset checks.
+
+## Publication
+
+- [x] Owner explicitly approved releasing 0.3 Beta with the documented hardware, platform and model-quality limits.
+- [x] Public release notes and changelog explain the changes from 0.2, six native targets, unsigned distribution and AI review requirements.
+- [ ] Matching tag-triggered release verification completes for the approved source and target matrix.
+- [ ] GitHub release contains all declared packages, source/target manifests and matching checksums; uploaded assets are verified.
+- [ ] Confirm the existing public 0.2 release and assets remain unchanged.
 
 Development evidence is recorded in [the October 25 verification report](VERIFICATION_03_2026-10-25.md).
 The completed [maintainability refactor](REFACTOR_03_2026-10-25.md) includes
 controller/view and engine boundaries, shared note parsing, formatting gates and
 the contributor development tour.
 
-Model-quality evaluation, Windows/macOS/Linux acceptance and publication timing must each be reported separately. Earlier 0.2 results do not certify new 0.3 behavior. Do not run local Docker/WSL or a real model merely to satisfy this checklist.
+Model-quality evaluation, Windows/macOS/Linux acceptance and publication status are reported separately. The owner's qualified beta approval does not establish unperformed hands-on, provider or hardware tests. Earlier 0.2 results do not certify new 0.3 behavior. Do not run local Docker/WSL or a real model merely to satisfy this checklist.

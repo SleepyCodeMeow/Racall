@@ -10,23 +10,31 @@ Update `package.json`, the root entries in `package-lock.json`, `pyproject.toml`
 
 `apps/shared/release.json` declares publication approval and the exact native platform scope. Both publication scripts refuse to proceed while `publication` is `"hold"`. Building, testing and saving candidate installers do not by themselves approve publication.
 
-Only after the owner explicitly chooses the release timing may the maintainer change the value to `"approved"`, complete the final checklist and create a release tag. Do not infer a date or minimum interval, schedule automatic publication, or clear the hold merely because CI passed. Return the next development version to `"hold"`. See the [0.2 checklist](RELEASE_02_CHECKLIST.md).
+Only after the owner explicitly chooses the release timing may the maintainer change the value to `"approved"`, complete the final checklist and create a release tag. Do not infer a date or minimum interval, schedule automatic publication, or clear the hold merely because CI passed. Return the next development version to `"hold"`. See the [current release checklist](RELEASE_03_CHECKLIST.md).
 
 On **October 19, 2026**, the owner explicitly approved publishing **Racall 0.2 Beta for Windows x64**. Its policy is `publication: "approved"`, `platforms: ["win-x64"]`, `github_latest: true`. macOS and Linux are not included in this release's packages or acceptance claim. The required fresh native build and publication passed in [run 39257810891](https://github.com/SleepyCodeMeow/Racall/actions/runs/39257810891), from the exact tagged source `70fd79bd69cef06d88c03e1fa5ff88929fc1fa3e`; old native CI and the earlier local candidate were not reused as the released build.
+
+On **October 25, 2026**, the owner explicitly approved **0.3 Beta** for all six
+x64/ARM64 targets on Windows, macOS and Linux, with the same GitHub Latest
+presentation. The owner accepted limited hardware/model coverage and requested
+community testing after being informed of local critic false positives. This
+approval permits publication; it does not turn the open model-reliability gate
+into a passed test. Preserve the [evaluation results](MODEL_EVALUATION_03_2026-10-25.md)
+and the release's known limitations.
 
 Supported platform identifiers are `win-x64`, `win-arm64`, `mac-arm64`, `mac-x64`,
 `linux-x64` and `linux-arm64`. The nonempty, unique list is validated by
 `scripts/release_policy.py` and drives the CI matrix, required native jobs,
 reusable artifacts and exact package names. Expanding a future release requires
 explicitly adding its platforms and passing their native checks. Do not silently
-treat missing platform builds as accepted. The 0.3 candidate matrix declares all
-six targets while keeping publication on hold.
+treat missing platform builds as accepted. The 0.3 policy declares all six
+targets with publication approved by the owner.
 
 ## Before tagging
 
 Run the documented checks and packaged smoke tests. Review the staged files for secrets, documents, generated artifacts and machine-specific paths. Build on each declared native target; Python executables are not cross-compiled. Record known limits and model/OS verification honestly. Do not call unsigned builds signed or notarized.
 
-Push the prepared source branch. A branch CI pass can provide a preliminary check; publication always waits for the full fresh tag build. After explicit release-timing approval and removal of the publication hold, create and push the matching annotated tag at that exact source commit. The tag workflow runs all checks and builds for the declared platforms before publishing. A separate publication job receives write permission only for tags. The current Windows-only policy therefore runs the full Windows suite, including NSIS install/uninstall, without starting local Docker/WSL jobs or claiming macOS/Linux acceptance. The default branch may then be fast-forwarded to the verified source, with a separate documentation commit recording the resulting run.
+Push the prepared source branch. A branch CI pass can provide a preliminary check; publication always waits for the full fresh tag build. After explicit release-timing approval and removal of the publication hold, create and push the matching annotated tag at that exact source commit. The tag workflow runs all checks and builds for the declared platforms before publishing. A separate publication job receives write permission only for tags. The 0.3 policy requires all six native jobs, without starting local Docker/WSL. The default branch may then be fast-forwarded to the verified source, with a separate documentation commit recording the resulting run.
 
 ## Publication
 
@@ -38,9 +46,9 @@ GitHub is the project's home: README, docs, Issues, Releases and Actions. No web
 
 ## GitHub Latest and the public beta
 
-The earlier **Racall 0.1 Beta** was designated as GitHub Latest so it appeared in the repository sidebar. The same presentation is explicitly selected for **0.2 Beta**. GitHub does not allow a prerelease to be Latest, so its GitHub prerelease flag is disabled. The product remains a beta: its title, version, tag, assets and documented limitations retain that status. This presentation does not certify production readiness.
+The earlier **Racall 0.1 Beta** was designated as GitHub Latest so it appeared in the repository sidebar. The same presentation is selected for **0.2 Beta** and **0.3 Beta**. GitHub does not allow a prerelease to be Latest, so its GitHub prerelease flag is disabled. The product remains a beta: its title, version, tag, assets and documented limitations retain that status. This presentation does not certify production readiness.
 
-By default the workflow publishes a GitHub prerelease and explicitly avoids Latest. An explicitly declared `github_latest: true` publishes with GitHub's prerelease flag disabled and Latest enabled, while preserving the product's Beta title/version/limits. The value must be a JSON boolean. This is the approved presentation for 0.2 Beta, matching the existing 0.1 sidebar presentation. Do not recreate a release, move its tag or replace assets merely to change this display.
+By default the workflow publishes a GitHub prerelease and explicitly avoids Latest. An explicitly declared `github_latest: true` publishes with GitHub's prerelease flag disabled and Latest enabled, while preserving the product's Beta title/version/limits. The value must be a JSON boolean. This is the approved presentation for 0.3 Beta, matching the earlier sidebar presentation. Do not recreate a release, move its tag or replace assets merely to change this display.
 
 ## Recover a publication-only failure
 

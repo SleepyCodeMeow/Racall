@@ -1,5 +1,34 @@
 # Changelog
 
+## 0.3.0-beta.1 — 0.3 Beta — 2026-10-25
+
+Selected evidence, conversational context and reusable text materials, with native x64/ARM64 packages for Windows, macOS and Linux.
+
+### Added
+
+- Bounded active-thread history for follow-up questions; saved assistant prose remains context rather than factual evidence.
+- Explicit source and saved-note selection for chat, Research and Studio, including empty context, persisted selection and revision-specific note citations.
+- Durable Research/Studio jobs with stage progress, duplicate-submission protection, queued/running cancellation and explicit retry after failure or interruption. Restart does not automatically replay inference.
+- Three Studio text formats: summary, study guide, and review questions with answers.
+- A material library with cited Markdown export and independent editable note copies, including access to earlier 0.2 Research reports.
+- Windows ARM64, macOS Intel x64/Apple Silicon ARM64, and Linux x64/ARM64 distributions alongside Windows x64; separate macOS DMG/ZIP and Linux AppImage/DEB packages.
+
+### Changed and hardened
+
+- Split Python retrieval, generation, document processing and completion protocols into responsibility-based modules; separate feature execution, frontend controllers/views and Electron lifecycle/security/native actions.
+- Reuse one Markdown note parser for editing and context snapshots; add a contributor development guide, updated code map and formatting checks.
+- Check selected context and saved AI configuration around generation, fence cancelled/interrupted results and reject an empty model name before persisting a generation job.
+- Add shared evidence-scope instructions and recorded semantic regression fixtures, while retaining the known limitations of model-based critique.
+
+### Verification and limits
+
+- Six native candidate targets passed 499 Python tests each, packaged application scenarios and native installation/copy checks. A separate installed Windows x64 0.2 → 0.3 upgrade preserved existing knowledge and historical citations; see the [candidate report](docs/CANDIDATE_VERIFICATION_03_2026-10-25.md).
+- One Windows/local Ollama configuration completed 25 functional scenarios. Earlier accepted unsupported claims remain evidence that the critic is not a factual guarantee; see the [model report](docs/MODEL_EVALUATION_03_2026-10-25.md). Generated claims and materials need review.
+- Windows/macOS distributions are unsigned; macOS is not notarized. Native CI does not establish every OS/device, AppImage FUSE or live-provider configuration. Embeddings and other live models/providers were outside the local acceptance run.
+- The owner approved publication on October 25, 2026 with these beta limits. Stable semantic verification remains uncertified. Presentations/audio/video generation, OCR, mobile and sync are outside this release.
+
+See the [release notes](docs/releases/0.3.0-beta.1.md) for downloads, changes, upgrade guidance and known limits.
+
 ## 0.2.0-beta.1 — 0.2 Beta — 2026-10-19
 
 Windows x64 release. Current Linux and macOS desktop packages are not included; earlier 0.1 downloads remain unchanged.

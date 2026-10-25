@@ -5,11 +5,13 @@ Racall is an open-source alternative to NotebookLM + Obsidian, combining AI rese
 [← Project home](../README.md) · [Русский](../README.ru.md)
 
 - [Get started, connect AI, back up your data](GETTING_STARTED.md)
-- [0.2 Beta: Windows download, changes and limitations](releases/0.2.0-beta.1.md)
+- [0.3 Beta: downloads for six platforms, changes and limitations](releases/0.3.0-beta.1.md)
+- [Choose context, create Studio materials and manage jobs](STUDIO.md)
+- [Earlier 0.2 Beta: Windows release](releases/0.2.0-beta.1.md)
 - [Earlier 0.1 Beta release notes](releases/0.1.0-beta.1.md)
 - [AI provider connections](PROVIDERS.md) · [Russian instructions](PROVIDERS.ru.md)
 - [Apps, model selection and appearance](WORKBENCH.md) · [Russian instructions](WORKBENCH.ru.md)
-- [Roadmap: 0.1 → 0.2 → 0.3](ROADMAP.md)
+- [Roadmap: the next release stages](ROADMAP.md)
 - [Reference projects and implementation priorities](REFERENCE_PROJECTS.md)
 - [Licenses and component boundaries](../LICENSING.md)
 - [Code map: where to change each feature](CODE_MAP.md)
@@ -26,5 +28,7 @@ Racall is an open-source alternative to NotebookLM + Obsidian, combining AI rese
 
 Some architecture and implementation notes are currently in Russian. The app supports English and Russian. Documentation, issue tracking and downloads are hosted in this repository; no external project website is required.
 
-- [0.2 release checklist](RELEASE_02_CHECKLIST.md)
+- [0.3 release checklist](RELEASE_03_CHECKLIST.md)
+- [0.3 candidate builds and installed Windows upgrade](CANDIDATE_VERIFICATION_03_2026-10-25.md)
+- [0.3 local Ollama evaluation and known model limitations](MODEL_EVALUATION_03_2026-10-25.md)
 - [Real-model evaluation](MODEL_EVALUATION.md) · [Russian instructions](MODEL_EVALUATION.ru.md)
