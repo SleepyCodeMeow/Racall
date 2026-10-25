@@ -1,5 +1,6 @@
 """Private critic protocol: statement IDs are distinct from evidence labels."""
 
+from .evidence_policy import ENTAILMENT_CHECK, EVIDENCE_SCOPE
 from .providers import LLMProvider
 
 _CRITIC_INSTRUCTIONS = (
@@ -53,7 +54,7 @@ def verify_claims(
     ]
     allowed = {claim["claim_id"] for claim in labelled}
     data = {"question": question, "claims": labelled, "evidence": evidence}
-    instructions = _CRITIC_INSTRUCTIONS
+    instructions = _CRITIC_INSTRUCTIONS + " " + EVIDENCE_SCOPE + ENTAILMENT_CHECK
     for attempt in range(2):
         accepted = _supported_claim_ids(provider.complete(instructions, data), allowed)
         if accepted is not None:
@@ -62,7 +63,11 @@ def verify_claims(
             # Do not echo an untrusted malformed verdict into the next prompt.
             labels = ", ".join(claim["claim_id"] for claim in labelled)
             instructions = (
-                _CRITIC_INSTRUCTIONS + " Previous response did not match the JSON contract. "
+                _CRITIC_INSTRUCTIONS
+                + " "
+                + EVIDENCE_SCOPE
+                + ENTAILMENT_CHECK
+                + " Previous response did not match the JSON contract. "
                 "Recheck the same claims. The only valid claim IDs are: " + labels + ". "
                 "Use an empty array if none are supported."
             )

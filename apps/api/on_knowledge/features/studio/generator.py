@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from ...answer_language import language_instruction, language_mismatch
 from ...claim_verification import verify_claims
+from ...evidence_policy import EVIDENCE_SCOPE
 from ...evidence_references import prepare_evidence
 from ...provider_factory import completion_provider
 from .markdown import material_markdown
@@ -96,6 +97,7 @@ def generate_material(
         "Only exact provided evidence IDs are allowed. Omit unsupported content. "
         + _FORMATS[kind]
         + " "
+        + EVIDENCE_SCOPE
         + language_instruction(language)
     )
     records = []

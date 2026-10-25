@@ -18,7 +18,7 @@
     "test": "uv run python scripts/test.py",
     "typecheck": "tsc --project apps/web/tsconfig.json --noEmit",
     "test:desktop": "node scripts/smoke-desktop.cjs",
-    "lint": "uv run ruff check apps/api tests scripts/build_backend.py scripts/evaluate_model.py scripts/build_installer_catalog.py scripts/check_native_arch.py scripts/check_candidate_packages.py",
+    "lint": "uv run ruff check apps/api tests scripts",
     "test:i18n": "node scripts/test-i18n.cjs",
     "check:release": "uv run python scripts/check_release.py",
     "test:languages": "node scripts/smoke-languages.cjs",

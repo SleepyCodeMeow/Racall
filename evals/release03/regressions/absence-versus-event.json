@@ -1,0 +1,59 @@
+{
+  "origin": "Observed 0.3 Ollama acceptance failure, 2026-10-25",
+  "model_digest": "6114515d63c17436a7c0417d82820ac65ad643e2806c5a3c89cb62846436ed0b",
+  "question": "What exact temperatures has the Лис station already measured?",
+  "evidence": [
+    {
+      "id": "E1",
+      "title": "meeting.md",
+      "quote": "The Marigold team and the Лис station team reviewed their sensor inventories.\nThey did not approve any schedule or budget changes at this meeting.\nNo actual scientific results, measured temperatures or ticket prices were reported.",
+      "location": {
+        "type": "paragraph",
+        "page": null,
+        "section": "Planning meeting — September 22, 2030",
+        "line_start": 3,
+        "line_end": 5,
+        "element": 1,
+        "offset_start": 0,
+        "offset_end": 230
+      },
+      "url": null
+    },
+    {
+      "id": "E4",
+      "title": "station-ru.md",
+      "quote": "Утверждено 21 сентября 2030 года.\nОткрытие станции «Лис» назначено на 12 ноября 2030 года.\nНа станции будет семь датчиков температуры. Руководитель — Алина Морозова.\nПлановая мощность станции составляет 40 киловатт.\nФактические результаты работы ещё не получены.",
+      "location": {
+        "type": "paragraph",
+        "page": null,
+        "section": "Станция «Лис» — утверждённый план",
+        "line_start": 3,
+        "line_end": 7,
+        "element": 1,
+        "offset_start": 0,
+        "offset_end": 262
+      },
+      "url": null
+    }
+  ],
+  "writer_response": {
+    "claims": [
+      {
+        "text": "No actual temperatures have been measured by the Лис station yet as the results of its work have not been received.",
+        "evidence_ids": ["E1", "E4"]
+      }
+    ],
+    "message": "The evidence explicitly states that no measured temperatures were reported during the planning meeting and that actual results of the station's work have not yet been obtained."
+  },
+  "critic_response": {
+    "supported_claim_ids": ["C1"]
+  },
+  "unsupported_claim": {
+    "text": "No actual temperatures have been measured by the Лис station yet as the results of its work have not been received.",
+    "evidence_ids": ["E1", "E4"]
+  },
+  "expected_critic": {
+    "supported_claim_ids": []
+  },
+  "reason": "No reported or received measurements does not prove that no measurements were taken; the causal explanation is unsupported too."
+}

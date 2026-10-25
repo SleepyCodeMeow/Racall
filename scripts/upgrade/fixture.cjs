@@ -172,6 +172,22 @@ async function assertLegacyData(desktop, fixture) {
   return material;
 }
 
+async function setTheme(desktop, theme) {
+  const page = desktop.page;
+  // These controlled radios commit after an async API acknowledgement. Playwright
+  // check() requires an immediate checked state, so wait for the actual persisted result.
+  await page
+    .locator('.theme-choice')
+    .filter({ has: page.locator(`input[value="${theme}"]`) })
+    .click();
+  await expect(page.locator('html')).toHaveAttribute('data-theme-preference', theme);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+  await expect.poll(async () => (await desktop.api('/appearance')).theme).toBe(theme);
+  await expect
+    .poll(() => desktop.app.evaluate(({ nativeTheme }) => nativeTheme.themeSource))
+    .toBe(theme);
+}
+
 async function exerciseUpgradedUI(desktop, fixture) {
   const page = desktop.page;
   const base = `/notebooks/${fixture.notebook.id}`;
@@ -196,10 +212,8 @@ async function exerciseUpgradedUI(desktop, fixture) {
   await page.getByRole('button', { name: ru['settings.title'], exact: true }).click();
   await page.locator('#interface-language').selectOption('en');
   await expect(page.locator('html')).toHaveAttribute('lang', 'en');
-  await page.locator('.theme-choice input[value="light"]').check();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
-  await page.locator('.theme-choice input[value="dark"]').check();
-  await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+  await setTheme(desktop, 'light');
+  await setTheme(desktop, 'dark');
   await page.locator('#interface-language').selectOption('ru');
   await expect(page.locator('html')).toHaveAttribute('lang', 'ru');
   await expect(

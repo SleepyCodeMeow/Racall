@@ -1,6 +1,7 @@
 """Generate cited claims, with one bounded repair for clear EN/RU drift."""
 
 from .answer_language import AnswerLanguage, language_instruction, language_mismatch
+from .evidence_policy import EVIDENCE_SCOPE
 from .providers import LLMProvider
 
 _WRITER_INSTRUCTIONS = (
@@ -41,7 +42,7 @@ def generate_claims(
     language: AnswerLanguage,
     history: list[dict] | None = None,
 ) -> list[dict]:
-    instructions = _WRITER_INSTRUCTIONS + language_instruction(language)
+    instructions = _WRITER_INSTRUCTIONS + EVIDENCE_SCOPE + language_instruction(language)
     data = {"question": question, "answer_language": language, "evidence": evidence}
     if history:
         instructions += (
