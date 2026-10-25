@@ -18,16 +18,23 @@ The owner approved starting the context/jobs/Studio development scope on October
 ## Verification
 
 - [x] Targeted deterministic backend regressions for context, jobs, materials and profile changes.
-- [x] Full backend suite, lint, TypeScript and localization/release metadata checks (462 tests initially, 486 in the first native matrix, 493 after the maintainability refactor).
+- [x] Full backend suite, lint, TypeScript and localization/release metadata checks (462 tests initially, 486 in the first native matrix, 493 after the maintainability refactor; 499 after evidence-scope and evaluator-shutdown regressions).
 - [x] Production frontend build and isolated UI workflow smoke without real model requests/downloads.
 - [x] Portable 0.2 chat/note/report compatibility regressions and preserved citation versions; this is not an installed binary upgrade test.
+- [x] Separate installed Windows x64 0.2 → exact final 0.3 candidate upgrade, same default profile/path, preserved data and uninstall retention: [run 40222132278](https://github.com/SleepyCodeMeow/Racall/actions/runs/40222132278).
 - [x] Fresh native candidate build and installer/copy checks for all six declared x64/ARM64 targets.
+- [ ] Stable live-model semantic acceptance: recorded unsupported claims passed the local critic. Later successful examples do not close this gate; see the [October 25 model report](MODEL_EVALUATION_03_2026-10-25.md).
+
+Final application-source and binary upgrade checks are tracked in the
+[candidate verification report](CANDIDATE_VERIFICATION_03_2026-10-25.md), separately
+from model reliability and owner hands-on acceptance.
 
 The owner subsequently expanded the candidate scope to x64 and ARM64 on Windows,
-macOS and Linux. All six passed again after refactoring in
-[Actions run 40212923810](https://github.com/SleepyCodeMeow/Racall/actions/runs/40212923810).
+macOS and Linux. All six passed again on final application source
+`50e1a65a80f86c2f66c6132289904057ec89bbb2` in
+[Actions run 40221003598](https://github.com/SleepyCodeMeow/Racall/actions/runs/40221003598).
 See [native candidates](NATIVE_CANDIDATES_03.md) and the
-[native refactor verification report](NATIVE_REFACTOR_VERIFICATION_03_2026-10-25.md) for exact
+[final candidate verification report](CANDIDATE_VERIFICATION_03_2026-10-25.md) for exact
 source, package checksums and limits. These candidate checks do not authorize
 publication or replace the eventual matching tag-triggered release verification.
 

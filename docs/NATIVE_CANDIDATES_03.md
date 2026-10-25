@@ -20,12 +20,15 @@ distribution files. The authoritative packaging matrix is
 [release_policy.py](../scripts/release_policy.py).
 
 All six native targets passed candidate build, packaged application and
-installation/copy checks after the maintainability refactor in
-[Actions run 40212923810](https://github.com/SleepyCodeMeow/Racall/actions/runs/40212923810),
-from source `4389b888daa2c3b8825e55ca4beec9a13bdc0b24`. Ten distribution files
-were uploaded in six artifacts. See the [native refactor verification report](NATIVE_REFACTOR_VERIFICATION_03_2026-10-25.md)
-for checksums, exact scope and untested distribution behavior. This does not
-remove the publication hold.
+installation/copy checks in
+[Actions run 40221003598](https://github.com/SleepyCodeMeow/Racall/actions/runs/40221003598),
+from source `50e1a65a80f86c2f66c6132289904057ec89bbb2`, with 499 Python tests per
+target. Ten distribution files were uploaded in six artifacts. See the
+[final candidate verification report](CANDIDATE_VERIFICATION_03_2026-10-25.md)
+for package provenance, checksums, the installed Windows upgrade and limits.
+The earlier [native refactor report](NATIVE_REFACTOR_VERIFICATION_03_2026-10-25.md)
+retains source `4389b888...` as historical evidence. Neither build removes the
+publication hold or certifies model reliability.
 
 ## Processor and package checks
 

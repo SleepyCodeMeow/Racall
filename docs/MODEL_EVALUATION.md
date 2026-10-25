@@ -1,6 +1,83 @@
-# Real-model acceptance check for 0.2
+# Real-model acceptance checks
 
-[Russian instructions](MODEL_EVALUATION.ru.md) · [Release checklist](RELEASE_02_CHECKLIST.md) · [Synthetic fixture](../evals/release02)
+[Russian instructions](MODEL_EVALUATION.ru.md) · [0.3 checklist](RELEASE_03_CHECKLIST.md) · [Synthetic fixture](../evals/release02)
+
+## Isolated 0.3 workflow evaluation
+
+Full 0.3 model acceptance requires its own review; the historical 0.2 result below
+does not certify the new workflow. Publication remains on hold. The
+[0.3 fixture and review rubric](../evals/release03/cases.json) cover the original
+ten questions plus selected sources/notes, follow-up history, Research, three
+Studio formats, export/copy, cancellation, service restart, explicit retry and
+source versions.
+
+From the repository root, validate the fixture without contacting Ollama:
+
+```powershell
+uv run python scripts/evaluate_release03.py
+uv run python scripts/evaluate_release03.py --help
+```
+
+Live requests require **all three explicit arguments**: `--run`, `--model` and a
+new `--output` directory. Prepare a separate temporary Ollama alias beforehand;
+the runner uses existing models and never downloads or creates one. Identify its
+original tag with `--source-model` so both digests can be checked for drift:
+
+```powershell
+uv run python scripts/evaluate_release03.py --run --model "YOUR_PREPARED_ALIAS:latest" --source-model "YOUR_SOURCE_MODEL:TAG" --output "test-results/live03-my-run" --phase all
+```
+
+For the October 25 RTX 3080 10 GB exercise, the operator prepared an alias with
+`num_gpu=40` and `num_ctx=4096`. These are that machine's test settings, not an
+automatic recommendation for other hardware. The runner leaves alias settings,
+thinking, temperature and generation limits unchanged.
+
+Available phases are `core` (ten baseline questions), `context` (selection,
+history and saved-note revisions), `studio` (Research, all three Studio formats
+and material retention), `lifecycle` (queued/running cancellation, restart,
+retry and source replacement), or `all` in that order. Each invocation creates a
+fresh isolated vault; an output directory is never reused.
+
+The endpoint defaults to `http://127.0.0.1:11434/v1` and must remain loopback HTTP
+(`--endpoint` also accepts `localhost` or `::1`). No personal vault or application
+settings are opened, embeddings are disabled in the isolated vault, and the
+process uses a null keyring. This exercise makes no cloud calls. Run one instance
+only, without other inference clients using the test model. It permits at most
+80 serial completion calls and 45 minutes; `--max-calls` and `--minutes` can lower
+those bounds. Before and after successful calls, guards check available RAM
+(at least 1.5 GB), NVIDIA free VRAM (at least 1,024 MiB when available), model/tag
+digests and whether another model is loaded. Provider/resource failures stop the
+run. RAM sampling is implemented for Windows and Linux.
+
+To stop an active run after reviewing a bad answer, create `STOP` in its output
+directory:
+
+```powershell
+New-Item -ItemType File "test-results/live03-my-run/STOP"
+```
+
+The transport checks this stop condition during completion. Cancellation closes
+the local HTTP operation and prevents a late material from being saved; it does
+not establish that Ollama immediately stopped GPU computation.
+
+Review the incrementally written `results.json`, `provider-trace.json` (synthetic
+prompts, responses and runtime samples), `environment.json` (source-file manifest,
+digests and rubric), exported `.md` files and `isolated-knowledge/`. Every result
+starts with `quality_verdict: manual_pending`. A `validated` answer, correct JSON,
+matching quote offsets or passing pattern checks does **not** prove that every
+claim follows from the evidence. Review complete claims, conjunctions, causes,
+section titles and question premises, preserving the difference between missing
+reports and missing events, and between plans and observations. Record factual
+verdicts separately from contract/provenance checks. API/service reopening here
+also remains separate from the owner's interactive desktop acceptance.
+
+Alias cleanup is a separate operator step after preserving evidence: unload and
+remove only the temporary alias created for this exercise, keeping original
+model tags intact. The runner does not unload or delete models.
+
+Observed results and limitations: [October 25 report](MODEL_EVALUATION_03_2026-10-25.md).
+
+## Historical 0.2 acceptance
 
 **Status: the latest local Ollama verification passed; owner/cloud acceptance remains open.** The [Research timeout investigation](RESEARCH_TIMEOUT_2026-10-16.md) passed all ten questions, source replacement/history, real Research, Markdown export and service/store reopening without replay. Full citations and output language passed independent assistant review. Current weights differ from the [earlier timeout run](MODEL_FIXES_2026-10-16.md), so this is not a controlled performance comparison. The [September 26 report](OLLAMA_EVALUATION_2026-09-26.md) is retained. Deterministic tests do not establish real-model quality, and the owner's interactive review remains pending.
 
