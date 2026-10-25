@@ -153,7 +153,7 @@ async function runUpgrade() {
       preservedFiles: Object.keys(before).length,
       syntheticProviderCalls: provider.calls.length,
       errors,
-      publication: 'hold',
+      publication: CANDIDATE.publication,
     };
     writeEvidence(run, 'result.json', result);
     console.log(JSON.stringify(result));

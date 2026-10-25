@@ -15,12 +15,13 @@ const BASELINE = Object.freeze({
 });
 const CANDIDATE = Object.freeze({
   version: '0.3.0-beta.1',
-  source: '50e1a65a80f86c2f66c6132289904057ec89bbb2',
-  run: 40221003598,
-  artifact: 12609985853,
+  source: '839d5219d9269071c07e61497061905cc3f707e9',
+  run: 40223957296,
+  artifact: 12611260738,
+  publication: 'approved',
   name: 'Racall-0.3.0-beta.1-win-x64.exe',
-  size: 153279558,
-  sha256: '7aa36844f6893335299bdca2f4d906e2ef980ccd3c443634eb6303dd507d5af5',
+  size: 153279432,
+  sha256: 'b968cb0f91f0ddfba481853c2949e0978d7d603a9634b18be6d76fde91dc1eb9',
 });
 
 function assertHostedWindows(root, env = process.env, host = process) {
@@ -48,7 +49,7 @@ function verifyManifest(manifest) {
   assert.equal(manifest.source, CANDIDATE.source);
   assert.equal(manifest.platform, 'win');
   assert.equal(manifest.arch, 'x64');
-  assert.equal(manifest.publication, 'hold');
+  assert.equal(manifest.publication, CANDIDATE.publication);
   assert.deepEqual(manifest.packages, [
     { name: CANDIDATE.name, size: CANDIDATE.size, sha256: CANDIDATE.sha256 },
   ]);

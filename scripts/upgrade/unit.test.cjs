@@ -52,10 +52,16 @@ test('the candidate manifest cannot substitute another source, package or releas
     source: CANDIDATE.source,
     platform: 'win',
     arch: 'x64',
-    publication: 'hold',
+    publication: CANDIDATE.publication,
     packages: [{ name: CANDIDATE.name, size: CANDIDATE.size, sha256: CANDIDATE.sha256 }],
   };
   verifyManifest(manifest);
+  assert.throws(() =>
+    verifyManifest({
+      ...manifest,
+      publication: CANDIDATE.publication === 'approved' ? 'hold' : 'approved',
+    }),
+  );
   for (const key of ['version', 'source', 'platform', 'arch', 'publication'])
     assert.throws(() => verifyManifest({ ...manifest, [key]: 'other' }));
   assert.throws(() =>
