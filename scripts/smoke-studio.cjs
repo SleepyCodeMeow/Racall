@@ -27,10 +27,16 @@ async function launch() {
   const page = await app.firstWindow({ timeout: 60000 });
   page.setDefaultTimeout(15000);
   page.on('pageerror', error => errors.push(error.message));
-  await app.evaluate(({ BrowserWindow }) => {
+  await app.evaluate(({ BrowserWindow, screen }) => {
     const window = BrowserWindow.getAllWindows()[0];
     window.webContents.setBackgroundThrottling(false);
-    window.setSize(1180, 820);
+    const hostedCapture = process.env.GITHUB_ACTIONS === 'true' && process.platform !== 'darwin';
+    const area = screen.getPrimaryDisplay().workAreaSize;
+    window.setSize(hostedCapture ? Math.min(1180, Math.max(1000, area.width)) : 1180,
+      hostedCapture ? Math.min(820, Math.max(680, area.height)) : 820);
+    // Hidden compositor surfaces can stall CDP screenshots on Windows/Xvfb.
+    // Show only this disposable hosted test window; local checks stay hidden.
+    if (hostedCapture) window.showInactive();
   });
   await page.locator('.navigation').waitFor();
   assert.equal(await app.evaluate(({ app }) => app.getPath('userData')), path.join(data, 'electron-profile'));
