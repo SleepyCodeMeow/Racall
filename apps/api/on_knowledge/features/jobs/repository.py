@@ -27,8 +27,11 @@ class JobRepository:
     def list(self, notebook: str) -> list[dict]:
         with self.store.lock:
             directory = self.store.notebook_path(notebook) / "jobs"
-            return sorted([json.loads(read_text(path)) for path in directory.glob("*.json")],
-                          key=lambda job: job["created_at"], reverse=True)
+            return sorted(
+                [json.loads(read_text(path)) for path in directory.glob("*.json")],
+                key=lambda job: job["created_at"],
+                reverse=True,
+            )
 
     @staticmethod
     def public(job: dict) -> dict:

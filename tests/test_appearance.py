@@ -31,11 +31,20 @@ def test_theme_survives_application_restart(tmp_path, theme):
     assert list(tmp_path.glob("appearance.json.*.tmp")) == []
 
 
-@pytest.mark.parametrize("body", [
-    {}, {"theme": "night"}, {"theme": "Dark"}, {"theme": None},
-    {"theme": 1}, {"theme": True}, {"theme": ["dark"]},
-    {"theme": "dark", "locale": "ru"}, {"theme": "dark", "api_key": "secret"},
-])
+@pytest.mark.parametrize(
+    "body",
+    [
+        {},
+        {"theme": "night"},
+        {"theme": "Dark"},
+        {"theme": None},
+        {"theme": 1},
+        {"theme": True},
+        {"theme": ["dark"]},
+        {"theme": "dark", "locale": "ru"},
+        {"theme": "dark", "api_key": "secret"},
+    ],
+)
 def test_invalid_body_cannot_replace_the_saved_theme(tmp_path, body):
     path = tmp_path / "appearance.json"
     write_json(path, {"theme": "system"})
@@ -46,10 +55,19 @@ def test_invalid_body_cannot_replace_the_saved_theme(tmp_path, body):
     assert path.read_bytes() == before
 
 
-@pytest.mark.parametrize("raw", [
-    "{", "[]", '"dark"', "null", '{"theme": "unknown"}',
-    '{"theme": null}', '{"theme": 7}', '{}',
-])
+@pytest.mark.parametrize(
+    "raw",
+    [
+        "{",
+        "[]",
+        '"dark"',
+        "null",
+        '{"theme": "unknown"}',
+        '{"theme": null}',
+        '{"theme": 7}',
+        "{}",
+    ],
+)
 def test_corrupt_or_unsupported_preference_falls_back_without_rewriting(tmp_path, raw):
     path = tmp_path / "appearance.json"
     path.write_text(raw, "utf-8")

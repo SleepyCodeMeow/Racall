@@ -95,24 +95,32 @@ def create_router(store: Store) -> APIRouter:
             for name, config in s["profiles"].items()
         }
         return {
-            **s, "profiles": profiles,
+            **s,
+            "profiles": profiles,
             "embeddings": {**s["embeddings"], "has_key": bool(provider_key(s["embeddings"]))},
-            "has_key": profiles[s["provider"]]["has_key"], "vault_path": str(store.vault),
+            "has_key": profiles[s["provider"]]["has_key"],
+            "vault_path": str(store.vault),
         }
 
     @router.put("/api/settings")
     def update_settings(body: object = Body(...)):
-        schema = SettingsBody if isinstance(body, dict) and any(
-            key in body for key in ("provider", "profiles", "embeddings", "embedding_api_key")
-        ) else LegacySettingsBody
+        schema = (
+            SettingsBody
+            if isinstance(body, dict)
+            and any(key in body for key in ("provider", "profiles", "embeddings", "embedding_api_key"))
+            else LegacySettingsBody
+        )
         try:
             request = schema.model_validate(body)
         except ValidationError as exc:
             # Validation details must never echo API keys back in an error body.
-            raise HTTPException(status_code=422, detail=[
-                {"loc": ["body", *error["loc"]], "msg": error["msg"], "type": error["type"]}
-                for error in exc.errors(include_url=False, include_input=False, include_context=False)
-            ]) from None
+            raise HTTPException(
+                status_code=422,
+                detail=[
+                    {"loc": ["body", *error["loc"]], "msg": error["msg"], "type": error["type"]}
+                    for error in exc.errors(include_url=False, include_input=False, include_context=False)
+                ],
+            ) from None
         with store.lock:
             settings = persistent_settings(store.settings())
             key_updates = {}
@@ -126,15 +134,19 @@ def create_router(store: Store) -> APIRouter:
             if isinstance(request, LegacySettingsBody):
                 settings["provider"] = "openai_compatible"
                 settings["profiles"]["openai_compatible"] = {
-                    "base_url": request.base_url, "model": request.model,
+                    "base_url": request.base_url,
+                    "model": request.model,
                 }
                 settings["embeddings"] = {
-                    "provider": "openai_compatible", "base_url": request.base_url,
+                    "provider": "openai_compatible",
+                    "base_url": request.base_url,
                     "model": request.embedding_model,
                 }
             else:
                 settings["provider"] = request.provider
-                settings["profiles"].update({name: profile.model_dump() for name, profile in request.profiles.items()})
+                settings["profiles"].update(
+                    {name: profile.model_dump() for name, profile in request.profiles.items()}
+                )
                 if request.embeddings is not None:
                     settings["embeddings"] = request.embeddings.model_dump()
                 if request.embedding_api_key is not None:

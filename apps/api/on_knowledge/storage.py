@@ -98,7 +98,7 @@ class Store:
         self.active_operations: dict[str, int] = {}
         self.db_path = self.root / "index.sqlite3"
         with self.db() as db:
-            db.executescript('''
+            db.executescript("""
                 PRAGMA journal_mode=WAL;
                 CREATE TABLE IF NOT EXISTS schema_version(version INTEGER PRIMARY KEY);
                 INSERT OR IGNORE INTO schema_version VALUES(1);
@@ -109,7 +109,7 @@ class Store:
                 );
                 CREATE INDEX IF NOT EXISTS chunks_notebook ON chunks(notebook);
                 CREATE VIRTUAL TABLE IF NOT EXISTS chunks_fts USING fts5(id UNINDEXED, text);
-            ''')
+            """)
 
     @contextmanager
     def db(self):
@@ -170,9 +170,12 @@ class Store:
 
     def sources(self, notebook: str) -> list[dict]:
         return sorted(
-            [json.loads(read_text(p)) for p in
-             (self.notebook_path(notebook) / "sources").glob("*/source.json")],
-            key=lambda s: s["created_at"], reverse=True,
+            [
+                json.loads(read_text(p))
+                for p in (self.notebook_path(notebook) / "sources").glob("*/source.json")
+            ],
+            key=lambda s: s["created_at"],
+            reverse=True,
         )
 
     def source(self, notebook: str, source: str) -> dict:
@@ -189,17 +192,33 @@ class Store:
         db.execute("DELETE FROM chunks_fts WHERE id IN (SELECT id FROM chunks WHERE source=?)", (source,))
         db.execute("DELETE FROM chunks WHERE source=?", (source,))
         for c in chunks:
-            db.execute("INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)", (
-                c["id"], notebook, source, version, c["text"], json.dumps(c["location"]),
-                json.dumps(c.get("embedding")), c.get("model"),
-            ))
+            db.execute(
+                "INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)",
+                (
+                    c["id"],
+                    notebook,
+                    source,
+                    version,
+                    c["text"],
+                    json.dumps(c["location"]),
+                    json.dumps(c.get("embedding")),
+                    c.get("model"),
+                ),
+            )
             db.execute("INSERT INTO chunks_fts VALUES(?,?)", (c["id"], c["text"]))
 
     def list_notes(self, notebook: str, kind: str = "notes") -> list[dict]:
         return self.notes.list_notes(notebook, kind)
 
-    def save_note(self, notebook: str, title: str, body: str, note_id: str | None = None,
-                  kind: str = "notes", revision: str | None = None) -> dict:
+    def save_note(
+        self,
+        notebook: str,
+        title: str,
+        body: str,
+        note_id: str | None = None,
+        kind: str = "notes",
+        revision: str | None = None,
+    ) -> dict:
         return self.notes.save_note(notebook, title, body, note_id, kind, revision)
 
     def autosave_note(self, notebook: str, draft_id: str, note: dict) -> dict:
@@ -219,5 +238,10 @@ class Store:
 
     def audit(self, event: str, notebook: str = "", detail: dict | None = None):
         with self.lock, (self.root / "audit.jsonl").open("a", encoding="utf-8") as f:
-            f.write(json.dumps({"at": now(), "event": event, "notebook": notebook,
-                                "detail": detail or {}}, ensure_ascii=False) + "\n")
+            f.write(
+                json.dumps(
+                    {"at": now(), "event": event, "notebook": notebook, "detail": detail or {}},
+                    ensure_ascii=False,
+                )
+                + "\n"
+            )

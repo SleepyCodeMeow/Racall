@@ -3,6 +3,7 @@
 The shared PNG keeps its presentation padding for installer artwork and other
 platforms. Only Windows shell icons use the tighter artwork bounds below.
 """
+
 from pathlib import Path
 
 from PIL import Image, ImageOps
@@ -20,8 +21,9 @@ def main():
         if bounds is None:
             raise ValueError("The icon source has no visible artwork")
         left, top, right, bottom = bounds
-        artwork = source.crop((max(0, left - 4), max(0, top - 4),
-                               min(source.width, right + 4), min(source.height, bottom + 4)))
+        artwork = source.crop(
+            (max(0, left - 4), max(0, top - 4), min(source.width, right + 4), min(source.height, bottom + 4))
+        )
 
     frames = []
     for size in SIZES:
@@ -34,11 +36,9 @@ def main():
         frames.append(frame)
 
     output = ROOT / "assets/icon.ico"
-    frames[-1].save(output, format="ICO", sizes=[(size, size) for size in SIZES],
-                    append_images=frames[:-1])
+    frames[-1].save(output, format="ICO", sizes=[(size, size) for size in SIZES], append_images=frames[:-1])
     print(f"{output}: {', '.join(map(str, SIZES))} px")
 
 
 if __name__ == "__main__":
     main()
-

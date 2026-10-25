@@ -12,8 +12,11 @@ HEADERS = {"Authorization": "Bearer " + TOKEN}
 
 def session(status, question):
     return {
-        "id": str(uuid4()), "question": question, "status": status,
-        "created_at": "2026-10-17T10:00:00+00:00", "steps": [],
+        "id": str(uuid4()),
+        "question": question,
+        "status": status,
+        "created_at": "2026-10-17T10:00:00+00:00",
+        "steps": [],
     }
 
 
@@ -28,14 +31,15 @@ def test_startup_marks_interrupted_research_without_replaying_or_changing_result
     running = session("running", "Unfinished question")
     running["steps"] = [{"stage": "planner", "queries": ["saved plan"]}]
     completed = session("completed", "Completed question")
-    completed["answer"] = {"claims": [{"text": "Keep this finding", "evidence_ids": ["c1"]}],
-                           "citations": [{"id": "c1", "quote": "Exact saved quote"}]}
+    completed["answer"] = {
+        "claims": [{"text": "Keep this finding", "evidence_ids": ["c1"]}],
+        "citations": [{"id": "c1", "quote": "Exact saved quote"}],
+    }
     failed = session("failed", "Failed question")
     for item in (running, completed, failed):
         write_json(directory / (item["id"] + ".json"), item)
     untouched = {
-        item["id"]: (directory / (item["id"] + ".json")).read_bytes()
-        for item in (completed, failed)
+        item["id"]: (directory / (item["id"] + ".json")).read_bytes() for item in (completed, failed)
     }
     calls = []
 
@@ -43,7 +47,7 @@ def test_startup_marks_interrupted_research_without_replaying_or_changing_result
         calls.append((args, kwargs))
         raise AssertionError("Recovery must never replay model work")
 
-    monkeypatch.setattr("on_knowledge.knowledge.completion_provider", no_provider)
+    monkeypatch.setattr("on_knowledge.generation.research.completion_provider", no_provider)
     with client_for(tmp_path) as client:
         response = client.get(f"/api/notebooks/{notebook}/research")
         assert response.status_code == 200

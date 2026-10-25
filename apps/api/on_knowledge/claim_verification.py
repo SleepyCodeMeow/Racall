@@ -30,8 +30,9 @@ def _supported_claim_ids(verdict: object, allowed: set[str]) -> set[str] | None:
     return set(labels)
 
 
-def verify_claims(provider: LLMProvider, question: str, claims: list[dict],
-                  evidence: list[dict]) -> list[dict]:
+def verify_claims(
+    provider: LLMProvider, question: str, claims: list[dict], evidence: list[dict]
+) -> list[dict]:
     """Return original supported claims, with at most two critic requests.
 
     Assign IDs here, after writer output has been filtered. The writer never has
@@ -46,9 +47,10 @@ def verify_claims(provider: LLMProvider, question: str, claims: list[dict],
     """
     if not claims:
         return []
-    labelled = [{"claim_id": f"C{index}", "text": claim["text"],
-                 "evidence_ids": list(claim["evidence_ids"])}
-                for index, claim in enumerate(claims, 1)]
+    labelled = [
+        {"claim_id": f"C{index}", "text": claim["text"], "evidence_ids": list(claim["evidence_ids"])}
+        for index, claim in enumerate(claims, 1)
+    ]
     allowed = {claim["claim_id"] for claim in labelled}
     data = {"question": question, "claims": labelled, "evidence": evidence}
     instructions = _CRITIC_INSTRUCTIONS
@@ -59,7 +61,9 @@ def verify_claims(provider: LLMProvider, question: str, claims: list[dict],
         if attempt == 0:
             # Do not echo an untrusted malformed verdict into the next prompt.
             labels = ", ".join(claim["claim_id"] for claim in labelled)
-            instructions = (_CRITIC_INSTRUCTIONS + " Previous response did not match the JSON contract. "
-                            "Recheck the same claims. The only valid claim IDs are: " + labels + ". "
-                            "Use an empty array if none are supported.")
+            instructions = (
+                _CRITIC_INSTRUCTIONS + " Previous response did not match the JSON contract. "
+                "Recheck the same claims. The only valid claim IDs are: " + labels + ". "
+                "Use an empty array if none are supported."
+            )
     return []

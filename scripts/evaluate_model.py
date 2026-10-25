@@ -85,8 +85,12 @@ def main():
                 results.append({**case, "error": str(error), "human_verdict": "pending"})
             write_json(
                 output / "results.json",
-                {"model": settings["model"], "provider": settings["provider"],
-                 "base_url": settings["base_url"], "results": results},
+                {
+                    "model": settings["model"],
+                    "provider": settings["provider"],
+                    "base_url": settings["base_url"],
+                    "results": results,
+                },
             )
     finally:
         knowledge.executor.shutdown(wait=True)

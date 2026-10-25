@@ -11,13 +11,16 @@ def test_language_preference_survives_restart_without_changing_provider_or_notes
         assert client.get("/api/preferences").json() == {"locale": "en"}
         original_settings = client.get("/api/settings").json()
         notebook = client.post("/api/notebooks", json={"title": "Мои источники"}).json()
-        note = client.post(f'/api/notebooks/{notebook["id"]}/notes', json={"title": "Моя заметка", "body": "Text stays unchanged. Текст не меняется."}).json()
+        note = client.post(
+            f"/api/notebooks/{notebook['id']}/notes",
+            json={"title": "Моя заметка", "body": "Text stays unchanged. Текст не меняется."},
+        ).json()
         assert client.put("/api/preferences", json={"locale": "ru"}).json() == {"locale": "ru"}
         assert client.put("/api/preferences", json={"locale": "de"}).status_code == 422
         assert client.get("/api/preferences").json() == {"locale": "ru"}
         assert client.get("/api/preferences", headers={"Authorization": "bad"}).status_code == 401
         assert client.get("/api/settings").json() == original_settings
-        assert client.get(f'/api/notebooks/{notebook["id"]}/notes').json()[0]["body"] == note["body"]
+        assert client.get(f"/api/notebooks/{notebook['id']}/notes").json()[0]["body"] == note["body"]
     with TestClient(create_app(tmp_path, TOKEN), headers={"Authorization": "Bearer " + TOKEN}) as restarted:
         assert restarted.get("/api/preferences").json() == {"locale": "ru"}
         assert restarted.put("/api/preferences", json={"locale": "en"}).status_code == 200

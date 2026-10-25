@@ -28,8 +28,13 @@ class Chunks(httpx.AsyncByteStream):
 
 
 def event(delta=None, *, finish=None, index=0):
-    return ("data: " + json.dumps({"choices": [{"index": index, "delta": delta or {},
-                                              "finish_reason": finish}]}, ensure_ascii=False) + "\n\n").encode()
+    return (
+        "data: "
+        + json.dumps(
+            {"choices": [{"index": index, "delta": delta or {}, "finish_reason": finish}]}, ensure_ascii=False
+        )
+        + "\n\n"
+    ).encode()
 
 
 def completed(text='{"claims": []}'):
@@ -60,11 +65,13 @@ def call(**kwargs):
 
 def test_stream_assembles_utf8_content_without_changing_payload_or_reasoning(monkeypatch):
     expected = {"claims": [{"text": "Источник 🦝", "evidence_ids": ["E2"]}]}
-    wire = (b": keepalive\r\n\r\n" + event({"role": "assistant", "content": None})
-            + event({"reasoning_content": '{"claims": [{"text": "UNTRUSTED THOUGHT"}]}'})
-            + event({"reasoning": '{"claims": [{"text": "UNTRUSTED THOUGHT"}]}'})
-            + completed(json.dumps(expected, ensure_ascii=False))
-            ).replace(b"\n", b"\r\n")
+    wire = (
+        b": keepalive\r\n\r\n"
+        + event({"role": "assistant", "content": None})
+        + event({"reasoning_content": '{"claims": [{"text": "UNTRUSTED THOUGHT"}]}'})
+        + event({"reasoning": '{"claims": [{"text": "UNTRUSTED THOUGHT"}]}'})
+        + completed(json.dumps(expected, ensure_ascii=False))
+    ).replace(b"\n", b"\r\n")
     stream = Chunks([bytes([byte]) for byte in wire])
     requests = transport(monkeypatch, stream)
 
@@ -79,12 +86,14 @@ def test_stream_assembles_utf8_content_without_changing_payload_or_reasoning(mon
 
 
 def test_multiline_sse_fields_and_usage_are_not_content(monkeypatch):
-    wire = (b"event: message\nid: arbitrary\nretry: 1000\n"
-            b'data: {"choices": [\n'
-            b'data: {"index": 0, "delta": {"content": "{\\"claims\\": []}"}, "finish_reason": null}]}\n\n'
-            + event(finish="stop")
-            + b'data: {"choices": [], "usage": {"completion_tokens": 4}}\n\n'
-            + b"data: [DONE]\n\n")
+    wire = (
+        b"event: message\nid: arbitrary\nretry: 1000\n"
+        b'data: {"choices": [\n'
+        b'data: {"index": 0, "delta": {"content": "{\\"claims\\": []}"}, "finish_reason": null}]}\n\n'
+        + event(finish="stop")
+        + b'data: {"choices": [], "usage": {"completion_tokens": 4}}\n\n'
+        + b"data: [DONE]\n\n"
+    )
     transport(monkeypatch, Chunks([wire]))
     assert call() == {"claims": []}
 
@@ -93,11 +102,15 @@ def test_multiline_sse_fields_and_usage_are_not_content(monkeypatch):
 @pytest.mark.parametrize("streaming", [True, False], ids=["sse", "json"])
 def test_explicit_refusal_never_accepts_otherwise_valid_json(monkeypatch, refusal, streaming):
     message = {"content": '{"claims": []}', "refusal": refusal}
-    wire = (event(message) + event(finish="stop") + b"data: [DONE]\n\n" if streaming else
-            json.dumps({"choices": [{"message": message, "finish_reason": "stop"}]}).encode())
+    wire = (
+        event(message) + event(finish="stop") + b"data: [DONE]\n\n"
+        if streaming
+        else json.dumps({"choices": [{"message": message, "finish_reason": "stop"}]}).encode()
+    )
     stream = Chunks([wire])
-    requests = transport(monkeypatch, stream,
-                         content_type="text/event-stream" if streaming else "application/json")
+    requests = transport(
+        monkeypatch, stream, content_type="text/event-stream" if streaming else "application/json"
+    )
     with pytest.raises(completion_stream.CompletionProtocolError, match="refusal"):
         call()
     assert len(requests) == 1 and stream.closed
@@ -106,36 +119,43 @@ def test_explicit_refusal_never_accepts_otherwise_valid_json(monkeypatch, refusa
 @pytest.mark.parametrize("streaming", [True, False], ids=["sse", "json"])
 def test_null_refusal_metadata_allows_normally_completed_json(monkeypatch, streaming):
     message = {"content": '{"claims": []}', "refusal": None}
-    wire = (event(message) + event(finish="stop") + b"data: [DONE]\n\n" if streaming else
-            json.dumps({"choices": [{"message": message, "finish_reason": "stop"}]}).encode())
-    transport(monkeypatch, Chunks([wire]),
-              content_type="text/event-stream" if streaming else "application/json")
+    wire = (
+        event(message) + event(finish="stop") + b"data: [DONE]\n\n"
+        if streaming
+        else json.dumps({"choices": [{"message": message, "finish_reason": "stop"}]}).encode()
+    )
+    transport(
+        monkeypatch, Chunks([wire]), content_type="text/event-stream" if streaming else "application/json"
+    )
     assert call() == {"claims": []}
 
 
-@pytest.mark.parametrize("wire", [
-    event({"content": '{"claims": []}'}) + b"data: [DONE]\n\n",
-    event({"content": '{"claims": []}'}) + event(finish="stop"),
-    completed().replace(b"[DONE]\n\n", b"[DONE]"),
-    event({"content": '{"claims": []}'}) + event(finish="length") + b"data: [DONE]\n\n",
-    event({"content": '{"claims": []}'}) + event(finish="content_filter") + b"data: [DONE]\n\n",
-    event({"tool_calls": [{"function": {"name": "execute"}}]}) + event(finish="tool_calls"),
-    event({"function_call": {"name": "execute"}}),
-    event({"content": '{"claims": []}'}, index=1) + event(finish="stop"),
-    b'data: {"choices": [{"index": 0, "delta": {}}, {"index": 1, "delta": {}}]}\n\n',
-    b"data: not-json\n\n",
-    b"data: \xff\n\n",
-    b'data: {"choices": [{"index": 0, "delta": {"content": "\\ud800"}}]}\n\n',
-    event({"content": ["not a string"]}),
-    completed('["not an object"]'),
-    completed('{"claims":'),
-    completed('{"claims": [], "claims": [{"text": "replacement"}]}'),
-    completed('{"value": NaN}'),
-    b'data: {"error": {"message": "untrusted secret detail"}}\n\n',
-    event(finish="stop") + b"data: [DONE]\n\n",
-    event({"reasoning_content": '{"claims": []}'}) + event(finish="stop") + b"data: [DONE]\n\n",
-    event({"content": '{"claims": []}'}) + event(finish="stop") + event({"content": " "}),
-])
+@pytest.mark.parametrize(
+    "wire",
+    [
+        event({"content": '{"claims": []}'}) + b"data: [DONE]\n\n",
+        event({"content": '{"claims": []}'}) + event(finish="stop"),
+        completed().replace(b"[DONE]\n\n", b"[DONE]"),
+        event({"content": '{"claims": []}'}) + event(finish="length") + b"data: [DONE]\n\n",
+        event({"content": '{"claims": []}'}) + event(finish="content_filter") + b"data: [DONE]\n\n",
+        event({"tool_calls": [{"function": {"name": "execute"}}]}) + event(finish="tool_calls"),
+        event({"function_call": {"name": "execute"}}),
+        event({"content": '{"claims": []}'}, index=1) + event(finish="stop"),
+        b'data: {"choices": [{"index": 0, "delta": {}}, {"index": 1, "delta": {}}]}\n\n',
+        b"data: not-json\n\n",
+        b"data: \xff\n\n",
+        b'data: {"choices": [{"index": 0, "delta": {"content": "\\ud800"}}]}\n\n',
+        event({"content": ["not a string"]}),
+        completed('["not an object"]'),
+        completed('{"claims":'),
+        completed('{"claims": [], "claims": [{"text": "replacement"}]}'),
+        completed('{"value": NaN}'),
+        b'data: {"error": {"message": "untrusted secret detail"}}\n\n',
+        event(finish="stop") + b"data: [DONE]\n\n",
+        event({"reasoning_content": '{"claims": []}'}) + event(finish="stop") + b"data: [DONE]\n\n",
+        event({"content": '{"claims": []}'}) + event(finish="stop") + event({"content": " "}),
+    ],
+)
 def test_incomplete_unsafe_or_malformed_stream_never_returns_partial_json(monkeypatch, wire):
     requests = transport(monkeypatch, Chunks([wire]))
     with pytest.raises(completion_stream.CompletionProtocolError) as error:
@@ -181,17 +201,21 @@ def test_full_json_compatibility_when_server_ignores_stream(monkeypatch, finish)
     assert len(requests) == 1 and stream.closed
 
 
-@pytest.mark.parametrize("choice", [
-    {"finish_reason": "length", "message": {"content": '{"claims": []}'}},
-    {"finish_reason": None, "message": {"content": '{"claims": []}'}},
-    {"index": 1, "message": {"content": '{"claims": []}'}},
-    {"message": {"tool_calls": [{"function": {"name": "execute"}}], "content": '{"claims": []}'}},
-    {"message": {"content": "[]"}},
-    {"message": {"content": None}},
-])
+@pytest.mark.parametrize(
+    "choice",
+    [
+        {"finish_reason": "length", "message": {"content": '{"claims": []}'}},
+        {"finish_reason": None, "message": {"content": '{"claims": []}'}},
+        {"index": 1, "message": {"content": '{"claims": []}'}},
+        {"message": {"tool_calls": [{"function": {"name": "execute"}}], "content": '{"claims": []}'}},
+        {"message": {"content": "[]"}},
+        {"message": {"content": None}},
+    ],
+)
 def test_full_json_fallback_still_rejects_incomplete_or_wrong_shape(monkeypatch, choice):
-    transport(monkeypatch, Chunks([json.dumps({"choices": [choice]}).encode()]),
-              content_type="application/json")
+    transport(
+        monkeypatch, Chunks([json.dumps({"choices": [choice]}).encode()]), content_type="application/json"
+    )
     with pytest.raises(completion_stream.CompletionProtocolError):
         call()
 
@@ -238,14 +262,14 @@ def test_total_deadline_stops_blocked_read_or_endless_heartbeats(monkeypatch, he
             if not heartbeats:
                 await asyncio.Event().wait()
             while True:
-                await asyncio.sleep(.002)
+                await asyncio.sleep(0.002)
                 yield b": progress\n\n"
 
     stream = SlowStream([])
     requests = transport(monkeypatch, stream)
     started = time.monotonic()
     with pytest.raises(completion_stream.CompletionDeadlineError):
-        call(deadline_seconds=.03)
+        call(deadline_seconds=0.03)
     assert time.monotonic() - started < 1
     assert len(requests) == 1 and stream.closed
 

@@ -16,8 +16,11 @@ import httpx
 import psutil
 
 ROOT = Path(__file__).resolve().parents[1]
-BINARY = Path(os.environ.get("RACALL_BACKEND_BINARY", str(
-    ROOT / "release/win-unpacked/resources/backend/open-notebook-api.exe")))
+BINARY = Path(
+    os.environ.get(
+        "RACALL_BACKEND_BINARY", str(ROOT / "release/win-unpacked/resources/backend/open-notebook-api.exe")
+    )
+)
 PROVIDERS = ("openai", "anthropic", "ollama", "ollama_cloud", "llama_cpp")
 FACT = "Marigold launches on October 18."
 QUESTION = "When does Marigold launch?"
@@ -64,19 +67,44 @@ class Fixture(BaseHTTPRequestHandler):
                 result = {"queries": ["Marigold launch"]}
             content = json.dumps(result)
             if native:
-                events = [{"type": "message_start", "message": {"type": "message", "role": "assistant",
-                           "content": [], "stop_reason": None}},
-                          {"type": "content_block_start", "index": 0, "content_block": {"type": "text", "text": ""}},
-                          {"type": "content_block_delta", "index": 0, "delta": {"type": "text_delta", "text": content}},
-                          {"type": "content_block_stop", "index": 0},
-                          {"type": "message_delta", "delta": {"stop_reason": "end_turn"}}, {"type": "message_stop"}]
+                events = [
+                    {
+                        "type": "message_start",
+                        "message": {
+                            "type": "message",
+                            "role": "assistant",
+                            "content": [],
+                            "stop_reason": None,
+                        },
+                    },
+                    {
+                        "type": "content_block_start",
+                        "index": 0,
+                        "content_block": {"type": "text", "text": ""},
+                    },
+                    {
+                        "type": "content_block_delta",
+                        "index": 0,
+                        "delta": {"type": "text_delta", "text": content},
+                    },
+                    {"type": "content_block_stop", "index": 0},
+                    {"type": "message_delta", "delta": {"stop_reason": "end_turn"}},
+                    {"type": "message_stop"},
+                ]
                 if self.malformed:
                     events.pop()
                 wire = "".join(f"event: {item['type']}\ndata: {json.dumps(item)}\n\n" for item in events)
             else:
-                wire = "".join("data: " + json.dumps({"choices": [{"index": 0, "delta": delta,
-                               "finish_reason": reason}]}) + "\n\n" for delta, reason in
-                               [({"reasoning": "Untrusted draft"}, None), ({"content": content}, None), ({}, "stop")])
+                wire = "".join(
+                    "data: "
+                    + json.dumps({"choices": [{"index": 0, "delta": delta, "finish_reason": reason}]})
+                    + "\n\n"
+                    for delta, reason in [
+                        ({"reasoning": "Untrusted draft"}, None),
+                        ({"content": content}, None),
+                        ({}, "stop"),
+                    ]
+                )
                 wire += "data: [DONE]\n\n"
             encoded = wire.encode()
             self.send_response(200)
@@ -94,25 +122,38 @@ def backend(data, token):
     with socket.socket() as sock:
         sock.bind(("127.0.0.1", 0))
         port = sock.getsockname()[1]
-    env = {**os.environ, "OPENNOTEBOOK_SESSION_TOKEN": token,
-           "OPENAI_API_KEY": KEYS["openai"], "ANTHROPIC_API_KEY": KEYS["anthropic"],
-           "OLLAMA_API_KEY": KEYS["ollama_cloud"], "PYTHON_KEYRING_BACKEND": "keyring.backends.null.Keyring"}
+    env = {
+        **os.environ,
+        "OPENNOTEBOOK_SESSION_TOKEN": token,
+        "OPENAI_API_KEY": KEYS["openai"],
+        "ANTHROPIC_API_KEY": KEYS["anthropic"],
+        "OLLAMA_API_KEY": KEYS["ollama_cloud"],
+        "PYTHON_KEYRING_BACKEND": "keyring.backends.null.Keyring",
+    }
     env.pop("OPENNOTEBOOK_API_KEY", None)
     with (data / "process.log").open("a", encoding="utf-8") as log:
-        process = subprocess.Popen([str(BINARY), "--data-dir", str(data), "--port", str(port)], env=env,
-                                   stdout=log, stderr=log,
-                                   creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0)
+        process = subprocess.Popen(
+            [str(BINARY), "--data-dir", str(data), "--port", str(port)],
+            env=env,
+            stdout=log,
+            stderr=log,
+            creationflags=subprocess.CREATE_NO_WINDOW if sys.platform == "win32" else 0,
+        )
         try:
-            with httpx.Client(base_url=f"http://127.0.0.1:{port}", timeout=20, trust_env=False,
-                              headers={"Authorization": "Bearer " + token}) as client:
+            with httpx.Client(
+                base_url=f"http://127.0.0.1:{port}",
+                timeout=20,
+                trust_env=False,
+                headers={"Authorization": "Bearer " + token},
+            ) as client:
                 for _ in range(200):
                     assert process.poll() is None, "Frozen backend exited; inspect process.log"
                     try:
-                        if client.get("/health", timeout=.5).status_code == 200:
+                        if client.get("/health", timeout=0.5).status_code == 200:
                             break
                     except httpx.HTTPError:
                         pass
-                    time.sleep(.1)
+                    time.sleep(0.1)
                 else:
                     raise AssertionError("Frozen backend startup deadline exceeded")
                 yield client
@@ -154,16 +195,26 @@ def main():
     profiles = {name: {"base_url": base, "model": "fixture-" + name} for name in PROVIDERS}
     try:
         with backend(data, token) as client:
-            api(client, "PUT", "/settings", json={"provider": "openai", "profiles": profiles,
-                "embeddings": {"provider": "openai", "base_url": base, "model": ""}})
+            api(
+                client,
+                "PUT",
+                "/settings",
+                json={
+                    "provider": "openai",
+                    "profiles": profiles,
+                    "embeddings": {"provider": "openai", "base_url": base, "model": ""},
+                },
+            )
             notebook = api(client, "POST", "/notebooks", json={"title": "Frozen provider fixtures"})["id"]
             route = f"/notebooks/{notebook}"
-            source = api(client, "POST", route + "/sources", files={"file": ("facts.md", FACT.encode())})["id"]
+            source = api(client, "POST", route + "/sources", files={"file": ("facts.md", FACT.encode())})[
+                "id"
+            ]
             for _ in range(200):
                 state = api(client, "GET", route + f"/sources/{source}")["source"]
                 if state["status"] in ("ready", "error"):
                     break
-                time.sleep(.1)
+                time.sleep(0.1)
             assert state["status"] == "ready"
             sessions = []
             for provider in PROVIDERS:
@@ -179,13 +230,20 @@ def main():
                 assert [item["stage"] for item in Fixture.calls[before:]] == ["planner", "writer", "critic"]
                 saved = api(client, "POST", route + f"/research/{session['id']}/save")
                 assert "## Sources" in saved["body"] and FACT in saved["body"]
-                memory = json.loads((data / "notebooks" / notebook / "memory" / f"{session['id']}.json")
-                                    .read_text("utf-8"))
-                assert memory["finding"] == answer["claims"] and memory["supporting_citations"] == answer["citations"]
+                memory = json.loads(
+                    (data / "notebooks" / notebook / "memory" / f"{session['id']}.json").read_text("utf-8")
+                )
+                assert (
+                    memory["finding"] == answer["claims"]
+                    and memory["supporting_citations"] == answer["citations"]
+                )
                 sessions.append(session)
             artifacts = api(client, "GET", route + "/artifacts")
-            snapshot = {str(path): path.read_bytes() for folder in ("research", "artifacts", "memory")
-                        for path in (data / "notebooks" / notebook / folder).glob("*")}
+            snapshot = {
+                str(path): path.read_bytes()
+                for folder in ("research", "artifacts", "memory")
+                for path in (data / "notebooks" / notebook / folder).glob("*")
+            }
             api(client, "PUT", "/settings", json={"provider": "anthropic"})
             Fixture.malformed = True
             before = len(Fixture.calls)
@@ -201,8 +259,18 @@ def main():
             assert original.status_code == 200 and original.content == FACT.encode()
         assert len(Fixture.calls) == calls and not Fixture.errors
         assert all(Path(path).read_bytes() == value for path, value in snapshot.items())
-        (data / "result.json").write_text(json.dumps({"providers": list(PROVIDERS), "calls": Fixture.calls,
-            "research_saved_reopened": True, "truncated_claude_rejected": True}, indent=2), encoding="utf-8")
+        (data / "result.json").write_text(
+            json.dumps(
+                {
+                    "providers": list(PROVIDERS),
+                    "calls": Fixture.calls,
+                    "research_saved_reopened": True,
+                    "truncated_claude_rejected": True,
+                },
+                indent=2,
+            ),
+            encoding="utf-8",
+        )
         print(f"Frozen provider protocols, citations, save/reopen and truncated Claude checks passed: {data}")
     finally:
         server.shutdown()

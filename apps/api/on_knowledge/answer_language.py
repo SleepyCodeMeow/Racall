@@ -18,22 +18,26 @@ _EMBEDDED_DATA = re.compile(
     r'"[^"\n]*"|“[^”\n]*”|«[^»\n]*»|‘[^’\n]*’'
 )
 _CUES = {
-    "en": frozenset("""
+    "en": frozenset(
+        """
         a an the this that these those it its they their there
         is are was were be been has have had do does did
         will would can could should must not no already yet
         of to for from about and or with without in on at by as
         what when where who whose why how which
         tell explain compare summarize summarise describe list show give find
-    """.split()),
-    "ru": frozenset("""
+    """.split()
+    ),
+    "ru": frozenset(
+        """
         это этот эта эти того этой те он она они его её их
         есть был была были будет будут бы ли не нет ещё уже
         в во на у из о об про по и или с со для без от до к ко
         что когда где кто почему как какой какая какие какого сколько чей чья
         чем чего кому зачем
         расскажи объясни сравни опиши перечисли покажи найди
-    """.split()),
+    """.split()
+    ),
 }
 _DIRECTIVE = re.compile(
     r"\b(?:answer|respond|reply|write)\s+(?:only\s+)?in\s+(english|russian)\b|"
@@ -52,7 +56,8 @@ def _scores(text: str) -> dict[str, int]:
     # title-cased name in the middle of a sentence is not a grammatical cue.
     words = _WORDS.findall(text)
     eligible = {
-        word.casefold() for index, word in enumerate(words)
+        word.casefold()
+        for index, word in enumerate(words)
         if not word.isupper() and (not word.istitle() or index == 0)
     }
     return {language: len(eligible & cues) for language, cues in _CUES.items()}

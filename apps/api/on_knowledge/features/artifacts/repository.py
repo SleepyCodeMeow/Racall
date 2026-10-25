@@ -22,17 +22,25 @@ class Materials:
         session = self.store.notebook_path(notebook) / "research" / (note["id"] + ".json")
         if session.exists():
             answer = json.loads(read_text(session)).get("answer") or answer
-        return {"id": "legacy:" + note["id"], "title": note["title"], "kind": "research",
-                "body": note["body"], "answer": answer, "legacy": True,
-                "created_at": str(note["modified"])}
+        return {
+            "id": "legacy:" + note["id"],
+            "title": note["title"],
+            "kind": "research",
+            "body": note["body"],
+            "answer": answer,
+            "legacy": True,
+            "created_at": str(note["modified"]),
+        }
 
     def get(self, notebook: str, material: str) -> dict:
         with self.store.lock:
             if material.startswith("legacy:"):
                 note_id = material.removeprefix("legacy:")
                 validate_note_id(note_id)
-                note = next((item for item in self.store.list_notes(notebook, "artifacts")
-                             if item["id"] == note_id), None)
+                note = next(
+                    (item for item in self.store.list_notes(notebook, "artifacts") if item["id"] == note_id),
+                    None,
+                )
                 if note is None:
                     raise FileNotFoundError("Material not found.")
                 return self._legacy(notebook, note)
@@ -43,13 +51,16 @@ class Materials:
             directory = self.store.notebook_path(notebook) / "materials"
             materials = [json.loads(read_text(path)) for path in directory.glob("*.json")]
             represented = {item.get("research_id") for item in materials}
-            materials.extend(self._legacy(notebook, note)
-                             for note in self.store.list_notes(notebook, "artifacts")
-                             if note["id"] not in represented)
+            materials.extend(
+                self._legacy(notebook, note)
+                for note in self.store.list_notes(notebook, "artifacts")
+                if note["id"] not in represented
+            )
             # Persisted JSON timestamps are ISO; legacy timestamps are numeric strings.
             # Keep the original legacy ordering while showing new materials first.
-            return sorted(materials, key=lambda item: (not item.get("legacy", False), item["created_at"]),
-                          reverse=True)
+            return sorted(
+                materials, key=lambda item: (not item.get("legacy", False), item["created_at"]), reverse=True
+            )
 
     def create(self, notebook: str, material: dict) -> dict:
         with self.store.lock:

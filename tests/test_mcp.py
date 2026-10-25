@@ -15,7 +15,12 @@ async def test_real_stdio_handshake_and_notebook_scope(tmp_path):
     store.create_notebook("Hidden")
     store.save_note(allowed["id"], "My note", "A local knowledge layer")
     run = Path(__file__).resolve().parents[1] / "apps/api/run.py"
-    parameters = StdioServerParameters(command=os.environ.get("OPENNOTEBOOK_MCP_EXE", sys.executable), args=([] if os.environ.get("OPENNOTEBOOK_MCP_EXE") else [str(run)]) + ["--mcp", "--data-dir", str(tmp_path), "--notebook", allowed["id"]], env={**os.environ, "PYTHONUTF8": "1"})
+    parameters = StdioServerParameters(
+        command=os.environ.get("OPENNOTEBOOK_MCP_EXE", sys.executable),
+        args=([] if os.environ.get("OPENNOTEBOOK_MCP_EXE") else [str(run)])
+        + ["--mcp", "--data-dir", str(tmp_path), "--notebook", allowed["id"]],
+        env={**os.environ, "PYTHONUTF8": "1"},
+    )
     async with stdio_client(parameters) as (read, write):
         async with ClientSession(read, write) as session:
             await session.initialize()

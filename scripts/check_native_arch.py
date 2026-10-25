@@ -1,4 +1,5 @@
 """Reject emulated/mixed Python, Electron and frozen backend architecture labels."""
+
 import argparse
 import json
 import os
@@ -61,9 +62,12 @@ def main():
     target_platform = os.environ.get("RACALL_TARGET_PLATFORM", host_platform)
     if target != arch or target_platform != host_platform:
         raise ValueError(f"Expected native {target_platform}/{target}, running Python {host_platform}/{arch}")
-    node = json.loads(subprocess.check_output(
-        ["node", "-p", "JSON.stringify({platform:process.platform,arch:process.arch})"], text=True,
-    ))
+    node = json.loads(
+        subprocess.check_output(
+            ["node", "-p", "JSON.stringify({platform:process.platform,arch:process.arch})"],
+            text=True,
+        )
+    )
     if node != {"platform": sys.platform, "arch": target}:
         raise ValueError("Node.js architecture differs from native Python: " + json.dumps(node))
     binaries = {}
@@ -72,8 +76,17 @@ def main():
         if actual != target:
             raise ValueError(f"Expected {target} executable, got {actual}: {path}")
         binaries[str(path)] = actual
-    print(json.dumps({"passed": True, "platform": host_platform, "arch": arch,
-                      "python_platform": sysconfig.get_platform(), "binaries": binaries}))
+    print(
+        json.dumps(
+            {
+                "passed": True,
+                "platform": host_platform,
+                "arch": arch,
+                "python_platform": sysconfig.get_platform(),
+                "binaries": binaries,
+            }
+        )
+    )
 
 
 if __name__ == "__main__":

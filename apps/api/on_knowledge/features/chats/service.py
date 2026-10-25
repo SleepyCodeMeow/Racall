@@ -36,8 +36,14 @@ class Chats:
             )
 
     def create(self, notebook: str, title: str, *, context=None) -> dict:
-        item = {"id": uid(), "title": title, "created_at": now(), "updated_at": now(), "turns": [],
-                "context": normalize_selection(context)}
+        item = {
+            "id": uid(),
+            "title": title,
+            "created_at": now(),
+            "updated_at": now(),
+            "turns": [],
+            "context": normalize_selection(context),
+        }
         with self.store.lock:
             ContextService(self.store).snapshot(notebook, item["context"])
             write_json(self.path(notebook, item["id"]), item)
@@ -71,8 +77,15 @@ class Chats:
             os.replace(self.path(notebook, thread), destination)
 
     def begin(
-        self, notebook: str, thread: str, request_id: str, question: str, mode: str, *,
-        context: dict | None = None, snapshot: dict | None = None,
+        self,
+        notebook: str,
+        thread: str,
+        request_id: str,
+        question: str,
+        mode: str,
+        *,
+        context: dict | None = None,
+        snapshot: dict | None = None,
     ) -> tuple[dict, bool]:
         request_id = identifier(request_id)
         with self.store.lock:
@@ -80,8 +93,11 @@ class Chats:
             selection = normalize_selection(context if context is not None else item.get("context"))
             for turn in item["turns"]:
                 if turn["id"] == request_id:
-                    if (turn["question"] != question or turn["mode"] != mode
-                            or normalize_selection(turn.get("context")) != selection):
+                    if (
+                        turn["question"] != question
+                        or turn["mode"] != mode
+                        or normalize_selection(turn.get("context")) != selection
+                    ):
                         raise ConflictError("This request ID was already used for a different question.")
                     return turn, False
             if any(t["status"] == "running" for t in item["turns"]):

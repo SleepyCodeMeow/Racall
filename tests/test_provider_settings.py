@@ -38,7 +38,12 @@ def test_fresh_defaults_are_four_services_with_ollama_modes_and_separate_embeddi
         result = client.get("/api/settings").json()
     assert result["provider"] == "openai"
     assert set(result["profiles"]) == {
-        "openai", "anthropic", "ollama", "ollama_cloud", "llama_cpp", "openai_compatible",
+        "openai",
+        "anthropic",
+        "ollama",
+        "ollama_cloud",
+        "llama_cpp",
+        "openai_compatible",
     }
     assert result["base_url"] == "https://api.openai.com/v1"
     assert result["profiles"]["anthropic"]["base_url"] == "https://api.anthropic.com/v1"
@@ -61,8 +66,10 @@ def test_legacy_read_preserves_endpoint_and_embedding_identity_without_rewriting
     assert result["base_url"] == raw["base_url"]
     assert result["model"] == raw["model"]
     assert embedding_settings(result) == {
-        "provider": "openai_compatible", "base_url": raw["base_url"],
-        "model": "", "embedding_model": "nomic",
+        "provider": "openai_compatible",
+        "base_url": raw["base_url"],
+        "model": "",
+        "embedding_model": "nomic",
     }
     assert result["embedding_base_url"] + "/" + result["embedding_model"] == raw["base_url"] + "/nomic"
 
@@ -70,17 +77,35 @@ def test_legacy_read_preserves_endpoint_and_embedding_identity_without_rewriting
 def test_profiles_switch_and_survive_restart_without_changing_embeddings(tmp_path, credentials):
     keys, _, writes = credentials
     with connection(tmp_path) as client:
-        assert client.put("/api/settings", json={
-            "provider": "ollama",
-            "profiles": {"ollama": {"base_url": "http://127.0.0.1:11434/v1", "model": "local-model"}},
-            "embeddings": {"provider": "ollama", "base_url": "http://localhost:11434/v1", "model": "embed-model"},
-            "embedding_api_key": "embedding-secret",
-        }).status_code == 200
-        assert client.put("/api/settings", json={
-            "provider": "anthropic",
-            "profiles": {"anthropic": {"base_url": "https://api.anthropic.com/v1", "model": "claude-model"}},
-            "api_key": "anthropic-secret",
-        }).status_code == 200
+        assert (
+            client.put(
+                "/api/settings",
+                json={
+                    "provider": "ollama",
+                    "profiles": {"ollama": {"base_url": "http://127.0.0.1:11434/v1", "model": "local-model"}},
+                    "embeddings": {
+                        "provider": "ollama",
+                        "base_url": "http://localhost:11434/v1",
+                        "model": "embed-model",
+                    },
+                    "embedding_api_key": "embedding-secret",
+                },
+            ).status_code
+            == 200
+        )
+        assert (
+            client.put(
+                "/api/settings",
+                json={
+                    "provider": "anthropic",
+                    "profiles": {
+                        "anthropic": {"base_url": "https://api.anthropic.com/v1", "model": "claude-model"}
+                    },
+                    "api_key": "anthropic-secret",
+                },
+            ).status_code
+            == 200
+        )
         current = client.get("/api/settings").json()
         assert current["profiles"]["ollama"]["model"] == "local-model"
         assert current["model"] == "claude-model"
@@ -106,41 +131,90 @@ def test_profiles_switch_and_survive_restart_without_changing_embeddings(tmp_pat
 
 def test_legacy_put_preserves_inactive_profiles_and_old_embedding_semantics(tmp_path, credentials):
     with connection(tmp_path) as client:
-        client.put("/api/settings", json={
-            "provider": "anthropic", "profiles": {
-                "anthropic": {"base_url": "https://api.anthropic.com/v1", "model": "remember-me"},
+        client.put(
+            "/api/settings",
+            json={
+                "provider": "anthropic",
+                "profiles": {
+                    "anthropic": {"base_url": "https://api.anthropic.com/v1", "model": "remember-me"},
+                },
             },
-        })
-        assert client.put("/api/settings", json={
-            "base_url": "http://localhost:11234/v1/", "model": "legacy", "embedding_model": "embed",
-            "api_key": "legacy-secret",
-        }).status_code == 200
+        )
+        assert (
+            client.put(
+                "/api/settings",
+                json={
+                    "base_url": "http://localhost:11234/v1/",
+                    "model": "legacy",
+                    "embedding_model": "embed",
+                    "api_key": "legacy-secret",
+                },
+            ).status_code
+            == 200
+        )
         result = client.get("/api/settings").json()
         assert result["provider"] == "openai_compatible"
         assert result["base_url"] == "http://localhost:11234/v1"
         assert result["profiles"]["anthropic"]["model"] == "remember-me"
         assert result["embeddings"] == {
-            "provider": "openai_compatible", "base_url": result["base_url"], "model": "embed", "has_key": True,
+            "provider": "openai_compatible",
+            "base_url": result["base_url"],
+            "model": "embed",
+            "has_key": True,
         }
-        assert client.put("/api/settings", json={"base_url": result["base_url"], "model": "legacy"}).status_code == 200
+        assert (
+            client.put("/api/settings", json={"base_url": result["base_url"], "model": "legacy"}).status_code
+            == 200
+        )
         assert client.get("/api/settings").json()["embedding_model"] == ""
 
 
-@pytest.mark.parametrize("body", [
-    {"provider": "codex"},
-    {"provider": "openai", "profiles": {"invalid": {"base_url": "https://example.com/v1", "model": "m"}}},
-    {"provider": "openai", "profiles": {"openai": {"base_url": "https://example.com/v1", "model": "m", "api_key": "nested-secret"}}},
-    {"provider": "openai", "embeddings": {"provider": "anthropic", "base_url": "https://example.com/v1", "model": "e"}},
-    {"provider": "openai", "embeddings": {"provider": "openai", "base_url": "https://example.com/v1", "model": "e", "other": True}},
-    {"provider": "openai", "extra": True},
-    {"base_url": "https://example.com/v1", "model": 123},
-    {"provider": "openai", "api_key": "long-secret-" * 500},
-    {"provider": "openai", "profiles": {"openai": {"base_url": "https://example.com/v1", "model": "m" * 201}}},
-    {"base_url": "http://example.com/v1", "model": "m"},
-    {"provider": "openai", "profiles": {"openai": {"base_url": "https://user:password@example.com/v1", "model": "m"}}},
-    {"provider": "openai", "profiles": {"openai": {"base_url": "https://example.com/v1?api_key=secret", "model": "m"}}},
-    {"provider": "openai", "profiles": {"openai": {"base_url": "https://example.com/v1#fragment", "model": "m"}}},
-])
+@pytest.mark.parametrize(
+    "body",
+    [
+        {"provider": "codex"},
+        {"provider": "openai", "profiles": {"invalid": {"base_url": "https://example.com/v1", "model": "m"}}},
+        {
+            "provider": "openai",
+            "profiles": {
+                "openai": {"base_url": "https://example.com/v1", "model": "m", "api_key": "nested-secret"}
+            },
+        },
+        {
+            "provider": "openai",
+            "embeddings": {"provider": "anthropic", "base_url": "https://example.com/v1", "model": "e"},
+        },
+        {
+            "provider": "openai",
+            "embeddings": {
+                "provider": "openai",
+                "base_url": "https://example.com/v1",
+                "model": "e",
+                "other": True,
+            },
+        },
+        {"provider": "openai", "extra": True},
+        {"base_url": "https://example.com/v1", "model": 123},
+        {"provider": "openai", "api_key": "long-secret-" * 500},
+        {
+            "provider": "openai",
+            "profiles": {"openai": {"base_url": "https://example.com/v1", "model": "m" * 201}},
+        },
+        {"base_url": "http://example.com/v1", "model": "m"},
+        {
+            "provider": "openai",
+            "profiles": {"openai": {"base_url": "https://user:password@example.com/v1", "model": "m"}},
+        },
+        {
+            "provider": "openai",
+            "profiles": {"openai": {"base_url": "https://example.com/v1?api_key=secret", "model": "m"}},
+        },
+        {
+            "provider": "openai",
+            "profiles": {"openai": {"base_url": "https://example.com/v1#fragment", "model": "m"}},
+        },
+    ],
+)
 def test_invalid_settings_reject_without_writing_or_echoing_secrets(tmp_path, credentials, body):
     _, _, writes = credentials
     with connection(tmp_path) as client:
@@ -155,9 +229,17 @@ def test_invalid_settings_reject_without_writing_or_echoing_secrets(tmp_path, cr
 def test_settings_auth_precedes_secret_storage_and_validation(tmp_path, credentials):
     _, reads, writes = credentials
     with connection(tmp_path) as client:
-        assert client.put("/api/settings", headers={"Authorization": "wrong"}, json={
-            "provider": "anthropic", "api_key": "must-not-be-saved",
-        }).status_code == 401
+        assert (
+            client.put(
+                "/api/settings",
+                headers={"Authorization": "wrong"},
+                json={
+                    "provider": "anthropic",
+                    "api_key": "must-not-be-saved",
+                },
+            ).status_code
+            == 401
+        )
         assert client.get("/api/settings", headers={"Authorization": "wrong"}).status_code == 401
     assert reads == writes == []
     assert not (tmp_path / "settings.json").exists()
@@ -166,25 +248,48 @@ def test_settings_auth_precedes_secret_storage_and_validation(tmp_path, credenti
 def test_invalid_profile_cannot_partially_replace_saved_settings_or_credentials(tmp_path, credentials):
     _, _, writes = credentials
     with connection(tmp_path) as client:
-        assert client.put("/api/settings", json={
-            "provider": "openai", "profiles": {
-                "openai": {"base_url": "https://api.openai.com/v1", "model": "keep-model"},
-            },
-        }).status_code == 200
+        assert (
+            client.put(
+                "/api/settings",
+                json={
+                    "provider": "openai",
+                    "profiles": {
+                        "openai": {"base_url": "https://api.openai.com/v1", "model": "keep-model"},
+                    },
+                },
+            ).status_code
+            == 200
+        )
         before = (tmp_path / "settings.json").read_bytes()
-        assert client.put("/api/settings", json={
-            "provider": "anthropic", "api_key": "must-not-be-saved",
-            "embeddings": {"provider": "ollama", "base_url": "http://remote.example/v1", "model": "e"},
-        }).status_code == 422
+        assert (
+            client.put(
+                "/api/settings",
+                json={
+                    "provider": "anthropic",
+                    "api_key": "must-not-be-saved",
+                    "embeddings": {
+                        "provider": "ollama",
+                        "base_url": "http://remote.example/v1",
+                        "model": "e",
+                    },
+                },
+            ).status_code
+            == 422
+        )
     assert (tmp_path / "settings.json").read_bytes() == before
     assert writes == []
 
 
 def test_store_settings_does_not_read_credentials_or_expose_unknown_secret_fields(tmp_path, credentials):
     _, reads, writes = credentials
-    write_json(tmp_path / "settings.json", {
-        "base_url": "http://localhost:11434/v1", "model": "m", "api_key": "old-unsafe-secret",
-    })
+    write_json(
+        tmp_path / "settings.json",
+        {
+            "base_url": "http://localhost:11434/v1",
+            "model": "m",
+            "api_key": "old-unsafe-secret",
+        },
+    )
     result = Store(tmp_path).settings()
     assert "old-unsafe-secret" not in json.dumps(result)
     assert "api_key" not in result
@@ -203,19 +308,33 @@ def test_explicit_empty_key_clears_only_current_endpoint(tmp_path, credentials):
     assert keys["https://api.anthropic.com/v1"] == "keep-other-key"
 
 
-@pytest.mark.parametrize("completion_key,embedding_key", [("chat-private", "embed-private"), ("", "keep-private")])
+@pytest.mark.parametrize(
+    "completion_key,embedding_key", [("chat-private", "embed-private"), ("", "keep-private")]
+)
 def test_conflicting_keys_for_same_endpoint_reject_before_any_write(
-    tmp_path, credentials, completion_key, embedding_key,
+    tmp_path,
+    credentials,
+    completion_key,
+    embedding_key,
 ):
     _, _, writes = credentials
     with connection(tmp_path) as client:
         assert client.put("/api/settings", json={"provider": "openai"}).status_code == 200
         before = (tmp_path / "settings.json").read_bytes()
-        response = client.put("/api/settings", json={
-            "provider": "openai", "api_key": completion_key, "embedding_api_key": embedding_key,
-            "profiles": {"openai": {"base_url": "https://shared.example/v1/", "model": "chat-model"}},
-            "embeddings": {"provider": "openai", "base_url": "https://shared.example/v1", "model": "embed-model"},
-        })
+        response = client.put(
+            "/api/settings",
+            json={
+                "provider": "openai",
+                "api_key": completion_key,
+                "embedding_api_key": embedding_key,
+                "profiles": {"openai": {"base_url": "https://shared.example/v1/", "model": "chat-model"}},
+                "embeddings": {
+                    "provider": "openai",
+                    "base_url": "https://shared.example/v1",
+                    "model": "embed-model",
+                },
+            },
+        )
     assert response.status_code == 400
     assert response.json()["detail"] == "Use one API key for connections that share the same API URL."
     assert "private" not in response.text
@@ -226,9 +345,21 @@ def test_conflicting_keys_for_same_endpoint_reject_before_any_write(
 def test_identical_keys_for_same_endpoint_are_written_once(tmp_path, credentials):
     _, _, writes = credentials
     with connection(tmp_path) as client:
-        assert client.put("/api/settings", json={
-            "provider": "openai", "api_key": "shared-private", "embedding_api_key": "shared-private",
-            "profiles": {"openai": {"base_url": "https://shared.example/v1/", "model": "chat-model"}},
-            "embeddings": {"provider": "openai", "base_url": "https://shared.example/v1", "model": "embed-model"},
-        }).status_code == 200
+        assert (
+            client.put(
+                "/api/settings",
+                json={
+                    "provider": "openai",
+                    "api_key": "shared-private",
+                    "embedding_api_key": "shared-private",
+                    "profiles": {"openai": {"base_url": "https://shared.example/v1/", "model": "chat-model"}},
+                    "embeddings": {
+                        "provider": "openai",
+                        "base_url": "https://shared.example/v1",
+                        "model": "embed-model",
+                    },
+                },
+            ).status_code
+            == 200
+        )
     assert writes == [("https://shared.example/v1", "shared-private")]

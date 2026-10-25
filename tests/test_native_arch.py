@@ -1,4 +1,5 @@
 """Native package labels must match executable headers, including the Python sidecar."""
+
 import runpy
 import struct
 from pathlib import Path
@@ -8,11 +9,17 @@ import pytest
 helpers = runpy.run_path(str(Path(__file__).resolve().parents[1] / "scripts/check_native_arch.py"))
 
 
-@pytest.mark.parametrize("format,arch,machine", [
-    ("pe", "x64", 0x8664), ("pe", "arm64", 0xAA64),
-    ("elf", "x64", 62), ("elf", "arm64", 183),
-    ("macho", "x64", 0x01000007), ("macho", "arm64", 0x0100000C),
-])
+@pytest.mark.parametrize(
+    "format,arch,machine",
+    [
+        ("pe", "x64", 0x8664),
+        ("pe", "arm64", 0xAA64),
+        ("elf", "x64", 62),
+        ("elf", "arm64", 183),
+        ("macho", "x64", 0x01000007),
+        ("macho", "arm64", 0x0100000C),
+    ],
+)
 def test_native_headers_distinguish_x64_and_arm64(tmp_path, format, arch, machine):
     header = bytearray(128)
     if format == "pe":

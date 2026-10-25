@@ -1,4 +1,5 @@
 """Share the explicitly declared native release targets across CI and publication."""
+
 import argparse
 import json
 from dataclasses import dataclass
@@ -27,7 +28,9 @@ TARGETS = {
     "mac-arm64": ReleaseTarget("macos-15", "mac", "arm64", ("mac-arm64.dmg", "mac-arm64.zip")),
     "mac-x64": ReleaseTarget("macos-15-intel", "mac", "x64", ("mac-x64.dmg", "mac-x64.zip")),
     "linux-x64": ReleaseTarget("ubuntu-22.04", "linux", "x64", ("linux-x86_64.AppImage", "linux-amd64.deb")),
-    "linux-arm64": ReleaseTarget("ubuntu-22.04-arm", "linux", "arm64", ("linux-arm64.AppImage", "linux-arm64.deb")),
+    "linux-arm64": ReleaseTarget(
+        "ubuntu-22.04-arm", "linux", "arm64", ("linux-arm64.AppImage", "linux-arm64.deb")
+    ),
 }
 
 
@@ -49,8 +52,12 @@ def package_names(policy, version):
 
 
 def build_matrix(policy):
-    return {"include": [{"os": target.os, "platform": target.platform, "arch": target.arch}
-                        for target in release_targets(policy)]}
+    return {
+        "include": [
+            {"os": target.os, "platform": target.platform, "arch": target.arch}
+            for target in release_targets(policy)
+        ]
+    }
 
 
 def verify_build(run, jobs, artifacts, tagged_sha, policy):
@@ -64,11 +71,13 @@ def verify_build(run, jobs, artifacts, tagged_sha, policy):
     assert expected_jobs <= passed, "Every declared native desktop build and packaged test must pass"
     expected_artifacts = {target.artifact for target in targets}
     package_artifacts = [artifact for artifact in artifacts if artifact["name"].startswith("Racall-")]
-    assert {artifact["name"] for artifact in package_artifacts} == expected_artifacts, \
+    assert {artifact["name"] for artifact in package_artifacts} == expected_artifacts, (
         "Build artifacts must exactly match declared release platforms"
+    )
     assert len(package_artifacts) == len(expected_artifacts), "Duplicate release artifact"
-    assert all(not artifact["expired"] and artifact["size_in_bytes"] > 1_000_000
-               for artifact in package_artifacts), "A required build artifact is absent or expired"
+    assert all(
+        not artifact["expired"] and artifact["size_in_bytes"] > 1_000_000 for artifact in package_artifacts
+    ), "A required build artifact is absent or expired"
 
 
 def main():

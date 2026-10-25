@@ -22,7 +22,10 @@ def create_router(materials: Materials) -> APIRouter:
     @router.get("/api/notebooks/{notebook}/materials/{material}/export")
     def material_export(notebook: str, material: str):
         item = materials.get(notebook, material)
-        return Response(item["body"], media_type="text/markdown",
-                        headers={"Content-Disposition": 'attachment; filename="racall-material.md"'})
+        return Response(
+            item["body"],
+            media_type="text/markdown",
+            headers={"Content-Disposition": 'attachment; filename="racall-material.md"'},
+        )
 
     return router

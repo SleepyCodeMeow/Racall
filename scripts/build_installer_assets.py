@@ -1,4 +1,5 @@
 """Prepare NSIS bitmap resources from the existing Racall logo; no redesign."""
+
 from pathlib import Path
 
 from PIL import Image

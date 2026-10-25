@@ -42,10 +42,15 @@ def setup(tmp_path, monkeypatch):
     notebook = store.create_notebook("Research")["id"]
     source = {"id": uid(), "title": "Project", "status": "ready", "version": "v1", "created_at": now()}
     store.save_source(notebook, source)
-    chunk = {"id": "source-v1-chunk", "text": "The project codename is Marigold.",
-             "location": {"page": 2, "element": 0, "offset_start": 0, "offset_end": 33}}
+    chunk = {
+        "id": "source-v1-chunk",
+        "text": "The project codename is Marigold.",
+        "location": {"page": 2, "element": 0, "offset_start": 0, "offset_end": 33},
+    }
     store.replace_chunks(notebook, source["id"], source["version"], [chunk])
-    monkeypatch.setattr("on_knowledge.features.jobs.service.provider_key", lambda settings: "test-private-key")
+    monkeypatch.setattr(
+        "on_knowledge.features.jobs.service.provider_key", lambda settings: "test-private-key"
+    )
     service = GenerationService(store, object())
     yield store, notebook, source, service
     service.close()
@@ -61,7 +66,7 @@ def terminal(service, notebook, job_id, timeout=4):
         job = service.get(notebook, job_id)
         if job["status"] not in {"queued", "running"}:
             return job
-        time.sleep(.01)
+        time.sleep(0.01)
     pytest.fail("Fake-provider job did not finish")
 
 
@@ -94,8 +99,10 @@ def test_existing_submission_remains_idempotent_after_model_is_cleared(setup, mo
     settings = store.settings()
     settings["profiles"][settings["provider"]]["model"] = ""
     write_json(store.root / "settings.json", settings)
-    monkeypatch.setattr("on_knowledge.features.jobs.service.provider_key",
-                        lambda settings: pytest.fail("Deduplicated request read changed credentials"))
+    monkeypatch.setattr(
+        "on_knowledge.features.jobs.service.provider_key",
+        lambda settings: pytest.fail("Deduplicated request read changed credentials"),
+    )
     assert service.submit(notebook, body)["id"] == first["id"]
     assert len(service.list(notebook)) == 1
     assert store.active_operations[notebook] == 1
@@ -104,7 +111,9 @@ def test_existing_submission_remains_idempotent_after_model_is_cleared(setup, mo
 def test_progress_dedup_portable_material_and_copy(setup, monkeypatch):
     store, notebook, source, service = setup
     provider = Provider()
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     body = request()
     queued = service.submit(notebook, body)
     assert service.submit(notebook, body)["id"] == queued["id"]
@@ -129,7 +138,9 @@ def test_progress_dedup_portable_material_and_copy(setup, monkeypatch):
 def test_queued_cancel_never_calls_provider_and_unblocks_delete(setup, monkeypatch):
     store, notebook, source, service = setup
     provider = Provider()
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     job = service.submit(notebook, request())
     with pytest.raises(ConflictError):
         Notebooks(store).delete(notebook)
@@ -143,7 +154,9 @@ def test_running_cancel_fences_late_result(setup, monkeypatch):
     store, notebook, source, service = setup
     entered, release = threading.Event(), threading.Event()
     provider = Provider(entered, release)
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     service.start()
     job = service.submit(notebook, request())
     try:
@@ -153,7 +166,7 @@ def test_running_cancel_fences_late_result(setup, monkeypatch):
         release.set()
         deadline = time.monotonic() + 3
         while notebook in store.active_operations and time.monotonic() < deadline:
-            time.sleep(.01)
+            time.sleep(0.01)
         assert service.get(notebook, job["id"])["status"] == "cancelled"
         assert not service.materials.list(notebook) and len(provider.calls) == 1
         assert notebook not in store.active_operations
@@ -165,7 +178,9 @@ def test_close_does_not_wait_for_provider_and_restart_does_not_replay(setup, mon
     store, notebook, source, service = setup
     entered, release = threading.Event(), threading.Event()
     provider = Provider(entered, release)
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     service.start()
     running = service.submit(notebook, request())
     try:
@@ -173,7 +188,7 @@ def test_close_does_not_wait_for_provider_and_restart_does_not_replay(setup, mon
         queued = service.submit(notebook, request())
         start = time.monotonic()
         service.close()
-        assert time.monotonic() - start < .5
+        assert time.monotonic() - start < 0.5
         for job in (running, queued):
             assert service.get(notebook, job["id"])["status"] == "interrupted"
         restarted = GenerationService(store, object())
@@ -193,7 +208,9 @@ def test_close_does_not_wait_for_provider_and_restart_does_not_replay(setup, mon
 def test_recover_old_queue_without_inference_and_retry_current_context(setup, monkeypatch):
     store, notebook, source, service = setup
     provider = Provider()
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     old = service.submit(notebook, request())
     # A fresh process has the files but never has the accepted credential snapshot.
     recovered = GenerationService(store, object())
@@ -214,7 +231,9 @@ def test_recover_old_queue_without_inference_and_retry_current_context(setup, mo
 def test_queue_rejects_changed_context_or_connection_before_inference(setup, monkeypatch, change):
     store, notebook, source, service = setup
     provider = Provider()
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     note = store.save_note(notebook, "Project note", "The project codename is Marigold.")
     job = service.submit(notebook, request(context={"source_ids": [source["id"]], "note_ids": [note["id"]]}))
     if change == "source":
@@ -239,7 +258,9 @@ def test_context_change_while_model_runs_prevents_publication(setup, monkeypatch
     store, notebook, source, service = setup
     entered, release = threading.Event(), threading.Event()
     provider = Provider(entered, release)
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     service.start()
     job = service.submit(notebook, request())
     try:
@@ -257,7 +278,9 @@ def test_context_change_while_model_runs_prevents_publication(setup, monkeypatch
 def test_provider_error_is_stable_and_does_not_persist_secrets(setup, monkeypatch):
     store, notebook, source, service = setup
     provider = Provider(error="Authentication failed: test-private-key RAW-RESPONSE")
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     service.start()
     job = terminal(service, notebook, service.submit(notebook, request())["id"])
     assert job["error"] == "generation_failed"
@@ -269,9 +292,13 @@ def test_provider_error_is_stable_and_does_not_persist_secrets(setup, monkeypatc
 def test_explicit_empty_selection_does_not_fallback_to_all_sources(setup, monkeypatch):
     store, notebook, source, service = setup
     provider = Provider()
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     service.start()
-    job = terminal(service, notebook, service.submit(notebook, request(context={"source_ids": [], "note_ids": []}))["id"])
+    job = terminal(
+        service, notebook, service.submit(notebook, request(context={"source_ids": [], "note_ids": []}))["id"]
+    )
     assert job["error"] == "no_evidence" and not provider.calls
 
 
@@ -287,14 +314,20 @@ def test_legacy_material_routes_are_nondestructive_and_copy_editable(setup):
         listed = client.get(f"/api/notebooks/{notebook}/materials").json()
         assert listed[0]["legacy"] is True
         material_id = listed[0]["id"]
-        assert client.get(f"/api/notebooks/{notebook}/materials/{material_id}").json()["body"] == original["body"]
+        assert (
+            client.get(f"/api/notebooks/{notebook}/materials/{material_id}").json()["body"]
+            == original["body"]
+        )
         exported = client.get(f"/api/notebooks/{notebook}/materials/{material_id}/export")
         assert exported.text == original["body"] and "text/markdown" in exported.headers["content-type"]
         copied = client.post(f"/api/notebooks/{notebook}/materials/{material_id}/copy")
         assert copied.status_code == 201 and copied.json()["body"] == original["body"]
         queued = client.post(f"/api/notebooks/{notebook}/jobs", json=request())
         assert queued.status_code == 202
-        assert client.post(f"/api/notebooks/{notebook}/jobs/{queued.json()['id']}/cancel").json()["status"] == "cancelled"
+        assert (
+            client.post(f"/api/notebooks/{notebook}/jobs/{queued.json()['id']}/cancel").json()["status"]
+            == "cancelled"
+        )
     assert path.read_bytes() == before
     with pytest.raises(ValueError):
         service.materials.get(notebook, "legacy:../escape")
@@ -317,7 +350,9 @@ def test_research_job_reuses_engine_and_publishes_one_inspectable_material(setup
     monkeypatch.setattr(OpenAICompatible, "complete", complete)
     try:
         service.start()
-        job = terminal(service, notebook, service.submit(notebook, request(kind="research", question="Marigold"))["id"])
+        job = terminal(
+            service, notebook, service.submit(notebook, request(kind="research", question="Marigold"))["id"]
+        )
         assert job["status"] == "completed", job
         assert len(calls) == 3
         material = service.materials.get(notebook, job["result"]["material_id"])
@@ -326,7 +361,11 @@ def test_research_job_reuses_engine_and_publishes_one_inspectable_material(setup
         assert "> The project codename is Marigold." in material["body"]
         assert len(service.materials.list(notebook)) == 1  # Its underlying 0.2 artifact is not listed twice.
         assert len(store.list_notes(notebook, "artifacts")) == 1
-        session = json.loads((store.notebook_path(notebook) / "research" / (material["research_id"] + ".json")).read_text("utf-8"))
+        session = json.loads(
+            (store.notebook_path(notebook) / "research" / (material["research_id"] + ".json")).read_text(
+                "utf-8"
+            )
+        )
         assert session["status"] == "completed" and session["context_snapshot"] == job["context"]
     finally:
         service.close()
@@ -337,7 +376,9 @@ def test_single_worker_keeps_next_job_queued_until_first_finishes(setup, monkeyp
     store, notebook, source, service = setup
     entered, release = threading.Event(), threading.Event()
     provider = Provider(entered, release)
-    monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", lambda settings: provider)
+    monkeypatch.setattr(
+        "on_knowledge.features.studio.generator.completion_provider", lambda settings: provider
+    )
     service.start()
     first = service.submit(notebook, request())
     try:
@@ -368,7 +409,9 @@ def test_running_job_pins_provider_settings_and_credentials_for_critic(setup, mo
                 settings = store.settings()
                 settings["profiles"]["openai"]["base_url"] = "https://new.example/v1"
                 write_json(store.root / "settings.json", settings)
-                monkeypatch.setattr("on_knowledge.features.jobs.service.provider_key", lambda settings: "new-key")
+                monkeypatch.setattr(
+                    "on_knowledge.features.jobs.service.provider_key", lambda settings: "new-key"
+                )
             return super().complete(system, data)
 
     monkeypatch.setattr("on_knowledge.features.studio.generator.completion_provider", PinnedProvider)
@@ -376,16 +419,27 @@ def test_running_job_pins_provider_settings_and_credentials_for_critic(setup, mo
     job = terminal(service, notebook, service.submit(notebook, request())["id"])
     assert job["status"] == "completed", job
     assert connections == [("https://api.openai.com/v1", "test-private-key")] * 2
-    assert service.materials.get(notebook, job["result"]["material_id"])["provider"]["base_url"] == connections[0][0]
+    assert (
+        service.materials.get(notebook, job["result"]["material_id"])["provider"]["base_url"]
+        == connections[0][0]
+    )
 
 
 def test_recovery_recognizes_committed_material_without_replaying_model(setup):
     store, notebook, source, service = setup
     job = service.submit(notebook, request())
-    service.materials.create(notebook, {
-        "id": job["id"], "job_id": job["id"], "kind": "summary", "title": "Committed",
-        "created_at": now(), "body": "# Committed", "answer": {"validated": True},
-    })
+    service.materials.create(
+        notebook,
+        {
+            "id": job["id"],
+            "job_id": job["id"],
+            "kind": "summary",
+            "title": "Committed",
+            "created_at": now(),
+            "body": "# Committed",
+            "answer": {"validated": True},
+        },
+    )
     restarted = GenerationService(store, object())
     restarted.recover()
     recovered = restarted.get(notebook, job["id"])

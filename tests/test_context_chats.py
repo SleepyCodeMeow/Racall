@@ -26,8 +26,10 @@ def chat(client, notebook, **extra):
 
 
 def turn(client, notebook, thread, question="Marigold", **extra):
-    return client.post(f"/api/notebooks/{notebook}/chats/{thread}/turns", json={
-        "request_id": str(uuid4()), "question": question, **extra})
+    return client.post(
+        f"/api/notebooks/{notebook}/chats/{thread}/turns",
+        json={"request_id": str(uuid4()), "question": question, **extra},
+    )
 
 
 def test_context_create_put_empty_choice_and_invalid_cross_notebook(client, monkeypatch):
@@ -45,8 +47,11 @@ def test_context_create_put_empty_choice_and_invalid_cross_notebook(client, monk
     empty = turn(client, notebook, thread["id"]).json()
     assert empty["status"] == "completed" and empty["context_info"]["source_count"] == 0
     assert not empty["answer"]["validated"] and calls == []
-    for selection in ({"source_ids": [foreign["id"]]}, {"source_ids": [str(uuid4())]},
-                      {"note_ids": ["Missing note"]}):
+    for selection in (
+        {"source_ids": [foreign["id"]]},
+        {"source_ids": [str(uuid4())]},
+        {"note_ids": ["Missing note"]},
+    ):
         assert client.put(endpoint, json=selection).status_code == 400
         assert turn(client, notebook, thread["id"], context=selection).status_code == 400
     assert not calls
@@ -83,7 +88,9 @@ def test_selection_change_excludes_previous_assistant_echo(client, monkeypatch):
     thread = chat(client, notebook, context={"source_ids": [first["id"]]})
     calls = fake_model(monkeypatch)
     assert turn(client, notebook, thread["id"]).json()["answer"]["validated"]
-    changed = turn(client, notebook, thread["id"], "What about it?", context={"source_ids": [second["id"]]}).json()
+    changed = turn(
+        client, notebook, thread["id"], "What about it?", context={"source_ids": [second["id"]]}
+    ).json()
     assert changed["context_info"]["history_turns"] == 0
     assert changed["context_info"]["history_truncated"] and len(calls) == 2
 
@@ -102,7 +109,9 @@ def test_request_id_retry_preserves_snapshot_and_rejects_changed_payload(client,
     assert retried.json() == first and len(calls) == 2
     for extra in ({"question": "different"}, {"mode": "search"}, {"context": {"source_ids": []}}):
         question = extra.pop("question", "Marigold")
-        assert turn(client, notebook, thread["id"], question, request_id=request_id, **extra).status_code == 409
+        assert (
+            turn(client, notebook, thread["id"], question, request_id=request_id, **extra).status_code == 409
+        )
 
 
 def test_material_change_during_model_discards_partial_response(client, monkeypatch):
@@ -110,8 +119,12 @@ def test_material_change_during_model_discards_partial_response(client, monkeypa
     notebook = store.create_notebook("One")["id"]
     item, _ = source(store, notebook, ["Marigold launches in October."])
     thread = chat(client, notebook)
-    calls = fake_model(monkeypatch, hook=lambda count: store.save_source(
-        notebook, {**item, "version": "changed-during-model"}) if count == 1 else None)
+    calls = fake_model(
+        monkeypatch,
+        hook=lambda count: (
+            store.save_source(notebook, {**item, "version": "changed-during-model"}) if count == 1 else None
+        ),
+    )
     failed = turn(client, notebook, thread["id"]).json()
     assert failed["status"] == "failed" and failed["error_code"] == "context_changed"
     assert "answer" not in failed and len(calls) == 1

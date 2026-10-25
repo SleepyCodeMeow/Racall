@@ -32,9 +32,14 @@ def test_anthropic_uses_messages_protocol_in_answer_and_research(tmp_path, monke
     write_json(store.root / "settings.json", settings)
     notebook = store.create_notebook("Provider routing")["id"]
     knowledge = Knowledge(store)
-    passage = {"id": "canonical-evidence", "source_id": "source", "version": "original-v1",
-               "title": "Approved plan", "quote": "The launch is planned for November 22, 2030.",
-               "location": {"element": 0}}
+    passage = {
+        "id": "canonical-evidence",
+        "source_id": "source",
+        "version": "original-v1",
+        "title": "Approved plan",
+        "quote": "The launch is planned for November 22, 2030.",
+        "location": {"element": 0},
+    }
     calls = []
 
     def complete(self, system, data):
@@ -65,8 +70,11 @@ def test_retrieval_embeddings_keep_their_endpoint_when_chat_vendor_changes(tmp_p
     settings = normalize_settings({})
     settings["provider"] = "anthropic"
     settings["profiles"]["anthropic"]["model"] = "chosen-model"
-    settings["embeddings"] = {"provider": "ollama", "base_url": "http://127.0.0.1:9911/v1",
-                              "model": "local-embedding"}
+    settings["embeddings"] = {
+        "provider": "ollama",
+        "base_url": "http://127.0.0.1:9911/v1",
+        "model": "local-embedding",
+    }
     write_json(store.root / "settings.json", settings)
     notebook = store.create_notebook("Separate embedding connection")["id"]
     knowledge = Knowledge(store)
@@ -81,7 +89,9 @@ def test_retrieval_embeddings_keep_their_endpoint_when_chat_vendor_changes(tmp_p
 
     monkeypatch.setattr(OpenAICompatible, "embed", embed)
     try:
-        source = knowledge.sources.repository.stage(notebook, "plan.md", b"# Plan\n\nThe launch is planned for November 22, 2030.")
+        source = knowledge.sources.repository.stage(
+            notebook, "plan.md", b"# Plan\n\nThe launch is planned for November 22, 2030."
+        )
         knowledge.ingest(notebook, source["id"])
         assert store.source(notebook, source["id"])["status"] == "ready"
         assert knowledge.search(notebook, "launch")["mode"] == "hybrid"
@@ -100,11 +110,21 @@ def test_retrieval_embeddings_keep_their_endpoint_when_chat_vendor_changes(tmp_p
 
 def test_provider_environment_keys_do_not_cross_vendor_or_local_boundaries(monkeypatch):
     monkeypatch.setattr(providers.keyring, "get_password", lambda *args: None)
-    for variable, value in {"OPENNOTEBOOK_API_KEY": "legacy", "OPENAI_API_KEY": "openai",
-                            "ANTHROPIC_API_KEY": "claude", "OLLAMA_API_KEY": "ollama-cloud"}.items():
+    for variable, value in {
+        "OPENNOTEBOOK_API_KEY": "legacy",
+        "OPENAI_API_KEY": "openai",
+        "ANTHROPIC_API_KEY": "claude",
+        "OLLAMA_API_KEY": "ollama-cloud",
+    }.items():
         monkeypatch.setenv(variable, value)
-    expected = {"openai": "openai", "anthropic": "claude", "ollama_cloud": "ollama-cloud",
-                "ollama": "", "llama_cpp": "", "openai_compatible": "legacy"}
+    expected = {
+        "openai": "openai",
+        "anthropic": "claude",
+        "ollama_cloud": "ollama-cloud",
+        "ollama": "",
+        "llama_cpp": "",
+        "openai_compatible": "legacy",
+    }
     for provider, key in expected.items():
         assert provider_key({"provider": provider, "base_url": "http://127.0.0.1:9999/v1"}) == key
 
@@ -124,8 +144,9 @@ def test_legacy_trailing_slash_preserves_runtime_keychain_lookup_and_index_ident
         return "legacy-saved-key" if account == "https://api.example.com/v1" else None
 
     monkeypatch.setattr(providers.keyring, "get_password", stored)
-    settings = normalize_settings({"base_url": "https://api.example.com/v1/", "model": "answer",
-                                   "embedding_model": "embedding"})
+    settings = normalize_settings(
+        {"base_url": "https://api.example.com/v1/", "model": "answer", "embedding_model": "embedding"}
+    )
     assert provider_key(settings) == "legacy-saved-key"
     assert seen == [("OpenNotebook", "https://api.example.com/v1")]
     assert embedding_settings(settings)["base_url"] + "/embedding" == "https://api.example.com/v1//embedding"
@@ -134,14 +155,24 @@ def test_legacy_trailing_slash_preserves_runtime_keychain_lookup_and_index_ident
 def test_missing_cloud_key_fails_before_http_without_leaking_details(monkeypatch):
     monkeypatch.setattr(providers, "provider_key", lambda settings: "")
     monkeypatch.setattr(providers, "complete_json", lambda *args: pytest.fail("HTTP must not start"))
-    instance = OpenAICompatible({"provider": "ollama_cloud", "base_url": "https://ollama.com/v1", "model": "selected"})
+    instance = OpenAICompatible(
+        {"provider": "ollama_cloud", "base_url": "https://ollama.com/v1", "model": "selected"}
+    )
     with pytest.raises(ValueError, match="API-ключ"):
         instance.complete("Return JSON", {})
 
 
-@pytest.mark.parametrize("url", ["https://example.com:invalid/v1", "https://example.com:99999/v1",
-                                 " https://example.com/v1", "https://example.com/with space",
-                                 "https://example.com/\npath", "https://[broken/v1"])
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://example.com:invalid/v1",
+        "https://example.com:99999/v1",
+        " https://example.com/v1",
+        "https://example.com/with space",
+        "https://example.com/\npath",
+        "https://[broken/v1",
+    ],
+)
 def test_provider_url_rejects_ambiguous_or_invalid_address(url):
     with pytest.raises(ValueError, match="Неверный URL API"):
         validate_endpoint(url)

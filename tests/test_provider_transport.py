@@ -9,7 +9,9 @@ from on_knowledge.completion_stream import CompletionDeadlineError, CompletionPr
 def provider(monkeypatch):
     monkeypatch.setattr(providers, "get_key", lambda base: "private-test-key")
     instance = providers.OpenAICompatible({"base_url": "http://127.0.0.1:11434/v1", "model": "fixture"})
-    monkeypatch.setattr(instance, "request", lambda *args: pytest.fail("Completion used legacy non-streaming path"))
+    monkeypatch.setattr(
+        instance, "request", lambda *args: pytest.fail("Completion used legacy non-streaming path")
+    )
     return instance
 
 
@@ -32,12 +34,15 @@ def test_completion_uses_bounded_stream_transport_without_reasoning_override(mon
     assert not {"think", "reasoning_effort", "temperature", "max_tokens"} & set(body)
 
 
-@pytest.mark.parametrize("error,expected", [
-    (CompletionDeadlineError("secret diagnostic"), "общее время"),
-    (httpx.ReadTimeout("secret diagnostic"), "передавать данные"),
-    (CompletionProtocolError("secret diagnostic"), "поток ответа"),
-    (httpx.ConnectError("secret diagnostic"), "связаться"),
-])
+@pytest.mark.parametrize(
+    "error,expected",
+    [
+        (CompletionDeadlineError("secret diagnostic"), "общее время"),
+        (httpx.ReadTimeout("secret diagnostic"), "передавать данные"),
+        (CompletionProtocolError("secret diagnostic"), "поток ответа"),
+        (httpx.ConnectError("secret diagnostic"), "связаться"),
+    ],
+)
 def test_completion_errors_are_distinct_sanitized_and_not_retried(monkeypatch, error, expected):
     instance = provider(monkeypatch)
     calls = []

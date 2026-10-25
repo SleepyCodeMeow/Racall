@@ -1,4 +1,5 @@
 """Conversation helps resolve a question; it never supplies factual evidence."""
+
 import re
 
 MAX_HISTORY_TURNS = 6
@@ -7,15 +8,25 @@ MAX_HISTORY_CHARS = 6000
 
 def limit_history(history: list[dict] | None) -> tuple[list[dict], bool]:
     """Clamp even internal callers before conversation text reaches a provider."""
-    turns = [{"status": "completed", "question": item.get("question", ""),
-              "answer": {"validated": True, "claims": [{"text": item.get("answer", "")}]}}
-             for item in (history or []) if isinstance(item, dict)]
+    turns = [
+        {
+            "status": "completed",
+            "question": item.get("question", ""),
+            "answer": {"validated": True, "claims": [{"text": item.get("answer", "")}]},
+        }
+        for item in (history or [])
+        if isinstance(item, dict)
+    ]
     return bounded_history(turns)
 
 
-def bounded_history(turns: list[dict], snapshot: dict | None = None, *,
-                    max_turns: int = MAX_HISTORY_TURNS,
-                    max_chars: int = MAX_HISTORY_CHARS) -> tuple[list[dict], bool]:
+def bounded_history(
+    turns: list[dict],
+    snapshot: dict | None = None,
+    *,
+    max_turns: int = MAX_HISTORY_TURNS,
+    max_chars: int = MAX_HISTORY_CHARS,
+) -> tuple[list[dict], bool]:
     allowed_sources = {item["id"]: item["version"] for item in (snapshot or {}).get("sources", [])}
     allowed_notes = {item["id"]: item["revision"] for item in (snapshot or {}).get("notes", [])}
     candidates, filtered = [], False
@@ -25,16 +36,27 @@ def bounded_history(turns: list[dict], snapshot: dict | None = None, *,
         answer = turn.get("answer") or {}
         citations = answer.get("citations", [])
         if snapshot is not None and any(
-            (allowed_notes.get(item.get("note_id")) if item.get("kind") == "note"
-             else allowed_sources.get(item.get("source_id"))) != item.get("version")
+            (
+                allowed_notes.get(item.get("note_id"))
+                if item.get("kind") == "note"
+                else allowed_sources.get(item.get("source_id"))
+            )
+            != item.get("version")
             for item in citations
         ):
             # Changing selection must also exclude material echoed by an older AI answer.
             filtered = True
             continue
         question = turn.get("question", "")
-        prose = " ".join(claim.get("text", "") for claim in answer.get("claims", [])
-                         if isinstance(claim, dict) and isinstance(claim.get("text"), str)) if answer.get("validated") else ""
+        prose = (
+            " ".join(
+                claim.get("text", "")
+                for claim in answer.get("claims", [])
+                if isinstance(claim, dict) and isinstance(claim.get("text"), str)
+            )
+            if answer.get("validated")
+            else ""
+        )
         if isinstance(question, str) and question.strip():
             filtered = filtered or len(question) > 2000 or len(prose) > 4000
             candidates.append({"question": question[:2000], "answer": prose[:4000]})
@@ -46,7 +68,7 @@ def bounded_history(turns: list[dict], snapshot: dict | None = None, *,
         if size > remaining:
             # Keep the latest question first. Truncation is explicit in returned metadata.
             question = turn["question"][:remaining]
-            prose = turn["answer"][:max(0, remaining - len(question))]
+            prose = turn["answer"][: max(0, remaining - len(question))]
             result.append({"question": question, "answer": prose})
             filtered = True
             remaining = 0

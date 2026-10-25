@@ -8,14 +8,13 @@ from __future__ import annotations
 
 import httpx
 
-from .completion_stream import (
-    _CONTENT_LIMIT,
+from .completion.events import EventDecoder, response_chunks
+from .completion.payloads import (
+    CONTENT_LIMIT,
     CompletionProtocolError,
-    _chunks,
-    _content,
-    _Events,
-    _json_object,
-    _utf8_size,
+    content_object,
+    json_object,
+    utf8_size,
 )
 
 
@@ -24,11 +23,17 @@ def _invalid() -> CompletionProtocolError:
 
 
 def _message(message: object, *, streaming: bool):
-    if not isinstance(message, dict) or message.get("type") != "message" \
-            or message.get("role") != "assistant" or "error" in message:
+    if (
+        not isinstance(message, dict)
+        or message.get("type") != "message"
+        or message.get("role") != "assistant"
+        or "error" in message
+    ):
         raise _invalid()
-    if message.get("stop_reason") != (None if streaming else "end_turn") \
-            or message.get("stop_sequence") is not None:
+    if (
+        message.get("stop_reason") != (None if streaming else "end_turn")
+        or message.get("stop_sequence") is not None
+    ):
         raise _invalid()
 
 
@@ -40,13 +45,13 @@ class _Text:
     def append(self, value: object):
         if not isinstance(value, str):
             raise _invalid()
-        self.size += _utf8_size(value)
-        if self.size > _CONTENT_LIMIT:
+        self.size += utf8_size(value)
+        if self.size > CONTENT_LIMIT:
             raise CompletionProtocolError("The completion content is too large.")
         self.parts.append(value)
 
     def result(self) -> dict:
-        return _content("".join(self.parts))
+        return content_object("".join(self.parts))
 
 
 def _block(block: object, text: _Text) -> str:
@@ -79,18 +84,22 @@ def full_response(payload: dict) -> dict:
 
 
 async def stream_response(response: httpx.Response) -> dict:
-    parser = _Events()
+    parser = EventDecoder()
     text = _Text()
     started = finished = False
     next_index = 0
     active_index = None
     active_kind = None
-    async for chunk in _chunks(response):
+    async for chunk in response_chunks(response):
         for event_name, event in parser.feed_named(chunk):
-            payload = _json_object(event)
+            payload = json_object(event)
             event_type = payload.get("type")
-            if "error" in payload or not isinstance(event_type, str) or event_type == "error" \
-                    or event_name != event_type:
+            if (
+                "error" in payload
+                or not isinstance(event_type, str)
+                or event_type == "error"
+                or event_name != event_type
+            ):
                 raise _invalid()
             if event_type == "ping":
                 continue
@@ -104,16 +113,25 @@ async def stream_response(response: httpx.Response) -> dict:
                 started = True
             elif event_type == "content_block_start":
                 index = payload.get("index")
-                if not started or finished or active_index is not None \
-                        or type(index) is not int or index != next_index:
+                if (
+                    not started
+                    or finished
+                    or active_index is not None
+                    or type(index) is not int
+                    or index != next_index
+                ):
                     raise _invalid()
                 active_kind = _block(payload.get("content_block"), text)
                 active_index = index
             elif event_type == "content_block_delta":
                 index = payload.get("index")
                 delta = payload.get("delta")
-                if active_index is None or type(index) is not int or index != active_index \
-                        or not isinstance(delta, dict):
+                if (
+                    active_index is None
+                    or type(index) is not int
+                    or index != active_index
+                    or not isinstance(delta, dict)
+                ):
                     raise _invalid()
                 kind = delta.get("type")
                 if active_kind == "text" and kind == "text_delta":

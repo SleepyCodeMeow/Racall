@@ -8,14 +8,14 @@ import threading
 from collections import deque
 from copy import deepcopy
 
-from ...answer_language import question_language
 from ...completion_stream import cancellable_completion
 from ...provider_settings import embedding_settings
 from ...providers import frozen_provider_keys, provider_identity, provider_key
 from ...storage import ConflictError, Store, identifier, now, uid
 from ..artifacts.repository import Materials
 from ..context.service import ContextService
-from ..studio.generator import NoEvidence, UnverifiedMaterial, generate_material
+from ..studio.generator import NoEvidence, UnverifiedMaterial
+from .execution import generate_payload
 from .repository import TERMINAL, JobRepository
 from .schemas import GenerationRequest
 
@@ -50,8 +50,12 @@ class GenerationService:
         self._thread: threading.Thread | None = None
 
     def _configuration(self, settings: dict) -> dict:
-        return {"provider": settings["provider"], "base_url": settings["base_url"],
-                "model": settings["model"], "embeddings": deepcopy(settings["embeddings"])}
+        return {
+            "provider": settings["provider"],
+            "base_url": settings["base_url"],
+            "model": settings["model"],
+            "embeddings": deepcopy(settings["embeddings"]),
+        }
 
     def _credentials(self, settings: dict) -> dict:
         configs = [settings]
@@ -61,8 +65,10 @@ class GenerationService:
         return {provider_identity(config): provider_key(config) for config in configs}
 
     def _fingerprint(self, settings: dict, credentials: dict) -> bytes:
-        data = {"configuration": self._configuration(settings),
-                "credentials": [[*identity, key] for identity, key in sorted(credentials.items())]}
+        data = {
+            "configuration": self._configuration(settings),
+            "credentials": [[*identity, key] for identity, key in sorted(credentials.items())],
+        }
         return hmac.digest(self._secret, json.dumps(data, sort_keys=True).encode(), hashlib.sha256)
 
     def _protect(self, notebook: str, job: str):
@@ -87,11 +93,24 @@ class GenerationService:
                     if job["status"] not in {"queued", "running"} or job["id"] in self._accepted:
                         continue
                     material = self.materials.for_job(notebook["id"], job["id"])
-                    if material and material.get("job_id") == job["id"] and material["answer"].get("validated"):
-                        job.update(status="completed", stage="completed", error=None,
-                                   result={"material_id": material["id"],
-                                           **({"research_id": material["research_id"]}
-                                              if material.get("research_id") else {})})
+                    if (
+                        material
+                        and material.get("job_id") == job["id"]
+                        and material["answer"].get("validated")
+                    ):
+                        job.update(
+                            status="completed",
+                            stage="completed",
+                            error=None,
+                            result={
+                                "material_id": material["id"],
+                                **(
+                                    {"research_id": material["research_id"]}
+                                    if material.get("research_id")
+                                    else {}
+                                ),
+                            },
+                        )
                     else:
                         job.update(status="interrupted", stage="interrupted", error="interrupted")
                     job.update(updated_at=now(), finished_at=now())
@@ -111,8 +130,13 @@ class GenerationService:
             for notebook in self.store.notebooks():
                 for job in self.jobs.list(notebook["id"]):
                     if job["status"] in {"queued", "running"}:
-                        job.update(status="interrupted", stage="interrupted", error="interrupted",
-                                   updated_at=now(), finished_at=now())
+                        job.update(
+                            status="interrupted",
+                            stage="interrupted",
+                            error="interrupted",
+                            updated_at=now(),
+                            finished_at=now(),
+                        )
                         self.jobs.save(notebook["id"], job)
                     self._release(notebook["id"], job["id"])
             self._queue.clear()
@@ -137,24 +161,44 @@ class GenerationService:
             keys = self._credentials(settings)
             job_id = uid()
             defaults = {
-                "en": {"research": "Research", "summary": "Summary", "study_guide": "Study guide",
-                       "review_questions": "Review questions"},
-                "ru": {"research": "Исследование", "summary": "Краткое содержание",
-                       "study_guide": "Учебный конспект", "review_questions": "Контрольные вопросы"},
+                "en": {
+                    "research": "Research",
+                    "summary": "Summary",
+                    "study_guide": "Study guide",
+                    "review_questions": "Review questions",
+                },
+                "ru": {
+                    "research": "Исследование",
+                    "summary": "Краткое содержание",
+                    "study_guide": "Учебный конспект",
+                    "review_questions": "Контрольные вопросы",
+                },
             }
             title = request.title or (request.question[:160] if request.kind == "research" else "")
             title = title or defaults[request.language][request.kind]
             job = {
-                "id": job_id, "request_id": request.request_id, "kind": request.kind,
-                "status": "queued", "stage": "queued", "steps": [], "question": request.question,
-                "title": title, "language": request.language, "context": context,
+                "id": job_id,
+                "request_id": request.request_id,
+                "kind": request.kind,
+                "status": "queued",
+                "stage": "queued",
+                "steps": [],
+                "question": request.question,
+                "title": title,
+                "language": request.language,
+                "context": context,
                 "provider": {key: settings[key] for key in ("provider", "base_url", "model")},
-                "created_at": now(), "updated_at": now(), "_request": data,
+                "created_at": now(),
+                "updated_at": now(),
+                "_request": data,
                 **({"retry_of": retry_of} if retry_of else {}),
             }
             self.jobs.save(notebook, job)
-            self._accepted[job_id] = {"settings": settings, "keys": keys,
-                                      "fingerprint": self._fingerprint(settings, keys)}
+            self._accepted[job_id] = {
+                "settings": settings,
+                "keys": keys,
+                "fingerprint": self._fingerprint(settings, keys),
+            }
             self._protect(notebook, job_id)
             self._queue.append((notebook, job_id))
             self._condition.notify()
@@ -201,8 +245,11 @@ class GenerationService:
         with self.store.lock:
             job = self.jobs.get(notebook, job_id)
             self._checkpoint(notebook, job_id, job["context"])
-            detail = {key: value for key, value in (detail or {}).items()
-                      if key in {"count", "accepted", "attempt", "total"} and type(value) in (int, bool)}
+            detail = {
+                key: value
+                for key, value in (detail or {}).items()
+                if key in {"count", "accepted", "attempt", "total"} and type(value) in (int, bool)
+            }
             job["steps"].append({"stage": stage, "at": now(), **({"detail": detail} if detail else {})})
             job.update(stage=stage, updated_at=now())
             self.jobs.save(notebook, job)
@@ -258,44 +305,54 @@ class GenerationService:
         current_keys = self._credentials(current)
         if not hmac.compare_digest(self._fingerprint(current, current_keys), accepted["fingerprint"]):
             raise ProviderChanged()
+
         def checkpoint():
             self._checkpoint(notebook, job_id, job["context"])
 
         def progress(stage, detail=None):
             self._progress(notebook, job_id, stage, detail)
+
         checkpoint()
         settings = accepted["settings"]
-        with frozen_provider_keys(accepted["keys"]), cancellable_completion(
-                lambda: self._cancel_check(notebook, job_id)):
-            if job["kind"] == "research":
-                question = job["question"] or job["title"]
-                if question_language(question) != job["language"]:
-                    question += "\n" + ("Ответь на русском." if job["language"] == "ru" else "Answer in English.")
-                result = self.knowledge.research(notebook, question, context=job["context"], settings=settings,
-                                                 progress=progress, cancel=checkpoint)
-                if not result.get("answer", {}).get("validated"):
-                    raise UnverifiedMaterial()
-                generated = {"answer": result["answer"]}
-            else:
-                progress("retrieval")
-                gathered = self.context.gather_snapshot(notebook, job["context"])
-                generated = generate_material(job["kind"], job["question"], job["title"], job["language"],
-                                              gathered["evidence"], settings, checkpoint, progress)
-                generated["context_info"] = gathered["context_info"]
+        with (
+            frozen_provider_keys(accepted["keys"]),
+            cancellable_completion(lambda: self._cancel_check(notebook, job_id)),
+        ):
+            generated, research = generate_payload(
+                notebook,
+                job,
+                settings,
+                context=self.context,
+                knowledge=self.knowledge,
+                checkpoint=checkpoint,
+                progress=progress,
+            )
             progress("saving")
             with self.store.lock:
                 checkpoint()
                 material = {
-                    "id": job_id, "job_id": job_id, "kind": job["kind"], "title": job["title"],
-                    "created_at": now(), "context": job["context"], "provider": job["provider"], **generated,
+                    "id": job_id,
+                    "job_id": job_id,
+                    "kind": job["kind"],
+                    "title": job["title"],
+                    "created_at": now(),
+                    "context": job["context"],
+                    "provider": job["provider"],
+                    **generated,
                 }
                 if job["kind"] == "research":
-                    note = self.knowledge.save_research(notebook, result["id"])
-                    material.update(body=note["body"], research_id=result["id"])
+                    note = self.knowledge.save_research(notebook, research["id"])
+                    material.update(body=note["body"], research_id=research["id"])
                 self.materials.create(notebook, material)
                 job = self.jobs.get(notebook, job_id)
-                job.update(status="completed", stage="completed", updated_at=now(), finished_at=now(),
-                           result={"material_id": material["id"],
-                                   **({"research_id": material["research_id"]}
-                                      if material.get("research_id") else {})})
+                job.update(
+                    status="completed",
+                    stage="completed",
+                    updated_at=now(),
+                    finished_at=now(),
+                    result={
+                        "material_id": material["id"],
+                        **({"research_id": material["research_id"]} if material.get("research_id") else {}),
+                    },
+                )
                 self.jobs.save(notebook, job)

@@ -19,7 +19,7 @@ from on_knowledge.storage import Store, write_json
 )
 def test_research_export_heading_and_provenance(tmp_path, question, language, heading):
     store = Store(tmp_path)
-    notebook = store.create_notebook("Export")['id']
+    notebook = store.create_notebook("Export")["id"]
     session_id = str(uuid4())
     citation = {
         "id": "canonical-chunk",

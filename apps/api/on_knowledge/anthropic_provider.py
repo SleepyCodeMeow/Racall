@@ -32,15 +32,26 @@ class AnthropicProvider:
             return complete_json(
                 self.base + "/messages",
                 {"x-api-key": key, "anthropic-version": "2023-06-01"},
-                body, protocol="anthropic",
+                body,
+                protocol="anthropic",
             )
         except CompletionDeadlineError as exc:
-            raise ValueError("Превышено общее время генерации ответа. Уточните вопрос или выберите более быструю модель.") from exc
+            raise ValueError(
+                "Превышено общее время генерации ответа. Уточните вопрос или выберите более быструю модель."
+            ) from exc
         except httpx.ReadTimeout as exc:
-            raise ValueError("Модель перестала передавать данные. Проверьте AI-провайдер или повторите запрос.") from exc
+            raise ValueError(
+                "Модель перестала передавать данные. Проверьте AI-провайдер или повторите запрос."
+            ) from exc
         except CompletionProtocolError as exc:
-            raise ValueError("Провайдер вернул неполный или некорректный поток ответа. Повторите запрос или выберите другую модель.") from exc
+            raise ValueError(
+                "Провайдер вернул неполный или некорректный поток ответа. Повторите запрос или выберите другую модель."
+            ) from exc
         except httpx.HTTPStatusError as exc:
-            raise ValueError(f"Провайдер вернул HTTP {exc.response.status_code}. Проверьте URL, ключ и имя модели.") from exc
+            raise ValueError(
+                f"Провайдер вернул HTTP {exc.response.status_code}. Проверьте URL, ключ и имя модели."
+            ) from exc
         except httpx.HTTPError as exc:
-            raise ValueError("Не удалось связаться с AI-провайдером. Проверьте подключение и настройки.") from exc
+            raise ValueError(
+                "Не удалось связаться с AI-провайдером. Проверьте подключение и настройки."
+            ) from exc

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from typing import TYPE_CHECKING
@@ -8,6 +7,7 @@ from typing import TYPE_CHECKING
 import yaml
 
 from ...storage import ConflictError, atomic_write, identifier, now, read_text, uid, write_json
+from .markdown import note_document, note_revision, split_note
 
 if TYPE_CHECKING:
     from ...storage import Store
@@ -29,24 +29,10 @@ class NoteRepository:
         notes = []
         for path in (self.store.notebook_path(notebook) / kind).glob("*.md"):
             text = read_text(path)
-            frontmatter = {}
-            body = text
-            if text.startswith("---\n"):
-                parts = text.split("---\n", 2)
-                if len(parts) == 3:
-                    try:
-                        parsed = yaml.safe_load(parts[1])
-                        frontmatter = parsed if isinstance(parsed, dict) else {}
-                    except yaml.YAMLError:
-                        frontmatter = {}
-                    body = parts[2].lstrip("\n")
             notes.append(
                 {
-                    "id": path.stem,
-                    "title": str(frontmatter.get("title", path.stem)),
-                    "body": body,
+                    **note_document(path.stem, text),
                     "modified": path.stat().st_mtime,
-                    "revision": hashlib.sha256(text.encode("utf-8")).hexdigest(),
                 }
             )
         return sorted(notes, key=lambda n: n["modified"], reverse=True)
@@ -81,21 +67,12 @@ class NoteRepository:
         validate_note_id(note_id)
         path = self.store.notebook_path(notebook) / kind / f"{note_id}.md"
         previous = read_text(path) if path.exists() else None
-        actual = hashlib.sha256(previous.encode("utf-8")).hexdigest() if previous is not None else ""
+        actual = note_revision(previous) if previous is not None else ""
         if revision is not None and revision != actual:
             raise ConflictError(
                 "This note changed outside this editor. Your draft is safe; save a copy or reload the file."
             )
-        metadata = {}
-        if previous is not None:
-            if previous.startswith("---\n"):
-                parts = previous.split("---\n", 2)
-                if len(parts) == 3:
-                    try:
-                        parsed = yaml.safe_load(parts[1])
-                        metadata = parsed if isinstance(parsed, dict) else {}
-                    except yaml.YAMLError:
-                        pass
+        metadata, _ = split_note(previous) if previous is not None else ({}, "")
         aliases = metadata.get("aliases", [])
         aliases = aliases if isinstance(aliases, list) else [str(aliases)]
         metadata.update(title=title, id=note_id, aliases=list(dict.fromkeys([*map(str, aliases), title])))
@@ -106,7 +83,7 @@ class NoteRepository:
             "id": note_id,
             "title": title,
             "body": body,
-            "revision": hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            "revision": note_revision(text),
         }
 
     def autosave_note(self, notebook: str, draft_id: str, note: dict) -> dict:

@@ -54,38 +54,63 @@ def make_service(store, monkeypatch, handler, key=""):
         return handler(request)
 
     monkeypatch.setattr(model_service, "provider_key", lambda settings: key)
-    service = Models(store, lambda **kwargs: httpx.AsyncClient(transport=httpx.MockTransport(dispatch), **kwargs))
+    service = Models(
+        store, lambda **kwargs: httpx.AsyncClient(transport=httpx.MockTransport(dispatch), **kwargs)
+    )
     return service, calls
 
 
 @pytest.mark.asyncio
-async def test_local_catalog_lists_downloaded_and_cloud_without_generation_or_settings_writes(store, monkeypatch):
+async def test_local_catalog_lists_downloaded_and_cloud_without_generation_or_settings_writes(
+    store, monkeypatch
+):
     before = (store.root / "settings.json").read_bytes()
-    service, calls = make_service(store, monkeypatch, lambda request: response({"models": [
-        {"model": "z:latest", "size": 4096}, {"name": "a:cloud", "size": 0},
-        {"model": "remote:latest", "remote_host": "https://cloud.invalid"},
-    ]}))
+    service, calls = make_service(
+        store,
+        monkeypatch,
+        lambda request: response(
+            {
+                "models": [
+                    {"model": "z:latest", "size": 4096},
+                    {"name": "a:cloud", "size": 0},
+                    {"model": "remote:latest", "remote_host": "https://cloud.invalid"},
+                ]
+            }
+        ),
+    )
     result = await service.catalog()
-    assert result == {"provider": "ollama", "selected_model": "selected:latest", "can_download": True,
-                      "models": [{"id": "a:cloud", "kind": "cloud", "installed": False, "size_bytes": 0},
-                                 {"id": "remote:latest", "kind": "cloud", "installed": False},
-                                 {"id": "z:latest", "kind": "local", "installed": True, "size_bytes": 4096}]}
+    assert result == {
+        "provider": "ollama",
+        "selected_model": "selected:latest",
+        "can_download": True,
+        "models": [
+            {"id": "a:cloud", "kind": "cloud", "installed": False, "size_bytes": 0},
+            {"id": "remote:latest", "kind": "cloud", "installed": False},
+            {"id": "z:latest", "kind": "local", "installed": True, "size_bytes": 4096},
+        ],
+    }
     assert len(calls) == 1 and calls[0].method == "GET"
     assert str(calls[0].url) == "http://127.0.0.1:11434/api/tags"
     assert not calls[0].content and "authorization" not in calls[0].headers
     assert (store.root / "settings.json").read_bytes() == before
 
 
-@pytest.mark.parametrize("provider,url,kind", [
-    ("openai", "https://api.openai.com/v1/models", "cloud"),
-    ("ollama_cloud", "https://ollama.com/api/tags", "cloud"),
-    ("llama_cpp", "http://127.0.0.1:8080/v1/models", "server"),
-    ("openai_compatible", "https://api.openai.com/v1/models", "server"),
-])
+@pytest.mark.parametrize(
+    "provider,url,kind",
+    [
+        ("openai", "https://api.openai.com/v1/models", "cloud"),
+        ("ollama_cloud", "https://ollama.com/api/tags", "cloud"),
+        ("llama_cpp", "http://127.0.0.1:8080/v1/models", "server"),
+        ("openai_compatible", "https://api.openai.com/v1/models", "server"),
+    ],
+)
 @pytest.mark.asyncio
 async def test_catalog_provider_endpoints_and_auth(store, monkeypatch, provider, url, kind):
-    payload = {"models": [{"name": "remote-model", "size": 0}]} if provider == "ollama_cloud" else {
-        "data": [{"id": "remote-model", "ignored_secret": "hidden"}]}
+    payload = (
+        {"models": [{"name": "remote-model", "size": 0}]}
+        if provider == "ollama_cloud"
+        else {"data": [{"id": "remote-model", "ignored_secret": "hidden"}]}
+    )
     service, calls = make_service(store, monkeypatch, lambda request: response(payload), key="catalog-secret")
     result = await service.catalog(provider)
     assert str(calls[0].url) == url
@@ -122,11 +147,20 @@ async def test_cloud_key_required_before_network(store, monkeypatch, provider):
     assert calls == []
 
 
-@pytest.mark.parametrize("payload", [[], {}, {"models": {}}, {"models": [None]}, {"models": [{"name": ""}]},
-                                    {"models": [{"name": "model", "size": True}]},
-                                    {"models": [{"name": "model", "size": -1}]},
-                                    {"models": [{"name": "secret\nheader"}]},
-                                    {"models": [{"name": "\ud800"}]}])
+@pytest.mark.parametrize(
+    "payload",
+    [
+        [],
+        {},
+        {"models": {}},
+        {"models": [None]},
+        {"models": [{"name": ""}]},
+        {"models": [{"name": "model", "size": True}]},
+        {"models": [{"name": "model", "size": -1}]},
+        {"models": [{"name": "secret\nheader"}]},
+        {"models": [{"name": "\ud800"}]},
+    ],
+)
 @pytest.mark.asyncio
 async def test_malformed_catalog_is_safely_rejected(store, monkeypatch, payload):
     service, _ = make_service(store, monkeypatch, lambda request: response(payload))
@@ -137,9 +171,15 @@ async def test_malformed_catalog_is_safely_rejected(store, monkeypatch, payload)
 @pytest.mark.parametrize("status", [301, 401, 403, 404, 500])
 @pytest.mark.asyncio
 async def test_http_failure_never_follows_redirects_or_returns_body(store, monkeypatch, status):
-    service, calls = make_service(store, monkeypatch, lambda request: response(
-        {"error": "sensitive-upstream-url-and-key"}, status=status,
-        headers={"Location": "https://different.invalid/private"}))
+    service, calls = make_service(
+        store,
+        monkeypatch,
+        lambda request: response(
+            {"error": "sensitive-upstream-url-and-key"},
+            status=status,
+            headers={"Location": "https://different.invalid/private"},
+        ),
+    )
     with pytest.raises(ValueError, match=f"HTTP {status}") as caught:
         await service.catalog()
     assert "sensitive" not in str(caught.value)
@@ -152,19 +192,25 @@ async def test_catalog_body_limit_and_encoding(store, monkeypatch):
     service, _ = make_service(store, monkeypatch, lambda request: response({"models": [{"name": "large"}]}))
     with pytest.raises(ValueError, match="too large"):
         await service.catalog()
-    service, _ = make_service(store, monkeypatch, lambda request: response({}, headers={"Content-Encoding": "gzip"}))
+    service, _ = make_service(
+        store, monkeypatch, lambda request: response({}, headers={"Content-Encoding": "gzip"})
+    )
     with pytest.raises(ValueError, match="invalid model list"):
         await service.catalog()
 
 
-@pytest.mark.parametrize("error,expected", [
-    (httpx.ConnectError("private-endpoint-secret"), "Could not connect"),
-    (httpx.ReadTimeout("private-endpoint-secret"), "timed out"),
-])
+@pytest.mark.parametrize(
+    "error,expected",
+    [
+        (httpx.ConnectError("private-endpoint-secret"), "Could not connect"),
+        (httpx.ReadTimeout("private-endpoint-secret"), "timed out"),
+    ],
+)
 @pytest.mark.asyncio
 async def test_catalog_network_error_redaction(store, monkeypatch, error, expected):
     def handler(request):
         raise error
+
     service, calls = make_service(store, monkeypatch, handler)
     with pytest.raises(ValueError, match=expected) as caught:
         await service.catalog()
@@ -178,6 +224,7 @@ async def test_catalog_total_deadline_bounds_continuous_stream(store, monkeypatc
             while True:
                 yield b" "
                 await asyncio.sleep(0.01)
+
     stream = Endless([])
     original = asyncio.timeout
     monkeypatch.setattr(model_service.asyncio, "timeout", lambda seconds: original(0.04))
@@ -187,8 +234,22 @@ async def test_catalog_total_deadline_bounds_continuous_stream(store, monkeypatc
     assert stream.closed
 
 
-@pytest.mark.parametrize("name", ["../model", "model;echo", "https://host/model", "model:cloud", "model-cloud",
-                                 "model\nother", "model:tag:extra", "name//model", "name/../model", "-flag", "x" * 201])
+@pytest.mark.parametrize(
+    "name",
+    [
+        "../model",
+        "model;echo",
+        "https://host/model",
+        "model:cloud",
+        "model-cloud",
+        "model\nother",
+        "model:tag:extra",
+        "name//model",
+        "name/../model",
+        "-flag",
+        "x" * 201,
+    ],
+)
 @pytest.mark.asyncio
 async def test_invalid_download_names_never_make_requests(store, monkeypatch, name):
     service, calls = make_service(store, monkeypatch, lambda request: pytest.fail("unexpected request"))
@@ -204,7 +265,9 @@ async def test_download_only_targets_saved_local_ollama_even_if_cloud_is_active(
     settings["profiles"]["ollama"]["base_url"] = "http://localhost:22334/proxy/v1"
     write_json(store.root / "settings.json", persistent_settings(settings))
     stream = Stream([b'{"status":"success"}\n'])
-    service, calls = make_service(store, monkeypatch, lambda request: response(stream=stream), key="local-secret")
+    service, calls = make_service(
+        store, monkeypatch, lambda request: response(stream=stream), key="local-secret"
+    )
     job = await service.download("namespace/test-model:Q4_K_M")
     assert job["status"] == "queued"
     await service.task
@@ -229,9 +292,14 @@ async def test_remote_ollama_profile_cannot_download(store, monkeypatch):
 
 @pytest.mark.asyncio
 async def test_download_progress_counts_are_per_layer_and_shutdown_is_bounded(store, monkeypatch):
-    stream = Stream([b'{"status":"pulling manifest"}\n',
-                     b'{"status":"pulling sha256:first","completed":20,"total":100}\n',
-                     b'{"status":"pulling sha256:second","completed":2,"total":10}\n'], wait=True)
+    stream = Stream(
+        [
+            b'{"status":"pulling manifest"}\n',
+            b'{"status":"pulling sha256:first","completed":20,"total":100}\n',
+            b'{"status":"pulling sha256:second","completed":2,"total":10}\n',
+        ],
+        wait=True,
+    )
     service, _ = make_service(store, monkeypatch, lambda request: response(stream=stream))
     job = await service.download("model")
     await stream.started.wait()
@@ -268,15 +336,19 @@ async def test_cancel_queued_job_does_not_start_http_request(store, monkeypatch)
     assert result["status"] == "cancelled" and not calls
 
 
-@pytest.mark.parametrize("chunks", [
-    [b'{"status":"pulling manifest"}\n'], [b'not-json\n'],
-    [b'{"error":"private-upstream-secret"}\n'],
-    [b'{"status":"pulling layer","completed":101,"total":100}\n'],
-    [b'{"status":"pulling layer","completed":true,"total":100}\n'],
-    [b'{"status":"pulling layer","completed":NaN,"total":100}\n'],
-    [b'{"status":"success","status":"failure"}\n'],
-    [b'{"status":"unknown-private-status"}\n'],
-])
+@pytest.mark.parametrize(
+    "chunks",
+    [
+        [b'{"status":"pulling manifest"}\n'],
+        [b"not-json\n"],
+        [b'{"error":"private-upstream-secret"}\n'],
+        [b'{"status":"pulling layer","completed":101,"total":100}\n'],
+        [b'{"status":"pulling layer","completed":true,"total":100}\n'],
+        [b'{"status":"pulling layer","completed":NaN,"total":100}\n'],
+        [b'{"status":"success","status":"failure"}\n'],
+        [b'{"status":"unknown-private-status"}\n'],
+    ],
+)
 @pytest.mark.asyncio
 async def test_invalid_or_incomplete_download_fails_without_raw_errors(store, monkeypatch, chunks):
     stream = Stream(chunks)
@@ -289,8 +361,13 @@ async def test_invalid_or_incomplete_download_fails_without_raw_errors(store, mo
 
 @pytest.mark.asyncio
 async def test_download_supports_split_utf8_and_final_success_without_newline(store, monkeypatch):
-    stream = Stream([b'{"status":"pulling mani', b'fest"}\n{"status":"verifying sha256 digest"}\n',
-                     b'{"status":"writing manifest"}\n{"status":"success"}'])
+    stream = Stream(
+        [
+            b'{"status":"pulling mani',
+            b'fest"}\n{"status":"verifying sha256 digest"}\n',
+            b'{"status":"writing manifest"}\n{"status":"success"}',
+        ]
+    )
     service, _ = make_service(store, monkeypatch, lambda request: response(stream=stream))
     await service.download("model")
     await service.task
@@ -316,7 +393,9 @@ async def test_download_line_and_total_wire_limits(store, monkeypatch):
 @pytest.mark.parametrize("status", [401, 404, 500])
 @pytest.mark.asyncio
 async def test_download_http_errors_are_redacted_and_not_retried(store, monkeypatch, status):
-    service, calls = make_service(store, monkeypatch, lambda request: response({"error": "private-key"}, status=status))
+    service, calls = make_service(
+        store, monkeypatch, lambda request: response({"error": "private-key"}, status=status)
+    )
     await service.download("model")
     await service.task
     assert service.current()["status"] == "failed"
@@ -330,6 +409,7 @@ async def test_download_continuous_progress_still_has_wall_deadline(store, monke
             while True:
                 yield b'{"status":"pulling manifest"}\n'
                 await asyncio.sleep(0.01)
+
     stream = Endless([])
     monkeypatch.setattr(model_service, "PULL_SECONDS", 0.04)
     service, _ = make_service(store, monkeypatch, lambda request: response(stream=stream))
@@ -341,9 +421,19 @@ async def test_download_continuous_progress_still_has_wall_deadline(store, monke
 
 @pytest.mark.parametrize("state", ["running", "queued"])
 def test_recovery_marks_unfinished_job_without_requests_or_replaying_secrets(store, state):
-    write_json(store.root / "model-download.json", {"id": "a0cc1733-51ab-4c24-a6c1-5748c4c5d55b",
-               "model": "saved-model", "status": state, "phase": "manifest", "completed": 3, "total": 10,
-               "error": "old-private-secret", "endpoint": "https://private.invalid"})
+    write_json(
+        store.root / "model-download.json",
+        {
+            "id": "a0cc1733-51ab-4c24-a6c1-5748c4c5d55b",
+            "model": "saved-model",
+            "status": state,
+            "phase": "manifest",
+            "completed": 3,
+            "total": 10,
+            "error": "old-private-secret",
+            "endpoint": "https://private.invalid",
+        },
+    )
     service = Models(store, lambda **kwargs: pytest.fail("unexpected request"))
     service.recover()
     assert service.current()["status"] == "interrupted" and service.task is None
@@ -352,7 +442,7 @@ def test_recovery_marks_unfinished_job_without_requests_or_replaying_secrets(sto
 
 def test_recovery_rejects_invalid_oversized_or_unexpected_metadata(store):
     path = store.root / "model-download.json"
-    for content in ("{", "x" * 4097, '{"id":"not-id"}', '[]'):
+    for content in ("{", "x" * 4097, '{"id":"not-id"}', "[]"):
         path.write_text(content)
         service = Models(store)
         service.recover()

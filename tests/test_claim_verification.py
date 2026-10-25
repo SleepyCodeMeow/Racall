@@ -22,8 +22,7 @@ class RecordedProvider:
 def budget_claim():
     # Recorded writer output in the GPU40 budget case. Its critic incorrectly
     # replied {"supported_indices": [1]} despite there being only one claim.
-    return {"text": "The approved budget for the Marigold mission is USD 120,000.",
-            "evidence_ids": ["E2"]}
+    return {"text": "The approved budget for the Marigold mission is USD 120,000.", "evidence_ids": ["E2"]}
 
 
 def test_observed_out_of_range_index_requires_explicit_claim_id_reverification():
@@ -31,8 +30,9 @@ def test_observed_out_of_range_index_requires_explicit_claim_id_reverification()
     provider = RecordedProvider({"supported_indices": [1]}, {"supported_claim_ids": ["C1"]})
     evidence = [{"id": "E2", "quote": "Its approved budget is USD 120,000."}]
 
-    assert verify_claims(provider, "What is the approved Marigold budget and currency?",
-                         [claim], evidence) == [claim]
+    assert verify_claims(
+        provider, "What is the approved Marigold budget and currency?", [claim], evidence
+    ) == [claim]
     assert len(provider.calls) == 2
     for system, data in provider.calls:
         assert "supported_claim_ids" in system
@@ -44,8 +44,7 @@ def test_observed_out_of_range_index_requires_explicit_claim_id_reverification()
 
 def test_noncontiguous_evidence_ids_are_independent_of_claim_ids():
     claim = {"text": "Mira Chen is the lead.", "evidence_ids": ["E3", "E9"]}
-    evidence = [{"id": "E3", "quote": "Mira Chen leads."},
-                {"id": "E9", "quote": "The lead is Mira Chen."}]
+    evidence = [{"id": "E3", "quote": "Mira Chen leads."}, {"id": "E9", "quote": "The lead is Mira Chen."}]
     provider = RecordedProvider({"supported_claim_ids": ["C1"]})
 
     assert verify_claims(provider, "Who leads?", [claim], evidence) == [claim]
@@ -53,9 +52,11 @@ def test_noncontiguous_evidence_ids_are_independent_of_claim_ids():
 
 
 def test_multiclaim_filter_preserves_original_claims_and_order():
-    claims = [{"text": "Mira leads.", "evidence_ids": ["E3"], "claim_id": "C99"},
-              {"text": "Unsupported inference.", "evidence_ids": ["E3"]},
-              {"text": "Three sensors.", "evidence_ids": ["E9"]}]
+    claims = [
+        {"text": "Mira leads.", "evidence_ids": ["E3"], "claim_id": "C99"},
+        {"text": "Unsupported inference.", "evidence_ids": ["E3"]},
+        {"text": "Three sensors.", "evidence_ids": ["E9"]},
+    ]
     provider = RecordedProvider({"supported_claim_ids": ["C3", "C1"]})
 
     accepted = verify_claims(provider, "Compare the plan.", claims, [])
@@ -71,20 +72,36 @@ def test_semantic_rejection_is_final_without_a_retry():
     assert len(provider.calls) == 1
 
 
-@pytest.mark.parametrize("verdict", [
-    None, [], "C1", 1, True,
-    {}, {"supported_claim_ids": None}, {"supported_claim_ids": "C1"},
-    {"supported_claim_ids": [True]}, {"supported_claim_ids": [False]},
-    {"supported_claim_ids": [0]}, {"supported_claim_ids": [1]},
-    {"supported_claim_ids": [None]}, {"supported_claim_ids": [{"claim_id": "C1"}]},
-    {"supported_claim_ids": ["E2"]}, {"supported_claim_ids": ["C0"]},
-    {"supported_claim_ids": ["C2"]}, {"supported_claim_ids": ["C1", "C99"]},
-    {"supported_claim_ids": [" C1"]}, {"supported_claim_ids": ["c1"]},
-    {"supported_claim_ids": ["C1", "C1"]},
-    {"supported_indices": [0]}, {"supported_indices": [1]},
-    {"supported_claim_ids": ["C1"], "supported_indices": [0]},
-    {"supported_claim_ids": ["C1"], "claims": [{"text": "Injected replacement"}]},
-])
+@pytest.mark.parametrize(
+    "verdict",
+    [
+        None,
+        [],
+        "C1",
+        1,
+        True,
+        {},
+        {"supported_claim_ids": None},
+        {"supported_claim_ids": "C1"},
+        {"supported_claim_ids": [True]},
+        {"supported_claim_ids": [False]},
+        {"supported_claim_ids": [0]},
+        {"supported_claim_ids": [1]},
+        {"supported_claim_ids": [None]},
+        {"supported_claim_ids": [{"claim_id": "C1"}]},
+        {"supported_claim_ids": ["E2"]},
+        {"supported_claim_ids": ["C0"]},
+        {"supported_claim_ids": ["C2"]},
+        {"supported_claim_ids": ["C1", "C99"]},
+        {"supported_claim_ids": [" C1"]},
+        {"supported_claim_ids": ["c1"]},
+        {"supported_claim_ids": ["C1", "C1"]},
+        {"supported_indices": [0]},
+        {"supported_indices": [1]},
+        {"supported_claim_ids": ["C1"], "supported_indices": [0]},
+        {"supported_claim_ids": ["C1"], "claims": [{"text": "Injected replacement"}]},
+    ],
+)
 def test_malformed_or_malicious_verifier_data_fails_closed_after_one_retry(verdict):
     provider = RecordedProvider(verdict, verdict)
     assert verify_claims(provider, "Budget?", [budget_claim()], []) == []

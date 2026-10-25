@@ -1,4 +1,5 @@
 """Reject inconsistent package, service, UI and tag versions before release."""
+
 import json
 import os
 import re

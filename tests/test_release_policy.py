@@ -1,4 +1,5 @@
 """Release policy must narrow platform scope explicitly without weakening provenance."""
+
 import base64
 import hashlib
 import json
@@ -18,8 +19,14 @@ SHA = "a" * 40
 
 
 def policy(**changes):
-    return {"version": VERSION, "label": "0.2 Beta", "publication": "approved",
-            "platforms": ["win-x64"], "github_latest": True, **changes}
+    return {
+        "version": VERSION,
+        "label": "0.2 Beta",
+        "publication": "approved",
+        "platforms": ["win-x64"],
+        "github_latest": True,
+        **changes,
+    }
 
 
 @pytest.mark.parametrize("platforms", [None, [], "win-x64", ["unknown"], ["win-x64", "win-x64"], [None]])
@@ -37,12 +44,21 @@ def test_latest_requires_a_real_boolean(value):
 def test_windows_only_and_all_native_platforms_use_one_package_map():
     assert helpers["package_names"](policy(), VERSION) == [f"Racall-{VERSION}-win-x64.exe"]
     assert helpers["build_matrix"](policy()) == {
-        "include": [{"os": "windows-latest", "platform": "win", "arch": "x64"}]}
+        "include": [{"os": "windows-latest", "platform": "win", "arch": "x64"}]
+    }
     all_policy = policy(platforms=["win-x64", "mac-arm64", "mac-x64", "linux-x64"])
     assert set(helpers["package_names"](all_policy, VERSION)) == {
-        f"Racall-{VERSION}-{suffix}" for suffix in (
-            "win-x64.exe", "mac-arm64.dmg", "mac-arm64.zip", "mac-x64.dmg", "mac-x64.zip",
-            "linux-x86_64.AppImage", "linux-amd64.deb")}
+        f"Racall-{VERSION}-{suffix}"
+        for suffix in (
+            "win-x64.exe",
+            "mac-arm64.dmg",
+            "mac-arm64.zip",
+            "mac-x64.dmg",
+            "mac-x64.zip",
+            "linux-x86_64.AppImage",
+            "linux-amd64.deb",
+        )
+    }
     assert len(helpers["build_matrix"](all_policy)["include"]) == 4
 
 
@@ -56,7 +72,10 @@ def test_six_native_targets_have_distinct_packages_and_native_arm_runners():
     matrix = helpers["build_matrix"](complete)["include"]
     assert len(matrix) == 6
     assert {item["os"] for item in matrix if item["arch"] == "arm64"} == {
-        "windows-11-arm", "macos-15", "ubuntu-22.04-arm"}
+        "windows-11-arm",
+        "macos-15",
+        "ubuntu-22.04-arm",
+    }
 
 
 def build_evidence():
@@ -73,8 +92,10 @@ def test_windows_build_passes_without_claiming_other_platforms():
         helpers["verify_build"](*build_evidence(), SHA, policy(platforms=["win-x64", "linux-x64"]))
 
 
-@pytest.mark.parametrize("bad", ["sha", "event", "workflow", "pending", "failed", "missing",
-                                 "expired", "empty", "extra", "duplicate"])
+@pytest.mark.parametrize(
+    "bad",
+    ["sha", "event", "workflow", "pending", "failed", "missing", "expired", "empty", "extra", "duplicate"],
+)
 def test_unverified_or_wrong_artifacts_cannot_authorize_reuse(bad):
     run, jobs, artifacts = build_evidence()
     if bad == "sha":
@@ -154,8 +175,12 @@ def test_publication_exact_assets_checksums_and_explicit_latest(release_tree, mo
         if args[1:3] == ["release", "list"]:
             result = []
         elif args[1:3] == ["release", "view"]:
-            result = {"assets": [{"name": file.name, "size": file.stat().st_size}
-                                 for file in (release_tree / "release").iterdir()]}
+            result = {
+                "assets": [
+                    {"name": file.name, "size": file.stat().st_size}
+                    for file in (release_tree / "release").iterdir()
+                ]
+            }
         else:
             result = {}
         return SimpleNamespace(stdout=json.dumps(result))
@@ -189,8 +214,12 @@ def test_failed_publication_never_goes_public(release_tree, monkeypatch, failure
         elif args[1:3] == ["release", "upload"] and failure == "upload":
             raise subprocess.CalledProcessError(1, args)
         elif args[1:3] == ["release", "view"]:
-            result = {"assets": [{"name": file.name, "size": file.stat().st_size}
-                                 for file in (release_tree / "release").iterdir()]}
+            result = {
+                "assets": [
+                    {"name": file.name, "size": file.stat().st_size}
+                    for file in (release_tree / "release").iterdir()
+                ]
+            }
             if failure == "remote-extra":
                 result["assets"].append({"name": "unexpected.zip", "size": 10})
         else:
@@ -214,7 +243,9 @@ def test_reuse_requires_the_exact_tagged_policy(release_tree, monkeypatch, chang
         "git/ref/tags/v" + VERSION: {"object": {"type": "tag", "sha": "c" * 40}},
         "git/tags/" + "c" * 40: {"object": {"type": "commit", "sha": SHA}},
         f"contents/apps/shared/release.json?ref={SHA}": {
-            "encoding": "base64", "content": base64.b64encode(json.dumps(source).encode()).decode()},
+            "encoding": "base64",
+            "content": base64.b64encode(json.dumps(source).encode()).decode(),
+        },
         "actions/runs/12345/jobs?per_page=100": {"jobs": jobs},
         "actions/runs/12345/artifacts?per_page=100": {"artifacts": artifacts},
     }

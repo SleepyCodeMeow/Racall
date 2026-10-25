@@ -26,8 +26,15 @@ def workflow(tmp_path):
 
 def source(store, notebook, texts, *, title="Document", embedding=None):
     item = {"id": uid(), "title": title, "version": uid(), "created_at": now(), "status": "ready"}
-    chunks = [{"id": uid(), "text": text, "location": {"element": i, "offset_start": 0,
-              "offset_end": len(text)}, **(embedding or {})} for i, text in enumerate(texts)]
+    chunks = [
+        {
+            "id": uid(),
+            "text": text,
+            "location": {"element": i, "offset_start": 0, "offset_end": len(text)},
+            **(embedding or {}),
+        }
+        for i, text in enumerate(texts)
+    ]
     store.save_source(notebook, item)
     store.replace_chunks(notebook, item["id"], item["version"], chunks)
     return item, chunks
@@ -44,8 +51,9 @@ def fake_model(monkeypatch, *, hook=None):
             return {"queries": ["Marigold"]}
         if "supported_claim_ids" in system:
             return {"supported_claim_ids": [data["claims"][0]["claim_id"]]}
-        return {"claims": [{"text": "Marigold launches in October.",
-                            "evidence_ids": [data["evidence"][0]["id"]]}]}
+        return {
+            "claims": [{"text": "Marigold launches in October.", "evidence_ids": [data["evidence"][0]["id"]]}]
+        }
 
     monkeypatch.setattr(OpenAICompatible, "complete", complete)
     return calls
@@ -63,11 +71,17 @@ def test_filter_is_applied_before_fts_top40_and_reranking(workflow):
 
 def test_explicit_none_is_empty_and_no_paid_or_embedding_calls(workflow, monkeypatch):
     store, notebook, knowledge, contexts = workflow
-    item, _ = source(store, notebook, ["Marigold"], embedding={
-        "embedding": [1., 0.], "model": "http://127.0.0.1:11434/v1/fixture"})
+    item, _ = source(
+        store,
+        notebook,
+        ["Marigold"],
+        embedding={"embedding": [1.0, 0.0], "model": "http://127.0.0.1:11434/v1/fixture"},
+    )
     settings = {"base_url": "http://127.0.0.1:11434/v1", "embedding_model": "fixture", "model": "test"}
     calls = fake_model(monkeypatch)
-    monkeypatch.setattr(OpenAICompatible, "embed", lambda *args: pytest.fail("No embedding for empty context"))
+    monkeypatch.setattr(
+        OpenAICompatible, "embed", lambda *args: pytest.fail("No embedding for empty context")
+    )
     assert contexts.snapshot(notebook)["sources"][0]["id"] == item["id"]
     snapshot = contexts.snapshot(notebook, {"source_ids": []})
     assert knowledge.search(notebook, "Marigold", context=snapshot, settings=settings)["evidence"] == []
@@ -89,7 +103,7 @@ def test_selected_notes_are_real_revisioned_evidence_for_generic_question(workfl
     assert citation["kind"] == "note" and citation["note_id"] == note["id"]
     assert citation["source_id"] == note["id"] and citation["version"] == note["revision"]
     loc = citation["location"]
-    assert note["body"][loc["offset_start"]:loc["offset_end"]] == citation["quote"]
+    assert note["body"][loc["offset_start"] : loc["offset_end"]] == citation["quote"]
     assert citation["id"] != "E1" and answer["claims"][0]["evidence_ids"] == [citation["id"]]
     assert answer["context_info"]["note_count"] == answer["context_info"]["included_notes"] == 1
 
@@ -103,7 +117,9 @@ def test_note_revision_changes_reject_before_next_provider_phase(workflow, monke
     def change():
         store.save_note(notebook, "Mission", "Different current content.", note["id"])
 
-    calls = fake_model(monkeypatch, hook=lambda count: change() if count == 1 and change_during_call else None)
+    calls = fake_model(
+        monkeypatch, hook=lambda count: change() if count == 1 and change_during_call else None
+    )
     if not change_during_call:
         change()
     with pytest.raises(ConflictError, match="materials changed"):
@@ -130,16 +146,29 @@ def test_changed_source_version_and_cross_notebook_selection_are_rejected(workfl
 def test_excluded_and_stale_vectors_never_trigger_embedding(workflow, monkeypatch):
     store, notebook, knowledge, contexts = workflow
     settings = {"base_url": "http://127.0.0.1:11434/v1", "model": "test", "embedding_model": "fixture"}
-    source(store, notebook, ["Forbidden"], embedding={"embedding": [1., 0.],
-           "model": settings["base_url"] + "/fixture"})
+    source(
+        store,
+        notebook,
+        ["Forbidden"],
+        embedding={"embedding": [1.0, 0.0], "model": settings["base_url"] + "/fixture"},
+    )
     allowed, _ = source(store, notebook, ["Marigold"])
     # A stale vector in the cache is not part of the selected current source version.
-    stale = {"id": uid(), "text": "stale", "location": {}, "embedding": [1., 0.],
-             "model": settings["base_url"] + "/fixture"}
+    stale = {
+        "id": uid(),
+        "text": "stale",
+        "location": {},
+        "embedding": [1.0, 0.0],
+        "model": settings["base_url"] + "/fixture",
+    }
     with store.db() as db:
-        db.execute("INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)", (stale["id"], notebook, allowed["id"],
-                   "old-version", "stale", "{}", "[1,0]", stale["model"]))
-    monkeypatch.setattr(OpenAICompatible, "embed", lambda *args: pytest.fail("Excluded vector reached embeddings"))
+        db.execute(
+            "INSERT INTO chunks VALUES(?,?,?,?,?,?,?,?)",
+            (stale["id"], notebook, allowed["id"], "old-version", "stale", "{}", "[1,0]", stale["model"]),
+        )
+    monkeypatch.setattr(
+        OpenAICompatible, "embed", lambda *args: pytest.fail("Excluded vector reached embeddings")
+    )
     snapshot = contexts.snapshot(notebook, {"source_ids": [allowed["id"]]})
     assert knowledge.search(notebook, "Marigold", context=snapshot, settings=settings)["mode"] == "keyword"
 
@@ -147,13 +176,30 @@ def test_excluded_and_stale_vectors_never_trigger_embedding(workflow, monkeypatc
 def test_history_is_bounded_and_drops_answers_from_excluded_or_changed_material():
     source_id = str(uuid4())
     snapshot = {"sources": [{"id": source_id, "version": "v1"}], "notes": []}
-    turns = [{"status": "completed", "mode": "ask", "question": "Question " + str(i),
-              "answer": {"validated": True, "claims": [{"text": "x" * 1500}],
-                         "citations": [{"source_id": source_id, "version": "v1"}]}}
-             for i in range(10)]
-    turns.append({"status": "completed", "question": "Excluded secret question", "answer": {
-        "validated": True, "claims": [{"text": "Excluded secret"}],
-        "citations": [{"source_id": source_id, "version": "v0"}]}})
+    turns = [
+        {
+            "status": "completed",
+            "mode": "ask",
+            "question": "Question " + str(i),
+            "answer": {
+                "validated": True,
+                "claims": [{"text": "x" * 1500}],
+                "citations": [{"source_id": source_id, "version": "v1"}],
+            },
+        }
+        for i in range(10)
+    ]
+    turns.append(
+        {
+            "status": "completed",
+            "question": "Excluded secret question",
+            "answer": {
+                "validated": True,
+                "claims": [{"text": "Excluded secret"}],
+                "citations": [{"source_id": source_id, "version": "v0"}],
+            },
+        }
+    )
     history, trimmed = bounded_history(turns, snapshot)
     assert trimmed and len(history) <= 6
     assert sum(len(item["question"]) + len(item["answer"]) for item in history) <= 6000
@@ -165,7 +211,9 @@ def test_history_is_context_only_with_no_extra_rewrite_call(workflow, monkeypatc
     item, _ = source(store, notebook, ["Marigold launches in October."])
     calls = fake_model(monkeypatch)
     history = [{"question": "Tell me about Marigold", "answer": "An unsupported past answer."}]
-    answer = knowledge.answer(notebook, "When does it launch?", context=contexts.snapshot(notebook), history=history)
+    answer = knowledge.answer(
+        notebook, "When does it launch?", context=contexts.snapshot(notebook), history=history
+    )
     assert answer["validated"] and len(calls) == 2
     system, data = calls[0]
     assert "NOT evidence" in system and data["conversation_history"] == history
@@ -194,17 +242,29 @@ def test_wrong_supplied_evidence_never_reaches_provider(workflow, monkeypatch):
     store, notebook, knowledge, contexts = workflow
     item, chunks = source(store, notebook, ["Forbidden secret."])
     calls = fake_model(monkeypatch)
-    evidence = [{"id": chunks[0]["id"], "source_id": item["id"], "version": item["version"],
-                 "title": "Forbidden", "quote": chunks[0]["text"], "location": chunks[0]["location"]}]
+    evidence = [
+        {
+            "id": chunks[0]["id"],
+            "source_id": item["id"],
+            "version": item["version"],
+            "title": "Forbidden",
+            "quote": chunks[0]["text"],
+            "location": chunks[0]["location"],
+        }
+    ]
     with pytest.raises(ValueError, match="outside"):
-        knowledge.answer(notebook, "Secret", evidence, context=contexts.snapshot(notebook, {"source_ids": []}))
+        knowledge.answer(
+            notebook, "Secret", evidence, context=contexts.snapshot(notebook, {"source_ids": []})
+        )
     assert not calls
 
 
 def test_selection_is_strict_and_normalized():
     identifier = str(uuid4())
     assert normalize_selection({"source_ids": [identifier, identifier]}) == {
-        "source_ids": [identifier], "note_ids": []}
+        "source_ids": [identifier],
+        "note_ids": [],
+    }
     assert normalize_selection({"source_ids": []})["source_ids"] == []
     for value in ([], "", False, {"source_ids": ["bad"]}, {"note_ids": ["../note"]}, {"unknown": True}):
         with pytest.raises(ValueError):
@@ -213,15 +273,25 @@ def test_selection_is_strict_and_normalized():
 
 def test_research_uses_one_settings_snapshot_for_planner_embeddings_writer_and_critic(workflow, monkeypatch):
     store, notebook, knowledge, contexts = workflow
-    settings = {"base_url": "http://127.0.0.1:11434/v1", "model": "frozen-model", "embedding_model": "frozen-vector"}
-    source(store, notebook, ["Marigold launches in October."], embedding={
-        "embedding": [1., 0.], "model": settings["base_url"] + "/frozen-vector"})
+    settings = {
+        "base_url": "http://127.0.0.1:11434/v1",
+        "model": "frozen-model",
+        "embedding_model": "frozen-vector",
+    }
+    source(
+        store,
+        notebook,
+        ["Marigold launches in October."],
+        embedding={"embedding": [1.0, 0.0], "model": settings["base_url"] + "/frozen-vector"},
+    )
     calls, embeddings = [], []
 
     def complete(self, system, data):
         calls.append((self.settings["model"], system))
         # Settings changed on disk after planning must not switch any later phase.
-        write_json(store.root / "settings.json", {**settings, "model": "different", "embedding_model": "different"})
+        write_json(
+            store.root / "settings.json", {**settings, "model": "different", "embedding_model": "different"}
+        )
         if "Plan research" in system:
             return {"queries": ["Marigold"]}
         if "supported_claim_ids" in system:
@@ -230,7 +300,7 @@ def test_research_uses_one_settings_snapshot_for_planner_embeddings_writer_and_c
 
     def embed(self, texts):
         embeddings.append(self.settings["embedding_model"])
-        return [[1., 0.] for _ in texts]
+        return [[1.0, 0.0] for _ in texts]
 
     monkeypatch.setattr(OpenAICompatible, "complete", complete)
     monkeypatch.setattr(OpenAICompatible, "embed", embed)
@@ -266,7 +336,9 @@ def test_research_cancel_stops_next_provider_phase_and_persists_progress(workflo
             stopped = True
 
     with pytest.raises(Cancelled):
-        knowledge.research(notebook, "Marigold", context=contexts.snapshot(notebook), progress=progress, cancel=cancel)
+        knowledge.research(
+            notebook, "Marigold", context=contexts.snapshot(notebook), progress=progress, cancel=cancel
+        )
     sessions = list((store.notebook_path(notebook) / "research").glob("*.json"))
     persisted = json.loads(sessions[0].read_text("utf-8"))
     assert persisted["status"] == "cancelled" and "answer" not in persisted

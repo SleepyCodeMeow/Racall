@@ -60,9 +60,13 @@ def normalize_settings(raw: dict | None = None) -> dict:
         embedding_provider = config.get("provider", "openai")
         if not isinstance(embedding_provider, str) or embedding_provider not in EMBEDDING_PROVIDERS:
             raise ValueError("Unknown embedding provider.")
-        embedding_profile = _profile(config, {
-            "base_url": PROVIDER_DEFAULTS[embedding_provider], "model": "",
-        })
+        embedding_profile = _profile(
+            config,
+            {
+                "base_url": PROVIDER_DEFAULTS[embedding_provider],
+                "model": "",
+            },
+        )
         embeddings = {"provider": embedding_provider, **embedding_profile}
     elif legacy:
         embedding_model = raw.get("embedding_model", "")
@@ -98,6 +102,8 @@ def embedding_settings(settings: dict) -> dict:
     """Adapt independent embeddings for the existing embedding provider interface."""
     config = normalize_settings(settings)["embeddings"]
     return {
-        "provider": config["provider"], "base_url": config["base_url"],
-        "model": "", "embedding_model": config["model"],
+        "provider": config["provider"],
+        "base_url": config["base_url"],
+        "model": "",
+        "embedding_model": config["model"],
     }

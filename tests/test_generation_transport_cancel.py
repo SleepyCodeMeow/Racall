@@ -30,7 +30,9 @@ def test_already_cancelled_generation_never_opens_a_client(monkeypatch):
 @pytest.mark.parametrize("waiting_for_headers", [False, True])
 @pytest.mark.parametrize("async_caller", [False, True])
 def test_cancel_interrupts_idle_transport_and_preserves_callback_across_threads(
-    monkeypatch, waiting_for_headers, async_caller,
+    monkeypatch,
+    waiting_for_headers,
+    async_caller,
 ):
     cancelled = threading.Event()
     closed = threading.Event()
@@ -55,8 +57,11 @@ def test_cancel_interrupts_idle_transport_and_preserves_callback_across_threads(
                 closed.set()
         return httpx.Response(200, headers={"Content-Type": "text/event-stream"}, stream=Idle())
 
-    monkeypatch.setattr(completion_stream.httpx, "AsyncClient",
-                        lambda **kwargs: CLIENT(**kwargs, transport=httpx.MockTransport(handler)))
+    monkeypatch.setattr(
+        completion_stream.httpx,
+        "AsyncClient",
+        lambda **kwargs: CLIENT(**kwargs, transport=httpx.MockTransport(handler)),
+    )
 
     def checkpoint():
         if cancelled.is_set():
@@ -88,8 +93,11 @@ def test_cancellation_wins_an_already_delivered_result_and_scope_is_restored(mon
         received.set()
         return httpx.Response(200, headers={"Content-Type": "application/json"}, stream=Complete())
 
-    monkeypatch.setattr(completion_stream.httpx, "AsyncClient",
-                        lambda **kwargs: CLIENT(**kwargs, transport=httpx.MockTransport(handler)))
+    monkeypatch.setattr(
+        completion_stream.httpx,
+        "AsyncClient",
+        lambda **kwargs: CLIENT(**kwargs, transport=httpx.MockTransport(handler)),
+    )
 
     def checkpoint():
         if received.is_set():

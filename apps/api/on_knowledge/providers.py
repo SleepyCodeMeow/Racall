@@ -48,7 +48,12 @@ def frozen_provider_keys(keys: Mapping[tuple[str, str], str]):
 
 
 def validate_endpoint(url: str) -> str:
-    if not isinstance(url, str) or not url or len(url) > 2000 or any(char.isspace() or ord(char) < 32 for char in url):
+    if (
+        not isinstance(url, str)
+        or not url
+        or len(url) > 2000
+        or any(char.isspace() or ord(char) < 32 for char in url)
+    ):
         raise ValueError("Неверный URL API")
     try:
         p = urlsplit(url)
@@ -90,8 +95,11 @@ def provider_key(settings: dict) -> str:
         return frozen[provider, base]
     if provider == "openai_compatible":
         return get_key(base)
-    variable = {"openai": "OPENAI_API_KEY", "anthropic": "ANTHROPIC_API_KEY",
-                "ollama_cloud": "OLLAMA_API_KEY"}.get(provider)
+    variable = {
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "ollama_cloud": "OLLAMA_API_KEY",
+    }.get(provider)
     return _stored_key(base) or (os.getenv(variable, "") if variable else "")
 
 
@@ -109,7 +117,9 @@ def save_key(base_url: str, value: str):
         elif keyring.get_password("OpenNotebook", base_url):
             keyring.delete_password("OpenNotebook", base_url)
     except keyring.errors.KeyringError as exc:
-        raise ValueError("Хранилище секретов ОС недоступно. Ключ не сохранён; проверьте Keychain/Credential Manager/Secret Service.") from exc
+        raise ValueError(
+            "Хранилище секретов ОС недоступно. Ключ не сохранён; проверьте Keychain/Credential Manager/Secret Service."
+        ) from exc
 
 
 class OpenAICompatible:
@@ -122,41 +132,60 @@ class OpenAICompatible:
             with httpx.Client(timeout=httpx.Timeout(120, connect=15), trust_env=False) as client:
                 response = client.post(self.base + route, json=body, headers=_authorization(self.settings))
                 if response.status_code >= 400:
-                    raise ValueError(f"Провайдер вернул HTTP {response.status_code}. Проверьте URL, ключ и имя модели.")
+                    raise ValueError(
+                        f"Провайдер вернул HTTP {response.status_code}. Проверьте URL, ключ и имя модели."
+                    )
                 return response.json()
         except httpx.HTTPError as exc:
-            raise ValueError("Не удалось связаться с AI-провайдером. Проверьте подключение и настройки.") from exc
+            raise ValueError(
+                "Не удалось связаться с AI-провайдером. Проверьте подключение и настройки."
+            ) from exc
 
     def complete(self, system: str, data: dict) -> dict:
         if not self.settings.get("model"):
             raise ValueError("Укажите имя модели в настройках AI")
         body = {
-            "model": self.settings["model"], "messages": [
+            "model": self.settings["model"],
+            "messages": [
                 {"role": "system", "content": system},
                 {"role": "user", "content": json.dumps(data, ensure_ascii=False)},
-            ], "response_format": {"type": "json_object"},
+            ],
+            "response_format": {"type": "json_object"},
         }
         try:
             return complete_json(
                 self.base + "/chat/completions",
-                _authorization(self.settings), body,
+                _authorization(self.settings),
+                body,
             )
         except CompletionDeadlineError as exc:
-            raise ValueError("Превышено общее время генерации ответа. Уточните вопрос или выберите более быструю модель.") from exc
+            raise ValueError(
+                "Превышено общее время генерации ответа. Уточните вопрос или выберите более быструю модель."
+            ) from exc
         except httpx.ReadTimeout as exc:
-            raise ValueError("Модель перестала передавать данные. Проверьте AI-провайдер или повторите запрос.") from exc
+            raise ValueError(
+                "Модель перестала передавать данные. Проверьте AI-провайдер или повторите запрос."
+            ) from exc
         except CompletionProtocolError as exc:
-            raise ValueError("Провайдер вернул неполный или некорректный поток ответа. Повторите запрос или выберите другую модель.") from exc
+            raise ValueError(
+                "Провайдер вернул неполный или некорректный поток ответа. Повторите запрос или выберите другую модель."
+            ) from exc
         except httpx.HTTPStatusError as exc:
-            raise ValueError(f"Провайдер вернул HTTP {exc.response.status_code}. Проверьте URL, ключ и имя модели.") from exc
+            raise ValueError(
+                f"Провайдер вернул HTTP {exc.response.status_code}. Проверьте URL, ключ и имя модели."
+            ) from exc
         except httpx.HTTPError as exc:
-            raise ValueError("Не удалось связаться с AI-провайдером. Проверьте подключение и настройки.") from exc
+            raise ValueError(
+                "Не удалось связаться с AI-провайдером. Проверьте подключение и настройки."
+            ) from exc
 
     def embed(self, texts: list[str]) -> list[list[float]]:
         vectors = []
         for i in range(0, len(texts), 32):
-            batch = texts[i:i + 32]
-            response = self.request("/embeddings", {"model": self.settings["embedding_model"], "input": batch})
+            batch = texts[i : i + 32]
+            response = self.request(
+                "/embeddings", {"model": self.settings["embedding_model"], "input": batch}
+            )
             data = sorted(response.get("data", []), key=lambda item: item["index"])
             if len(data) != len(batch):
                 raise ValueError("Провайдер вернул неполный набор embeddings")

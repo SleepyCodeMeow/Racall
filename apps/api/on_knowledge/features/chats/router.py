@@ -61,20 +61,32 @@ def create_router(chats: Chats, knowledge: Knowledge) -> APIRouter:
                 raise ValueError("A question is required.")
             with chats.store.lock:
                 current = chats.get(notebook, thread)
-                selection = normalize_selection(body.context if body.context is not None else current.get("context"))
+                selection = normalize_selection(
+                    body.context if body.context is not None else current.get("context")
+                )
                 if any(turn["id"] == identifier(body.request_id) for turn in current["turns"]):
-                    return chats.begin(notebook, thread, body.request_id, question, body.mode,
-                                       context=selection)[0]
+                    return chats.begin(
+                        notebook, thread, body.request_id, question, body.mode, context=selection
+                    )[0]
                 snapshot = contexts.snapshot(notebook, selection)
                 history, trimmed = bounded_history(current["turns"], snapshot)
-                turn, fresh = chats.begin(notebook, thread, body.request_id, question, body.mode,
-                                          context=selection, snapshot=snapshot)
+                turn, fresh = chats.begin(
+                    notebook,
+                    thread,
+                    body.request_id,
+                    question,
+                    body.mode,
+                    context=selection,
+                    snapshot=snapshot,
+                )
                 if not fresh:
                     return turn
             info = {**contexts.info(snapshot), "history_turns": len(history), "history_truncated": trimmed}
             try:
                 if body.mode == "ask":
-                    result = {"answer": knowledge.answer(notebook, question, context=snapshot, history=history)}
+                    result = {
+                        "answer": knowledge.answer(notebook, question, context=snapshot, history=history)
+                    }
                     info.update(result["answer"].get("context_info", {}))
                 else:
                     found = knowledge.search(notebook, retrieval_query(question, history), context=snapshot)
@@ -82,11 +94,18 @@ def create_router(chats: Chats, knowledge: Knowledge) -> APIRouter:
                     info.update(found.get("context_info", contexts.info(snapshot, result["evidence"])))
                 with chats.store.lock:
                     contexts.validate_snapshot(notebook, snapshot)
-                    return chats.finish(notebook, thread, body.request_id, status="completed",
-                                        context_info=info, **result)
+                    return chats.finish(
+                        notebook, thread, body.request_id, status="completed", context_info=info, **result
+                    )
             except ConflictError:
-                return chats.finish(notebook, thread, body.request_id, status="failed",
-                                    error_code="context_changed", context_info=info)
+                return chats.finish(
+                    notebook,
+                    thread,
+                    body.request_id,
+                    status="failed",
+                    error_code="context_changed",
+                    context_info=info,
+                )
             except Exception:
                 # Persist the failed question without retaining provider responses or credentials.
                 return chats.finish(notebook, thread, body.request_id, status="failed", context_info=info)

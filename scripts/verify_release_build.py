@@ -1,4 +1,5 @@
 """Authorize reuse only from the tagged build of every declared native target."""
+
 import base64
 import json
 import os
@@ -22,8 +23,11 @@ assert run_id.isdigit(), "Build run ID must be numeric"
 
 
 def api(path):
-    return json.loads(subprocess.run(["gh", "api", f"repos/{repo}/{path}"],
-                                    capture_output=True, text=True, check=True).stdout)
+    return json.loads(
+        subprocess.run(
+            ["gh", "api", f"repos/{repo}/{path}"], capture_output=True, text=True, check=True
+        ).stdout
+    )
 
 
 run = api(f"actions/runs/{run_id}")

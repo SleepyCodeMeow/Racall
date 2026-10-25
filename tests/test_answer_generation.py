@@ -21,8 +21,14 @@ def workflow(tmp_path):
 
 
 def passage():
-    return {"id": "canonical-chunk", "source_id": "station", "version": "original-v1",
-            "title": "Станция Лис", "quote": RU_CLAIM, "location": {"element": 0}}
+    return {
+        "id": "canonical-chunk",
+        "source_id": "station",
+        "version": "original-v1",
+        "title": "Станция Лис",
+        "quote": RU_CLAIM,
+        "location": {"element": 0},
+    }
 
 
 def test_english_question_with_russian_name_has_explicit_language_and_one_repair(workflow, monkeypatch):
@@ -39,7 +45,9 @@ def test_english_question_with_russian_name_has_explicit_language_and_one_repair
         return {"claims": [{"text": text, "evidence_ids": ["E1"]}]}
 
     monkeypatch.setattr(OpenAICompatible, "complete", complete)
-    answer = knowledge.answer(notebook, "What exact temperatures has the Лис station already measured?", [passage()])
+    answer = knowledge.answer(
+        notebook, "What exact temperatures has the Лис station already measured?", [passage()]
+    )
     assert len(calls) == 3  # One repair, followed by a fresh evidence verification.
     assert answer["validated"]
     assert answer["claims"] == [{"text": EN_CLAIM, "evidence_ids": ["canonical-chunk"]}]
