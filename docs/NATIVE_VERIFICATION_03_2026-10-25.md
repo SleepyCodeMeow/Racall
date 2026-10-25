@@ -1,5 +1,9 @@
 # Native 0.3 candidate verification — October 25, 2026
 
+This is the historical pre-refactor candidate report. The later
+[native refactor verification](NATIVE_REFACTOR_VERIFICATION_03_2026-10-25.md)
+records fresh packages from source `4389b888daa2c3b8825e55ca4beec9a13bdc0b24`.
+
 **All six native candidate jobs passed. Publication remains on hold.**
 
 - Version: `0.3.0-beta.1` (`0.3 Beta`).

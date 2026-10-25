@@ -20,9 +20,10 @@ distribution files. The authoritative packaging matrix is
 [release_policy.py](../scripts/release_policy.py).
 
 All six native targets passed candidate build, packaged application and
-installation/copy checks in [Actions run 40209217858](https://github.com/SleepyCodeMeow/Racall/actions/runs/40209217858),
-from source `94c34702fb6e1a8e08f7cbd2cd4ceb0fc7348b78`. Ten distribution files
-were uploaded in six artifacts. See the [native verification report](NATIVE_VERIFICATION_03_2026-10-25.md)
+installation/copy checks after the maintainability refactor in
+[Actions run 40212923810](https://github.com/SleepyCodeMeow/Racall/actions/runs/40212923810),
+from source `4389b888daa2c3b8825e55ca4beec9a13bdc0b24`. Ten distribution files
+were uploaded in six artifacts. See the [native refactor verification report](NATIVE_REFACTOR_VERIFICATION_03_2026-10-25.md)
 for checksums, exact scope and untested distribution behavior. This does not
 remove the publication hold.
 

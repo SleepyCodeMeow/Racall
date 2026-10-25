@@ -18,18 +18,22 @@ The owner approved starting the context/jobs/Studio development scope on October
 ## Verification
 
 - [x] Targeted deterministic backend regressions for context, jobs, materials and profile changes.
-- [x] Full backend suite, lint, TypeScript and localization/release metadata checks (462 tests at initial development verification; 486 in the later native matrix).
+- [x] Full backend suite, lint, TypeScript and localization/release metadata checks (462 tests initially, 486 in the first native matrix, 493 after the maintainability refactor).
 - [x] Production frontend build and isolated UI workflow smoke without real model requests/downloads.
 - [x] Portable 0.2 chat/note/report compatibility regressions and preserved citation versions; this is not an installed binary upgrade test.
 - [x] Fresh native candidate build and installer/copy checks for all six declared x64/ARM64 targets.
 
 The owner subsequently expanded the candidate scope to x64 and ARM64 on Windows,
-macOS and Linux. All six passed in [Actions run 40209217858](https://github.com/SleepyCodeMeow/Racall/actions/runs/40209217858).
+macOS and Linux. All six passed again after refactoring in
+[Actions run 40212923810](https://github.com/SleepyCodeMeow/Racall/actions/runs/40212923810).
 See [native candidates](NATIVE_CANDIDATES_03.md) and the
-[native verification report](NATIVE_VERIFICATION_03_2026-10-25.md) for exact
+[native refactor verification report](NATIVE_REFACTOR_VERIFICATION_03_2026-10-25.md) for exact
 source, package checksums and limits. These candidate checks do not authorize
 publication or replace the eventual matching tag-triggered release verification.
 
 Development evidence is recorded in [the October 25 verification report](VERIFICATION_03_2026-10-25.md).
+The completed [maintainability refactor](REFACTOR_03_2026-10-25.md) includes
+controller/view and engine boundaries, shared note parsing, formatting gates and
+the contributor development tour.
 
 Model-quality evaluation, Windows/macOS/Linux acceptance and publication timing must each be reported separately. Earlier 0.2 results do not certify new 0.3 behavior. Do not run local Docker/WSL or a real model merely to satisfy this checklist.
