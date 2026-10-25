@@ -36,6 +36,9 @@ class Provider:
 @pytest.fixture
 def setup(tmp_path, monkeypatch):
     store = Store(tmp_path)
+    settings = store.settings()
+    settings["profiles"][settings["provider"]]["model"] = "fixture"
+    write_json(store.root / "settings.json", settings)
     notebook = store.create_notebook("Research")["id"]
     source = {"id": uid(), "title": "Project", "status": "ready", "version": "v1", "created_at": now()}
     store.save_source(notebook, source)
@@ -60,6 +63,42 @@ def terminal(service, notebook, job_id, timeout=4):
             return job
         time.sleep(.01)
     pytest.fail("Fake-provider job did not finish")
+
+
+@pytest.mark.parametrize("kind", ["research", "summary", "study_guide", "review_questions"])
+@pytest.mark.parametrize("model", ["", " \t "])
+def test_missing_model_rejected_before_credentials_or_durable_job(setup, monkeypatch, kind, model):
+    store, notebook, source, service = setup
+    settings = store.settings()
+    settings["profiles"][settings["provider"]]["model"] = model
+    write_json(store.root / "settings.json", settings)
+    lookups = []
+
+    def forbidden_credentials(settings):
+        lookups.append(settings)
+        pytest.fail("An unconfigured generation must not read provider credentials")
+
+    monkeypatch.setattr("on_knowledge.features.jobs.service.provider_key", forbidden_credentials)
+    with pytest.raises(ValueError, match="^Укажите имя модели в настройках AI$"):
+        service.submit(notebook, request(kind=kind, question="Summarize the selected materials"))
+    assert not lookups
+    assert service.list(notebook) == []
+    assert service.materials.list(notebook) == []
+    assert not store.active_operations
+
+
+def test_existing_submission_remains_idempotent_after_model_is_cleared(setup, monkeypatch):
+    store, notebook, source, service = setup
+    body = request()
+    first = service.submit(notebook, body)
+    settings = store.settings()
+    settings["profiles"][settings["provider"]]["model"] = ""
+    write_json(store.root / "settings.json", settings)
+    monkeypatch.setattr("on_knowledge.features.jobs.service.provider_key",
+                        lambda settings: pytest.fail("Deduplicated request read changed credentials"))
+    assert service.submit(notebook, body)["id"] == first["id"]
+    assert len(service.list(notebook)) == 1
+    assert store.active_operations[notebook] == 1
 
 
 def test_progress_dedup_portable_material_and_copy(setup, monkeypatch):

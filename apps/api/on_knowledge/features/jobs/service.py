@@ -132,6 +132,8 @@ class GenerationService:
                     return self.jobs.public(existing)
             context = self.context.snapshot(notebook, request.context)
             settings = deepcopy(self.store.settings())
+            if not settings["model"].strip():
+                raise ValueError("Укажите имя модели в настройках AI")
             keys = self._credentials(settings)
             job_id = uid()
             defaults = {
