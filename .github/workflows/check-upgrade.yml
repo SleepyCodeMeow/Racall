@@ -1,0 +1,55 @@
+name: Check installed 0.2 to 0.3 upgrade
+on:
+  workflow_dispatch:
+  push:
+    branches: ['codex/0.3-context-studio']
+    paths:
+      - .github/workflows/check-upgrade.yml
+      - scripts/check-upgrade.cjs
+      - scripts/upgrade/**
+permissions:
+  contents: read
+  actions: read
+jobs:
+  windows-upgrade:
+    runs-on: windows-latest
+    timeout-minutes: 30
+    env:
+      PYTHON_KEYRING_BACKEND: keyring.backends.null.Keyring
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          architecture: x64
+          cache: npm
+      - run: npm ci
+      - name: Download immutable verified Windows x64 candidate
+        uses: actions/download-artifact@v4
+        with:
+          artifact-ids: '12606896781'
+          run-id: '40212923810'
+          merge-multiple: true
+          github-token: ${{ github.token }}
+          path: ${{ runner.temp }}/racall-upgrade-candidate
+      - name: Verify upgrade harness contracts
+        run: node --test scripts/upgrade/unit.test.cjs
+      - name: Install published 0.2, upgrade to verified 0.3, and check real app data
+        run: node scripts/check-upgrade.cjs
+        env:
+          RACALL_UPGRADE_CANDIDATE_DIR: ${{ runner.temp }}/racall-upgrade-candidate
+      - name: Save upgrade evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: upgrade-win-x64
+          path: |
+            test-results/upgrade-*/result.json
+            test-results/upgrade-*/inputs.json
+            test-results/upgrade-*/before-upgrade.json
+            test-results/upgrade-*/after-uninstall.json
+            test-results/upgrade-*/*.png
+            test-results/upgrade-*/legacy-report.md
+            test-results/upgrade-*/process.log
+            test-results/upgrade-*/backend.log
+          if-no-files-found: warn
